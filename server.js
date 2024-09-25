@@ -23,7 +23,7 @@ app.prepare().then(() => {
 	// Serve API routes from the routes file
 	server.use('/api', apiRoutes);
 
-	server.get('/api/hello', (req, res) => {
+	server.get('https://elezartracker-db32bacb5edc.herokuapp.com/api/hello', (req, res) => {
 		res.json({ message: 'Hello from the API!' });
 	  });
 
