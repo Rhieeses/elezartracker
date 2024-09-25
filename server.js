@@ -2,6 +2,7 @@ const express = require('express');
 const next = require('next');
 const apiRoutes = require('./src/backend/routes/routes.js');
 const path = require('path');
+const cors = require('cors'); // Require CORS
 
 const dev = process.env.NODE_ENV !== 'production';
 const app = next({ dev });
@@ -15,6 +16,9 @@ app.prepare().then(() => {
 
 	// Middleware to parse JSON bodies
 	server.use(express.json());
+
+	// Use CORS middleware to enable CORS
+	server.use(cors());
 
 	// Serve API routes from the routes file
 	server.use('/api', apiRoutes);
