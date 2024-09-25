@@ -232,6 +232,15 @@ export default function TransactionTable({
 	const bottomContent = useMemo(() => {
 		return (
 			<div>
+				<div className='flex items-end justify-end w-full bg-default-200 space-x-40 p-5'>
+				<div>
+					<p>Total Debit <strong className='text-red-500'>{formatNumberDecimal(totalDebit)}</strong></p>
+				</div>
+				<div>
+					<p>Total Credit: <strong className='text-green-500'> {formatNumberDecimal(totalCredit)}</strong></p>
+					
+				</div>
+				</div>
 				<div className='flex justify-center items-center py-4 space-x-1 '>
 					<Button
 						isDisabled={pages === 1}
