@@ -722,4 +722,14 @@ router.delete('/vendor-delete/:id', async (req, res) => {
 	}
 });
 
+router.get('/test-db', async (req, res) => {
+    try {
+        const result = await connection.query('SELECT NOW() AS current_time'); // Simple query to get current time
+        res.status(200).json({ message: 'Database connection successful', data: result.rows[0] });
+    } catch (error) {
+        console.error('Database connection error:', error);
+        res.status(500).json({ message: 'Database connection failed', error: error.message });
+    }
+});
+
 module.exports = router;
