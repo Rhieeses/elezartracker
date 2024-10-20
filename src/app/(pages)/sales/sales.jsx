@@ -13,7 +13,6 @@ import {
 	Button,
 	useDisclosure,
 } from '@nextui-org/react';
-import { useRouter } from 'next/navigation';
 
 import Layout from '@/components/ui/layout';
 import { formatDate, formatNumber } from '@/utils/inputFormatter';
@@ -23,7 +22,6 @@ import { PaymentData } from '@/backend/data/dataHooks';
 import ConfirmDelete from '@/components/ui/confirmDelete';
 
 export default function SalesContent() {
-	const router = useRouter();
 	const { payment, loading, refetch } = PaymentData();
 	const [filterValue, setFilterValue] = useState('');
 	const { isOpen, onOpen, onOpenChange } = useDisclosure();
@@ -215,12 +213,11 @@ export default function SalesContent() {
 											</div>
 
 											<Button
-												color='danger'
-												variant='light'
-												size='md'
-												onClick={onClose}
-												className='bg-gray-200'>
-												Close
+												color='none'
+												variant='bordered'
+												size='lg'
+												onClick={onClose}>
+												Cancel
 											</Button>
 										</ModalFooter>
 									</>

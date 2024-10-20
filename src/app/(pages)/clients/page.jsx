@@ -1,7 +1,7 @@
 import ClientsContent from './clients';
 
 export const metadata = {
-	title: 'Capstone | Clients',
+	title: 'Clients',
 	description: 'Capstone',
 };
 

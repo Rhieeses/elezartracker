@@ -9,59 +9,14 @@ const path = require('path');
 const bcrypt = require('bcrypt');
 const connection = require('../config/db');
 const jwt = require('jsonwebtoken');
+
 const JWT_SECRET = process.env.JWT_SECRET;
 
-const {
-	clientInsertData,
-	projectInsertData,
-	salesPaymentInsert,
-	vendorInsertData,
-	expenseInsert,
-	salesInsert,
-	transferDataInsert,
-	notificationStatusInsert,
-	setNotificationInsert,
-	expenseScanInsert,
-} = require('../models/INSERT/dbInsert');
-
-const {
-	fetchClients,
-	fetchProject,
-	fetchClientSelect,
-	fetchProjectView,
-	fetchClientView,
-	fetchAllClientProject,
-	fetchSales,
-	fetchSalesProject,
-	fetchInvoiceData,
-	fetchPayment,
-	fetchPaymentData,
-	fetchTransactionClient,
-	fetchProjectSelect,
-	fetchExpenses,
-	fetchInvoiceExpensesData,
-	fetchVendor,
-	fetchVendorSelect,
-	fetchVendorId,
-	fetchExpensesProject,
-	fetchTransactionDetails,
-	fetchAccounts,
-	fetchDashboardData,
-	fetchAccountsTransaction,
-	fetchAccountsTransactionId,
-	fetchNotifications,
-	fetchAlltransaction,
-	fetchProjectName,
-} = require('../models/SELECT/dbSelect');
-const {
-	deleteProject,
-	deleteClient,
-	deleteExpense,
-	deleteSales,
-	deleteVendor,
-} = require('../models/DELETE/dbDelete');
-
-const { updateProject, editVendor, ApproveTransfer } = require('../models/UPDATE/dbUpdate');
+const dbInsert = require('../models/INSERT/dbInsert');
+const dbSelect = require('../models/SELECT/dbSelect');
+const dbDelete = require('../models/DELETE/dbDelete');
+const dbUpdate = require('../models/UPDATE/dbUpdate');
+const { jwtVerify } = require('jose');
 
 /**
 const password = 'capstone_admin';
@@ -70,8 +25,7 @@ const saltRounds = 10;
 bcrypt.hash(password, saltRounds, function (err, hash) {
 	console.log(hash);
 }); 
-*/
-
+ 
 const authenticateJWT = (req, res, next) => {
 	const authHeader = req.headers.authorization;
 
@@ -88,7 +42,7 @@ const authenticateJWT = (req, res, next) => {
 	} else {
 		return res.status(401).json({ error: 'Unauthorized: Token is missing' });
 	}
-};
+};*/
 
 router.post('/login', async (req, res) => {
 	const { username, password } = req.body;
@@ -108,11 +62,14 @@ router.post('/login', async (req, res) => {
 			return res.status(401).json({ message: 'Invalid credentials' });
 		}
 
-		const token = jwt.sign(
-			{ userId: user.id, username: user.username, name: user.name, position: user.position },
-			JWT_SECRET,
-			{ expiresIn: '5h' },
-		);
+		const payload = {
+			userId: user.id,
+			username: user.username,
+			name: user.name,
+			position: user.position,
+		};
+
+		const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '5h' });
 
 		res.cookie('token', token, {
 			httpOnly: true,
@@ -121,21 +78,60 @@ router.post('/login', async (req, res) => {
 			sameSite: 'Strict',
 		});
 
-		res.json({ token });
+		res.status(200).json({
+			message: 'Login successful!',
+			user: payload,
+			token: token,
+		});
 	} catch (error) {
 		console.error('Error during login:', error);
 		res.status(500).json({ message: 'Server error' });
 	}
 });
 
-router.post('/logout', (req, res) => {
-	res.clearCookie('token', {
-		httpOnly: true,
-		secure: process.env.NODE_ENV === 'production',
-		sameSite: 'Strict',
-	});
+router.get('/getUser', async (req, res) => {
+	const token = req.cookies.token;
 
-	res.json({ message: 'Logout successful' });
+	if (!token) {
+		return res.status(401).json({ message: 'Unauthorized, token missing' });
+	}
+
+	try {
+		const decoded = jwt.verify(token, process.env.JWT_SECRET); // Ensure you have a secret key in .env
+
+		const userId = decoded.userId;
+
+		// Query the database for the user using the userId from the token
+		const result = await connection.query('SELECT * FROM users WHERE id = $1', [userId]);
+
+		if (result.rows.length > 0) {
+			// If user is found, return user details
+			res.status(200).json(result.rows[0]);
+		} else {
+			// If no user is found, return 404
+			res.status(404).json({ message: 'User not found' });
+		}
+	} catch (error) {
+		// Handle errors such as invalid token
+		return res.status(403).json({ message: 'Invalid token', error });
+	}
+});
+
+router.post('/logout', (req, res) => {
+	req.session.destroy((err) => {
+		if (err) {
+			console.error('Error destroying session:', err);
+			return res.status(500).json({ message: 'Could not log out' });
+		}
+
+		res.clearCookie('token', {
+			httpOnly: true,
+			secure: process.env.NODE_ENV === 'production',
+			sameSite: 'Strict',
+		});
+
+		res.json({ message: 'Logout successful' });
+	});
 });
 
 //upload photo
@@ -146,6 +142,42 @@ let storage = multer.diskStorage({
 	filename: function (req, file, cb) {
 		cb(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname));
 	},
+});
+
+let storageReceipt = multer.diskStorage({
+	destination: function (req, file, cb) {
+		cb(null, path.join(__dirname, '../public/receipts'));
+	},
+	filename: function (req, file, cb) {
+		const newFileName = 'receipt-' + Date.now() + path.extname(file.originalname);
+		cb(null, newFileName);
+
+		//cb(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname));
+	},
+});
+
+// Initialize multer upload with storage
+const uploadReceipt = multer({
+	storage: storageReceipt,
+	limits: { fileSize: 1000000 }, // Optional: limit file size to 1MB
+}).single('file'); // Use .single() for single file upload
+
+router.post('/upload-receipt', (req, res) => {
+	// Use multer to handle the file upload
+	uploadReceipt(req, res, function (err) {
+		if (err) {
+			return res.status(500).json({ error: err.message });
+		}
+		if (!req.file) {
+			return res.status(400).json({ error: 'No file uploaded' });
+		}
+		// If successful, send back the file details or a success message
+		res.status(200).json({
+			message: 'File uploaded successfully',
+			fileName: req.file.filename,
+			filePath: `/uploads/${req.file.filename}`,
+		});
+	});
 });
 
 //post
@@ -167,7 +199,7 @@ router.post('/add-client', (req, res, next) => {
 				profilePicture: profilePicturePath,
 			};
 
-			const clientInsertedData = await clientInsertData(clientFormData);
+			const clientInsertedData = await dbInsert.clientInsertData(clientFormData);
 
 			res.status(201).json({ message: 'Data inserted successfully', data: clientInsertedData });
 		} catch (error) {
@@ -195,7 +227,7 @@ router.post('/create-project', (req, res, next) => {
 				projectPicture: projectPicturePath,
 			};
 
-			const projectInsertedData = await projectInsertData(projectFormData);
+			const projectInsertedData = await dbInsert.projectInsertData(projectFormData);
 
 			res.status(201).json({ message: 'Data inserted successfully', data: projectInsertedData });
 		} catch (error) {
@@ -223,7 +255,7 @@ router.post('/add-vendor', (req, res, next) => {
 				vendorPicture: profilePicturePath,
 			};
 
-			const vendorInsertedData = await vendorInsertData(vendorFormData);
+			const vendorInsertedData = await dbInsert.vendorInsertData(vendorFormData);
 
 			res.status(201).json({ message: 'Data inserted successfully', data: vendorInsertedData });
 		} catch (error) {
@@ -248,7 +280,7 @@ router.post('/sales-payment', async (req, res) => {
 
 		//const salesPaymentInsertResult =
 
-		await salesPaymentInsert({
+		await dbInsert.salesPaymentInsert({
 			invoiceId,
 			projectId,
 			invoiceNo,
@@ -269,7 +301,7 @@ router.post('/sales-payment', async (req, res) => {
 router.post('/add-expense', async (req, res) => {
 	try {
 		const expenseFormData = req.body;
-		const expenseInsertData = await expenseInsert(expenseFormData);
+		const expenseInsertData = await dbInsert.expenseInsert(expenseFormData);
 		res.status(200).json({ message: 'Expense inserted successfully' });
 	} catch (error) {
 		console.error('Error inserting expense:', error);
@@ -280,7 +312,7 @@ router.post('/add-expense', async (req, res) => {
 router.post('/scan-expense', async (req, res) => {
 	try {
 		const expenseFormData = req.body;
-		const expenseInsertData = await expenseScanInsert(expenseFormData);
+		const expenseInsertData = await dbInsert.expenseScanInsert(expenseFormData);
 		res.status(200).json({ message: 'Expense inserted successfully' });
 	} catch (error) {
 		console.error('Error inserting expense:', error);
@@ -291,7 +323,7 @@ router.post('/scan-expense', async (req, res) => {
 router.post('/add-sales', async (req, res) => {
 	try {
 		const salesFormData = req.body;
-		await salesInsert(salesFormData);
+		await dbInsert.salesInsert(salesFormData);
 		res.status(200).json({ message: 'Sales inserted successfully' });
 	} catch (error) {
 		console.error('Error inserting expense:', error);
@@ -302,7 +334,7 @@ router.post('/add-sales', async (req, res) => {
 router.post('/transfer-account', async (req, res) => {
 	try {
 		const transferData = req.body;
-		await transferDataInsert(transferData);
+		await dbInsert.transferDataInsert(transferData);
 		res.status(200).json({ message: 'Transfer successfully' });
 	} catch (error) {
 		console.error('Error inserting expense:', error);
@@ -313,7 +345,7 @@ router.post('/transfer-account', async (req, res) => {
 router.post('/approve-transfer/:id', async (req, res) => {
 	try {
 		const { id } = req.params;
-		const approveTransfer = await ApproveTransfer(id);
+		const approveTransfer = await dbUpdate.ApproveTransfer(id);
 		res.json(approveTransfer);
 	} catch (error) {
 		res.status(500).json({ error: 'Failed to approve' });
@@ -327,7 +359,7 @@ router.post('/notification-seen', async (req, res) => {
 			return res.status(400).json({ message: 'Notification ID is required' });
 		}
 
-		await notificationStatusInsert(id);
+		await dbInsert.notificationStatusInsert(id);
 		res.status(200).json({ message: 'Notification successfully marked as seen' });
 	} catch (error) {
 		console.error('Error marking notification as seen:', error);
@@ -338,7 +370,7 @@ router.post('/notification-seen', async (req, res) => {
 router.post('/set-notification', async (req, res) => {
 	try {
 		const notificationBody = req.body;
-		await setNotificationInsert(notificationBody);
+		await dbInsert.setNotificationInsert(notificationBody);
 
 		res.status(200).json({ message: 'Notification successfully inserted' });
 	} catch (error) {
@@ -347,9 +379,21 @@ router.post('/set-notification', async (req, res) => {
 	}
 });
 
+router.post('/change-password/:id', async (req, res) => {
+	try {
+		const { id } = req.params;
+		const changePasswordForm = req.body;
+
+		const changePassword = await dbUpdate.changePassword(id, changePasswordForm);
+		res.json(changePassword);
+	} catch (error) {
+		res.status(500).json({ error: 'Failed to change password!' });
+	}
+});
+
 //update
 
-router.post('/update-project/:id', (req, res, next) => {
+router.put('/update-project/:id', (req, res, next) => {
 	const upload = multer({ storage: storage });
 
 	upload.single('imageFile')(req, res, async (err) => {
@@ -369,7 +413,7 @@ router.post('/update-project/:id', (req, res, next) => {
 			};
 
 			// Update project in the database
-			const projectUpdateData = await updateProject(formData, id);
+			const projectUpdateData = await dbUpdate.updateProject(formData, id);
 
 			res.status(201).json({ message: 'Data updated successfully', data: projectUpdateData });
 		} catch (error) {
@@ -379,7 +423,37 @@ router.post('/update-project/:id', (req, res, next) => {
 	});
 });
 
-router.post('/edit-vendor/:id', (req, res, next) => {
+router.put('/update-account/:id', (req, res, next) => {
+	const upload = multer({ storage: storage });
+
+	upload.single('imageFile')(req, res, async (err) => {
+		if (err) {
+			return res.status(500).json({ message: 'File upload failed', error: err.message });
+		}
+
+		const { id } = req.params;
+
+		try {
+			const fileName = req.file ? path.basename(req.file.path) : null;
+			const profilePicturePath = fileName ? `/uploads/${fileName}` : null;
+
+			const formData = {
+				...req.body,
+				imageFile: profilePicturePath || req.body.profilepicture,
+			};
+
+			// Update project in the database
+			const accountUpdate = await dbUpdate.updateAccount(formData, id);
+
+			res.status(201).json({ message: 'Data updated successfully', data: accountUpdate });
+		} catch (error) {
+			console.error('Error handling request:', error);
+			res.status(500).json({ message: 'Failed to update data', error: error.message });
+		}
+	});
+});
+
+router.put('/edit-vendor/:id', (req, res, next) => {
 	const upload = multer({ storage: storage });
 
 	upload.single('imageFile')(req, res, async (err) => {
@@ -399,7 +473,7 @@ router.post('/edit-vendor/:id', (req, res, next) => {
 			};
 
 			// Update project in the database
-			const vendorEdit = await editVendor(editForm, id);
+			const vendorEdit = await dbUpdate.editVendor(editForm, id);
 
 			res.status(201).json({ message: 'Data updated successfully', data: vendorEdit });
 		} catch (error) {
@@ -412,324 +486,334 @@ router.post('/edit-vendor/:id', (req, res, next) => {
 //get
 router.get('/client-details', async (req, res) => {
 	try {
-		const clients = await fetchClients();
+		const clients = await dbSelect.fetchClients();
 		res.json(clients);
 	} catch (error) {
-		res.status(500).json({ error: 'Failed to fetch clients' });
+		res.status(500).json({ error: 'Failed to dbSelect.fetch clients' });
 	}
 });
 
 router.get('/accounts-transactions', async (req, res) => {
 	try {
-		const accountTransaction = await fetchAccountsTransaction();
+		const accountTransaction = await dbSelect.fetchAccountsTransaction();
 		res.json(accountTransaction);
 	} catch (error) {
-		res.status(500).json({ error: 'Failed to fetch accounts transaction' });
+		res.status(500).json({ error: 'Failed to dbSelect.fetch accounts transaction' });
 	}
 });
 
 router.get('/accounts-transactions/:id', async (req, res) => {
 	try {
 		const { id } = req.params;
-		const accountTransaction = await fetchAccountsTransactionId(id);
+		const accountTransaction = await dbSelect.fetchAccountsTransactionId(id);
 		res.json(accountTransaction);
 	} catch (error) {
-		res.status(500).json({ error: 'Failed to fetch accounts transaction' });
+		res.status(500).json({ error: 'Failed to dbSelect.fetch accounts transaction' });
 	}
 });
 
 router.get('/client-details/:id', async (req, res) => {
 	try {
 		const { id } = req.params;
-		const client = await fetchClientView(id);
+		const client = await dbSelect.fetchClientView(id);
 		res.json(client);
 	} catch (error) {
-		res.status(500).json({ error: 'Failed to fetch clients' });
+		res.status(500).json({ error: 'Failed to dbSelect.fetch clients' });
 	}
 });
 
 router.get('/client-select', async (req, res) => {
 	try {
-		const clientSelect = await fetchClientSelect();
+		const clientSelect = await dbSelect.fetchClientSelect();
 		res.json(clientSelect);
 	} catch (error) {
-		console.error('Error fetching clients:', error);
-		res.status(500).json({ message: 'Failed to fetch clients' });
+		console.error('Error dbSelect.fetching clients:', error);
+		res.status(500).json({ message: 'Failed to dbSelect.fetch clients' });
 	}
 });
 
 router.get('/project-details', async (req, res) => {
 	try {
-		const project = await fetchProject();
+		const project = await dbSelect.fetchProject();
 		res.json(project);
 	} catch (error) {
-		res.status(500).json({ error: 'Failed to fetch project' });
+		res.status(500).json({ error: 'Failed to dbSelect.fetch project' });
 	}
 });
 
 router.get('/project-details/:id', async (req, res) => {
 	try {
 		const { id } = req.params;
-		const project = await fetchProjectView(id);
+		const project = await dbSelect.fetchProjectView(id);
 		res.json(project);
 	} catch (error) {
-		res.status(500).json({ error: 'Failed to fetch project' });
+		res.status(500).json({ error: 'Failed to dbSelect.fetch project' });
 	}
 });
 
 router.get('/allclient-project/:id', async (req, res) => {
 	try {
 		const { id } = req.params;
-		const clientProject = await fetchAllClientProject(id);
+		const clientProject = await dbSelect.fetchAllClientProject(id);
 		res.json(clientProject);
 	} catch (error) {
-		res.status(500).json({ error: 'Failed to fetch project' });
+		res.status(500).json({ error: 'Failed to dbSelect.fetch project' });
 	}
 });
 
 router.get('/sales-details', async (req, res) => {
 	try {
-		const sales = await fetchSales();
+		const sales = await dbSelect.fetchSales();
 		res.json(sales);
 	} catch (error) {
-		res.status(500).json({ error: 'Failed to fetch sales' });
+		res.status(500).json({ error: 'Failed to dbSelect.fetch sales' });
 	}
 });
 
 router.get('/sales-details/:id', async (req, res) => {
 	try {
 		const { id } = req.params;
-		const sales = await fetchSalesProject(id);
+		const sales = await dbSelect.fetchSalesProject(id);
 		res.json(sales);
 	} catch (error) {
-		res.status(500).json({ error: 'Failed to fetch sales' });
+		res.status(500).json({ error: 'Failed to dbSelect.fetch sales' });
 	}
 });
 
 router.get('/invoice-details/:invoice', async (req, res) => {
 	try {
 		const { invoice } = req.params;
-		const invoiceData = await fetchInvoiceData(invoice);
+		const invoiceData = await dbSelect.fetchInvoiceData(invoice);
 		res.json(invoiceData);
 	} catch (error) {
-		res.status(500).json({ error: 'Failed to fetch invoice' });
+		res.status(500).json({ error: 'Failed to dbSelect.fetch invoice' });
 	}
 });
 
 router.get('/payment-details', async (req, res) => {
 	try {
-		const payment = await fetchPayment();
+		const payment = await dbSelect.fetchPayment();
 		res.json(payment);
 	} catch (error) {
-		res.status(500).json({ error: 'Failed to fetch Payments' });
+		res.status(500).json({ error: 'Failed to dbSelect.fetch Payments' });
 	}
 });
 
 router.get('/payment-details/:id', async (req, res) => {
 	try {
 		const { id } = req.params;
-		const invoiceData = await fetchPaymentData(id);
+		const invoiceData = await dbSelect.fetchPaymentData(id);
 		res.json(invoiceData);
 	} catch (error) {
-		res.status(500).json({ error: 'Failed to fetch payment' });
+		res.status(500).json({ error: 'Failed to dbSelect.fetch payment' });
 	}
 });
 
 router.get('/transaction-client/:id', async (req, res) => {
 	try {
 		const { id } = req.params;
-		const transactionClient = await fetchTransactionClient(id);
+		const transactionClient = await dbSelect.fetchTransactionClient(id);
 		res.json(transactionClient);
 	} catch (error) {
-		res.status(500).json({ error: 'Failed to fetch payment' });
+		res.status(500).json({ error: 'Failed to dbSelect.fetch payment' });
 	}
 });
 
 router.get('/project-select', async (req, res) => {
 	try {
-		const projectSelect = await fetchProjectSelect();
+		const projectSelect = await dbSelect.fetchProjectSelect();
 		res.json(projectSelect);
 	} catch (error) {
-		console.error('Error fetching clients:', error);
-		res.status(500).json({ message: 'Failed to fetch clients' });
+		console.error('Error dbSelect.fetching clients:', error);
+		res.status(500).json({ message: 'Failed to dbSelect.fetch clients' });
 	}
 });
 
 router.get('/expenses-details', async (req, res) => {
 	try {
-		const expenses = await fetchExpenses();
+		const expenses = await dbSelect.fetchExpenses();
 		res.json(expenses);
 	} catch (error) {
-		res.status(500).json({ error: 'Failed to fetch sales' });
+		res.status(500).json({ error: 'Failed to dbSelect.fetch sales' });
 	}
 });
 
 router.get('/expenses-details/:id', async (req, res) => {
 	try {
 		const { id } = req.params;
-		const expenses = await fetchExpensesProject(id);
+		const expenses = await dbSelect.fetchExpensesProject(id);
 		res.json(expenses);
 	} catch (error) {
-		res.status(500).json({ error: 'Failed to fetch sales' });
+		res.status(500).json({ error: 'Failed to dbSelect.fetch sales' });
 	}
 });
 
 router.get('/expensesInvoice-details/:id', async (req, res) => {
 	try {
 		const { id } = req.params;
-		const invoiceExpensesData = await fetchInvoiceExpensesData(id);
+		const invoiceExpensesData = await dbSelect.fetchInvoiceExpensesData(id);
 		res.json(invoiceExpensesData);
 	} catch (error) {
-		res.status(500).json({ error: 'Failed to fetch invoice' });
+		res.status(500).json({ error: 'Failed to dbSelect.fetch invoice' });
 	}
 });
 
 router.get('/vendor-select', async (req, res) => {
 	try {
-		const vendorSelect = await fetchVendorSelect();
+		const vendorSelect = await dbSelect.fetchVendorSelect();
 		res.json(vendorSelect);
 	} catch (error) {
-		console.error('Error fetching vendors:', error);
-		res.status(500).json({ message: 'Failed to fetch vendors' });
+		console.error('Error dbSelect.fetching vendors:', error);
+		res.status(500).json({ message: 'Failed to dbSelect.fetch vendors' });
 	}
 });
 
 router.get('/transaction-details/:id', async (req, res) => {
 	try {
 		const { id } = req.params;
-		const transacData = await fetchTransactionDetails(id);
+		const transacData = await dbSelect.fetchTransactionDetails(id);
 		res.json(transacData);
 	} catch (error) {
-		res.status(500).json({ error: 'Failed to fetch transaction' });
+		res.status(500).json({ error: 'Failed to dbSelect.fetch transaction' });
 	}
 });
 
 router.get('/accounts-details', async (req, res) => {
 	try {
-		const accountsSelect = await fetchAccounts();
+		const accountsSelect = await dbSelect.fetchAccounts();
 		res.json(accountsSelect);
 	} catch (error) {
-		console.error('Error fetching accounts:', error);
-		res.status(500).json({ message: 'Failed to fetch accounts' });
+		console.error('Error dbSelect.fetching accounts:', error);
+		res.status(500).json({ message: 'Failed to dbSelect.fetch accounts' });
 	}
 });
 
 router.get('/dashboard-data', async (req, res) => {
 	try {
-		const dashboardData = await fetchDashboardData();
+		const dashboardData = await dbSelect.fetchDashboardData();
 		res.json(dashboardData);
 	} catch (error) {
-		res.status(500).json({ error: 'Failed to fetch dashboard data' });
+		res.status(500).json({ error: 'Failed to dbSelect.fetch dashboard data' });
 	}
 });
 
 router.get('/vendor-details', async (req, res) => {
 	try {
-		const vendor = await fetchVendor();
+		const vendor = await dbSelect.fetchVendor();
 		res.json(vendor);
 	} catch (error) {
-		res.status(500).json({ error: 'Failed to fetch vendor' });
+		res.status(500).json({ error: 'Failed to dbSelect.fetch vendor' });
 	}
 });
 
 router.get('/vendor-details/:id', async (req, res) => {
 	try {
 		const { id } = req.params;
-		const vendor = await fetchVendorId(id);
+		const vendor = await dbSelect.fetchVendorId(id);
 		res.json(vendor);
 	} catch (error) {
-		res.status(500).json({ error: 'Failed to fetch vendor' });
+		res.status(500).json({ error: 'Failed to dbSelect.fetch vendor' });
 	}
 });
 
 router.get('/project-name/:id', async (req, res) => {
 	try {
 		const { id } = req.params;
-		const projectName = await fetchProjectName(id);
+		const projectName = await dbSelect.fetchProjectName(id);
 		res.json(projectName);
 	} catch (error) {
-		res.status(500).json({ error: 'Failed to fetch project name' });
+		res.status(500).json({ error: 'Failed to dbSelect.fetch project name' });
 	}
 });
 
 router.get('/notifications', async (req, res) => {
 	try {
-		const notifications = await fetchNotifications();
+		const notifications = await dbSelect.fetchNotifications();
 		res.json(notifications);
 	} catch (error) {
-		res.status(500).json({ error: 'Failed to fetch notifications' });
+		res.status(500).json({ error: 'Failed to dbSelect.fetch notifications' });
 	}
 });
 
 router.get('/all-transactions', async (req, res) => {
 	try {
-		const transactions = await fetchAlltransaction();
+		const transactions = await dbSelect.fetchAlltransaction();
 		res.json(transactions);
 	} catch (error) {
-		res.status(500).json({ error: 'Failed to fetch transactions' });
+		res.status(500).json({ error: 'Failed to dbSelect.fetch transactions' });
 	}
 });
 
-//delete
+router.get('/top-vendor/:id', async (req, res) => {
+	try {
+		const { id } = req.params;
+		const topVendor = await dbSelect.fetchTopVendor(id);
+		res.json(topVendor);
+	} catch (error) {
+		res.status(500).json({ error: 'Failed to dbSelect.fetch transactions' });
+	}
+});
+
+//dbDelete.delete
 
 router.delete('/project-delete/:id', async (req, res) => {
 	try {
 		const { id } = req.params;
-		const project = await deleteProject(id);
+		const project = await dbDelete.deleteProject(id);
 		res.json(project);
 	} catch (error) {
-		res.status(500).json({ error: 'Failed to delete project' });
+		res.status(500).json({ error: 'Failed to dbDelete.delete project' });
 	}
 });
 
 router.delete('/client-delete/:id', async (req, res) => {
 	try {
 		const { id } = req.params;
-		const client = await deleteClient(id);
+		const client = await dbDelete.deleteClient(id);
 		res.json(client);
 	} catch (error) {
-		res.status(500).json({ error: 'Failed to delete client' });
+		res.status(500).json({ error: 'Failed to dbDelete.delete client' });
 	}
 });
 
 router.delete('/expense-delete/:id', async (req, res) => {
 	try {
 		const { id } = req.params;
-		const expense = await deleteExpense(id);
+		const expense = await dbDelete.deleteExpense(id);
 		res.json(expense);
 	} catch (error) {
-		res.status(500).json({ error: 'Failed to delete expense' });
+		res.status(500).json({ error: 'Failed to dbDelete.delete expense' });
 	}
 });
 
 router.delete('/sales-delete/:id', async (req, res) => {
 	try {
 		const { id } = req.params;
-		const sales = await deleteSales(id);
+		const sales = await dbDelete.deleteSales(id);
 		res.json(sales);
 	} catch (error) {
-		res.status(500).json({ error: 'Failed to delete sales' });
+		res.status(500).json({ error: 'Failed to dbDelete.delete sales' });
 	}
 });
 
 router.delete('/vendor-delete/:id', async (req, res) => {
 	try {
 		const { id } = req.params;
-		const vendor = await deleteVendor(id);
+		const vendor = await dbDelete.deleteVendor(id);
 		res.json(vendor);
 	} catch (error) {
-		res.status(500).json({ error: 'Failed to delete vendor' });
+		res.status(500).json({ error: 'Failed to dbDelete.delete vendor' });
 	}
 });
 
 router.get('/test-db', async (req, res) => {
-    try {
-        const result = await connection.query('SELECT NOW() AS current_time'); // Simple query to get current time
-        res.status(200).json({ message: 'Database connection successful', data: result.rows[0] });
-    } catch (error) {
-        console.error('Database connection error:', error);
-        res.status(500).json({ message: 'Database connection failed', error: error.message });
-    }
+	try {
+		const result = await connection.query('SELECT NOW() AS current_time'); // Simple query to get current time
+		res.status(200).json({ message: 'Database connection successful', data: result.rows[0] });
+	} catch (error) {
+		console.error('Database connection error:', error);
+		res.status(500).json({ message: 'Database connection failed', error: error.message });
+	}
 });
 
 module.exports = router;

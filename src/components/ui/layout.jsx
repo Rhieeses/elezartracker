@@ -1,3 +1,5 @@
+'use client';
+
 import {
 	User,
 	Button,
@@ -7,18 +9,38 @@ import {
 	DropdownMenu,
 	DropdownItem,
 	DropdownSection,
+	Avatar,
 } from '@nextui-org/react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { Notification } from '@/backend/data/dataHooks';
 import { formatDateTime } from '@/utils/inputFormatter';
 import axios from 'axios';
+import { useState, useEffect } from 'react';
 
 export default function Layout({ children }) {
+	const [user, setUser] = useState(null);
+
+	useEffect(() => {
+		const fetchUser = async () => {
+			try {
+				const response = await axios.get('/api/getUser', { withCredentials: true });
+				setUser(response.data);
+			} catch (err) {
+				setError(err.response ? err.response.data : 'Error fetching user');
+			}
+		};
+
+		fetchUser();
+	}, []);
+
 	let pathname = usePathname();
 	const router = useRouter();
 
-	pathname = pathname.replace(/[\/0-9]/g, '');
+	let pathArray = pathname.split('/');
+
+	pathname = pathArray[1];
+
 	pathname = pathname.charAt(0).toUpperCase() + pathname.slice(1);
 
 	const isActive = (href) => pathname === href;
@@ -51,14 +73,14 @@ export default function Layout({ children }) {
 
 	return (
 		<div className='flex flex-col h-screen text-black'>
-			<header className='flex flex-col w-full bg-white pt-2 h-fit opacity-90'>
-				<div className='flex items-center justify-between pr-2'>
+			<header className='flex flex-col w-full bg-white pt-2 h-fit'>
+				<div className='flex items-center justify-between pr-2 z-20'>
 					<div className='ml-[2rem]'>
 						<div className='flex items-center  rounded-lg pointer-events-none'>
 							<img
 								src='/logo.jpg'
 								alt='Logo'
-								className='sticky top-0 z-10 w-[25px] h-[30px] sm:w-[10px] sm:h-[10px] md:w-[40px] md-[40px] lg:w-[35px] lg:h-[35px] object-cover rounded-full'
+								className='sticky top-0  w-[25px] h-[30px] sm:w-[10px] sm:h-[10px] md:w-[40px] md-[40px] lg:w-[35px] lg:h-[35px] object-cover rounded-full'
 							/>
 							<div className='flex flex-col'>
 								<h1 className='ml-2 font-bold text-[20px] tracking-tightest  md:inline'>
@@ -68,7 +90,7 @@ export default function Layout({ children }) {
 						</div>
 					</div>
 
-					<div className='flex items-center space-x-5'>
+					<div className='flex items-center space-x-5 pr-3'>
 						<div className='flex space-x-2'>
 							<Dropdown
 								radius='sm'
@@ -135,15 +157,18 @@ export default function Layout({ children }) {
 							<DropdownTrigger>
 								<User
 									as='button'
-									className='my-2'
+									className='text-sm p-2'
 									avatarProps={{
-										src: '/bookkeeper.jpg',
+										src: user?.profilepicture,
 									}}
+									name={user?.name}
+									description={user?.position}
 								/>
 							</DropdownTrigger>
 							<DropdownMenu aria-label='Action event example'>
 								<DropdownItem
 									key='accountSettings'
+									href='/account-settings'
 									startContent={
 										<span className='material-symbols-outlined'>account_circle</span>
 									}>
@@ -167,13 +192,15 @@ export default function Layout({ children }) {
 					</div>
 				</div>
 
-				<div className='sticky top-0 z-10 bg-white no-scrollbar w-full overflow-x-scroll lg:overflow-x-hidden border-b-[1px]'>
+				<div className='sticky top-0 z-10 h-full bg-white no-scrollbar w-full overflow-x-scroll lg:overflow-x-hidden border-b-[1px]'>
 					<ul className='flex list-none ml-5 space-x-3'>
 						<Link
 							href='/dashboard'
 							prefetch={true}
-							className={`flex items-center p-1text-gray-700 ${
-								isActive('Dashboard') ? 'pointer-events-none border-b-2 border-black' : ''
+							className={`flex items-center p-1  ${
+								isActive('Dashboard')
+									? 'pointer-events-none border-b-2 border-black font-semibold'
+									: ''
 							}`}>
 							<li className='hover:bg-gray-200 p-2 rounded-lg'>
 								<p className=' md:inline'>Dashboard</p>
@@ -182,8 +209,10 @@ export default function Layout({ children }) {
 						<Link
 							href='/projects'
 							prefetch={true}
-							className={`flex items-center p-1 text-gray-700 ${
-								isActive('Projects') ? 'pointer-events-none border-b-2 border-black' : ''
+							className={`flex items-center p-1  ${
+								isActive('Projects')
+									? 'pointer-events-none border-b-2 border-black font-semibold'
+									: ''
 							}`}>
 							<li className='hover:bg-gray-200 p-2 rounded-lg'>
 								<p className=' md:inline'>Projects</p>
@@ -192,8 +221,10 @@ export default function Layout({ children }) {
 						<Link
 							href='/clients'
 							prefetch={true}
-							className={`flex items-center p-1 text-gray-700 ${
-								isActive('Clients') ? 'pointer-events-none border-b-2 border-black' : ''
+							className={`flex items-center p-1  ${
+								isActive('Clients')
+									? 'pointer-events-none border-b-2 border-black font-semibold'
+									: ''
 							}`}>
 							<li className='hover:bg-gray-200 p-2 rounded-lg'>
 								<p className=' md:inline'>Clients</p>
@@ -202,8 +233,10 @@ export default function Layout({ children }) {
 						<Link
 							href='/vendors'
 							prefetch={true}
-							className={`flex items-center p-1 text-gray-700 ${
-								isActive('Vendors') ? 'pointer-events-none border-b-2 border-black' : ''
+							className={`flex items-center p-1  ${
+								isActive('Vendors')
+									? 'pointer-events-none border-b-2 border-black font-semibold'
+									: ''
 							}`}>
 							<li className='hover:bg-gray-200 p-2 rounded-lg'>
 								<p className=' md:inline'>Vendors</p>
@@ -212,8 +245,10 @@ export default function Layout({ children }) {
 						<Link
 							href='/accounts'
 							prefetch={true}
-							className={`flex items-center p-1 text-gray-700 ${
-								isActive('Accounts') ? 'pointer-events-none border-b-2 border-black' : ''
+							className={`flex items-center p-1  ${
+								isActive('Accounts')
+									? 'pointer-events-none border-b-2 border-black font-semibold'
+									: ''
 							}`}>
 							<li className='hover:bg-gray-200 p-2 rounded-lg'>
 								<p className=' md:inline'>Accounts</p>
@@ -223,8 +258,10 @@ export default function Layout({ children }) {
 						<Link
 							href='/receivables'
 							prefetch={true}
-							className={`flex items-center p-1 text-gray-700 ${
-								isActive('Receivables') ? 'pointer-events-none border-b-2 border-black' : ''
+							className={`flex items-center p-1  ${
+								isActive('Receivables')
+									? 'pointer-events-none border-b-2 border-black font-semibold'
+									: ''
 							}`}>
 							<li className='hover:bg-gray-200 p-2 rounded-lg'>
 								<p className=' md:inline'>Receivables</p>
@@ -234,8 +271,10 @@ export default function Layout({ children }) {
 						<Link
 							href='/sales'
 							prefetch={true}
-							className={`flex items-center p-1 text-gray-700 ${
-								isActive('Sales') ? 'pointer-events-none border-b-2 border-black' : ''
+							className={`flex items-center p-1  ${
+								isActive('Sales')
+									? 'pointer-events-none border-b-2 border-black font-semibold'
+									: ''
 							}`}>
 							<li className='hover:bg-gray-200 p-2 rounded-lg'>
 								<p className=' md:inline'>Sales</p>
@@ -245,8 +284,10 @@ export default function Layout({ children }) {
 						<Link
 							href='/expense'
 							prefetch={true}
-							className={`flex items-center p-1 text-gray-700 ${
-								isActive('Expense') ? 'pointer-events-none border-b-2 border-black' : ''
+							className={`flex items-center p-1  ${
+								isActive('Expense')
+									? 'pointer-events-none border-b-2 border-black font-semibold'
+									: ''
 							}`}>
 							<li className='hover:bg-gray-200 p-2 rounded-lg'>
 								<p className=' md:inline'>Expenses</p>
@@ -256,9 +297,9 @@ export default function Layout({ children }) {
 						<Link
 							href='/transactions'
 							prefetch={true}
-							className={`flex items-center p-1 text-gray-700 ${
+							className={`flex items-center p-1  ${
 								isActive('Transactions')
-									? 'pointer-events-none border-b-2 border-black'
+									? 'pointer-events-none border-b-2 border-black font-semibold'
 									: ''
 							}`}>
 							<li className='hover:bg-gray-200 p-2 rounded-lg'>
@@ -269,8 +310,10 @@ export default function Layout({ children }) {
 						<Link
 							href='/reports'
 							prefetch={true}
-							className={`flex items-center p-1 text-gray-700 ${
-								isActive('Reports') ? 'pointer-events-none border-b-2 border-black' : ''
+							className={`flex items-center p-1  ${
+								isActive('Reports')
+									? 'pointer-events-none border-b-2 border-black font-semibold'
+									: ''
 							}`}>
 							<li className='hover:bg-gray-200 p-2 rounded-lg'>
 								<p className=' md:inline'>Reports</p>
@@ -278,8 +321,8 @@ export default function Layout({ children }) {
 						</Link>
 					</ul>
 				</div>
-				<div className='flex-1 w-screen lg:w-full'>
-					<main className='w-full bg-[#fafafa]'>{children}</main>
+				<div className='flex w-full h-full 	lg:w-full'>
+					<main className='w-full h-full lg:w-full'>{children}</main>
 				</div>
 			</header>
 		</div>

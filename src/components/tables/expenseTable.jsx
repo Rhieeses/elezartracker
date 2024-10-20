@@ -93,10 +93,15 @@ export default function ExpenseTable({
 		});
 	}, [sortDescriptor, items]);
 
-	const renderCell = (user, columnKey) => {
+	const renderCell = (user, columnKey, index) => {
+		if (!user) return null; // Safety check in case `user` is null or undefined
+
 		const cellValue = user[columnKey];
+		var rowNumber = (page - 1) * rowsPerPage + index + 1;
 
 		switch (columnKey) {
+			case 'no':
+				return rowNumber;
 			case 'vendor_name':
 				return cellValue ? (
 					<User
@@ -104,14 +109,19 @@ export default function ExpenseTable({
 						classNames={{
 							description: 'text-default-500',
 						}}
-						description='5/12 payments paid'
+						description='Vendor'
 						name={cellValue}></User>
 				) : (
 					<em className='text-default-500 text-sm'>[vendor not found]</em>
 				);
 
 			case 'expense_description':
-				return formatDescription(cellValue);
+				return (
+					<div className='flex gap-2'>
+						<span className='material-symbols-outlined'>receipt_long</span>
+						{formatDescription(cellValue)}
+					</div>
+				);
 
 			case 'project_name':
 				return cellValue ? (
@@ -123,7 +133,12 @@ export default function ExpenseTable({
 			case 'invoiceNo':
 				return '#' + cellValue;
 			case 'purchase_date':
-				return formatDate(cellValue);
+				return (
+					<div className='flex items-center gap-1'>
+						<span className='material-symbols-outlined text-slate-500'>calendar_today</span>
+						{formatDate(cellValue)}
+					</div>
+				);
 
 			case 'purchase_amount':
 				return formatNumber(cellValue);
@@ -131,28 +146,23 @@ export default function ExpenseTable({
 			case 'actions':
 				return (
 					<div className='relative flex items-center gap-2 justify-center'>
-						<Tooltip content='View'>
-							<Button
-								isIconOnly
-								color='primary'
-								variant='flat'
-								onPress={() => handleRowChange(user.id)}>
-								<span className='material-symbols-outlined text-lg cursor-pointer active:opacity-50'>
-									visibility
-								</span>
-							</Button>
-						</Tooltip>
-						<Tooltip content='Delete'>
-							<Button
-								isIconOnly
-								color='danger'
-								variant='flat'
-								onPress={() => handleRowDelete(user.id)}>
+						<Button
+							variant='bordered'
+							className='font-bold hover:scale-105'
+							onPress={() => handleRowChange(user.id)}>
+							View
+						</Button>
+						<Button
+							isIconOnly
+							variant='solid'
+							className='bg-black text-white'
+							onPress={() => handleRowDelete(user.id)}
+							startContent={
 								<span className='material-symbols-outlined text-lg cursor-pointer active:opacity-50'>
 									delete
 								</span>
-							</Button>
-						</Tooltip>
+							}
+						/>
 					</div>
 				);
 			default:
@@ -208,9 +218,10 @@ export default function ExpenseTable({
 									}
 									size='md'
 									color='default'
-									variant='flat'
+									className='font-semibold'
 									disableRipple
 									disableAnimations
+									variant='bordered'
 									radius='sm'>
 									Type
 								</Button>
@@ -241,11 +252,12 @@ export default function ExpenseTable({
 									}
 									size='md'
 									color='default'
-									variant='flat'
+									className='font-semibold'
 									disableRipple
 									disableAnimations
+									variant='bordered'
 									radius='sm'>
-									Columns
+									Filters
 								</Button>
 							</DropdownTrigger>
 							<DropdownMenu
@@ -298,32 +310,15 @@ export default function ExpenseTable({
 		return (
 			<div>
 				<div className='flex justify-center items-center py-4 space-x-1 '>
-					<Button
-						isDisabled={pages === 1}
-						size='md'
-						variant='flat'
-						className='bg-black text-white'
-						onPress={onPreviousPage}>
-						Previous
-					</Button>
 					<Pagination
 						isCompact
 						showControls
 						showShadow
-						color='primary'
+						color='default'
 						page={page}
 						total={pages}
 						onChange={setPage}
 					/>
-
-					<Button
-						isDisabled={pages === 1}
-						size='md'
-						variant='flat'
-						className='bg-black text-white'
-						onPress={onNextPage}>
-						Next
-					</Button>
 				</div>
 				<div className='flex justify-end items-center'>
 					<label className='flex items-center text-default-400 text-small'>
@@ -363,7 +358,9 @@ export default function ExpenseTable({
 				sortDescriptor={sortDescriptor}
 				topContentPlacement='outside'
 				onSelectionChange={setSelectedKeys}
-				onSortChange={setSortDescriptor}>
+				onSortChange={setSortDescriptor}
+				classNames={{ th: 'bg-slate-900 text-white', td: 'border-b-1' }}
+				className='p-2 w-full rounded-none'>
 				<TableHeader columns={headerColumns}>
 					{(column) => (
 						<TableColumn
@@ -374,14 +371,18 @@ export default function ExpenseTable({
 						</TableColumn>
 					)}
 				</TableHeader>
-				<TableBody
-					emptyContent={'No expense found'}
-					items={sortedItems}>
-					{(item) => (
-						<TableRow key={item.id}>
-							{(columnKey) => <TableCell>{renderCell(item, columnKey)}</TableCell>}
-						</TableRow>
-					)}
+				<TableBody emptyContent={'No expenses found'}>
+					{sortedItems && sortedItems.length > 0
+						? sortedItems.map((item, index) =>
+								item ? (
+									<TableRow key={item.id}>
+										{(columnKey) => (
+											<TableCell>{renderCell(item, columnKey, index)}</TableCell>
+										)}
+									</TableRow>
+								) : null,
+						  )
+						: null}
 				</TableBody>
 			</Table>
 		</>

@@ -19,7 +19,12 @@ import {
 	Tooltip,
 } from '@nextui-org/react';
 import { useState, useMemo, useCallback, useEffect } from 'react';
-import { capitalizeOnlyFirstLetter, formatNumber, formatDateTime } from '@/utils/inputFormatter';
+import {
+	capitalizeOnlyFirstLetter,
+	formatNumber,
+	formatDateTime,
+	formatNumberDecimal,
+} from '@/utils/inputFormatter';
 import { transactionColumns } from '@/backend/data/dataHooks';
 import { Search } from '@/components/ui/search';
 
@@ -90,10 +95,15 @@ export default function SalesTable({
 		});
 	}, [sortDescriptor, items]);
 
-	const renderCell = (user, columnKey) => {
+	const renderCell = (user, columnKey, index) => {
+		if (!user) return null;
+
 		const cellValue = user[columnKey];
+		var rowNumber = (page - 1) * rowsPerPage + index + 1;
 
 		switch (columnKey) {
+			case 'no':
+				return rowNumber;
 			case 'name':
 				return cellValue ? (
 					<User
@@ -101,7 +111,7 @@ export default function SalesTable({
 						classNames={{
 							description: 'text-default-500',
 						}}
-						description='5/12 payments paid'
+						description='Client'
 						name={user.name}></User>
 				) : (
 					<em className='text-default-500 text-sm'>[client not found]</em>
@@ -110,46 +120,59 @@ export default function SalesTable({
 			case 'invoice_id':
 				return '#' + cellValue;
 			case 'payment_date':
-				return formatDateTime(cellValue);
+				return (
+					<div className='flex items-center gap-1'>
+						<span className='material-symbols-outlined text-slate-500'>calendar_today</span>
+						{formatDateTime(cellValue)}
+					</div>
+				);
+
+			case 'payment_description':
+				return (
+					<div className='flex items-center justify-start w-full gap-2'>
+						<span
+							className='material-symbols-sharp text-slate-700'
+							style={{ fontSize: '35px' }}>
+							receipt
+						</span>
+						<div className='w-8/12'>
+							<p className='text-sm'>#{user.invoice_id}</p>
+							<div className='flex w-full justify-between'>
+								<p className='font-semibold'>{cellValue}</p>
+								<div className='flex flex-col items-center'>
+									<strong className='font-semibold'>
+										{formatNumberDecimal(user.payment_amount)}
+									</strong>
+									<p className='text-default-500 text-sm'>Amount</p>
+								</div>
+							</div>
+						</div>
+					</div>
+				);
 
 			case 'payment_amount':
 				return formatNumber(cellValue);
 
-			case 'status':
-				return (
-					<Chip
-						className='capitalize border-none gap-1 text-default-600'
-						color={statusColorMap[user.status]}
-						size='sm'
-						variant='dot'>
-						{cellValue}
-					</Chip>
-				);
 			case 'actions':
 				return (
-					<div className='relative flex items-center gap-2 justify-center'>
-						<Tooltip content='Details'>
-							<Button
-								isIconOnly
-								color='primary'
-								variant='flat'
-								onPress={() => handleRowChange(user.id)}>
-								<span className='material-symbols-outlined text-lg cursor-pointer active:opacity-50'>
-									visibility
-								</span>
-							</Button>
-						</Tooltip>
-						<Tooltip content='Delete'>
-							<Button
-								isIconOnly
-								color='danger'
-								variant='flat'
-								onPress={() => handleRowDelete(user.id)}>
+					<div className=' flex items-center gap-2 justify-end'>
+						<Button
+							variant='bordered'
+							className='font-bold hover:scale-105'
+							onPress={() => handleRowChange(user.id)}>
+							View
+						</Button>
+						<Button
+							isIconOnly
+							variant='solid'
+							className='bg-black text-white'
+							onPress={() => handleRowDelete(user.id)}
+							startContent={
 								<span className='material-symbols-outlined text-lg cursor-pointer active:opacity-50'>
 									delete
 								</span>
-							</Button>
-						</Tooltip>
+							}
+						/>
 					</div>
 				);
 			default:
@@ -201,11 +224,12 @@ export default function SalesTable({
 									}
 									size='md'
 									color='default'
-									variant='flat'
+									className='font-semibold'
 									disableRipple
 									disableAnimations
+									variant='bordered'
 									radius='sm'>
-									Status
+									Type
 								</Button>
 							</DropdownTrigger>
 							<DropdownMenu
@@ -234,11 +258,12 @@ export default function SalesTable({
 									}
 									size='md'
 									color='default'
-									variant='flat'
+									className='font-semibold'
 									disableRipple
 									disableAnimations
+									variant='bordered'
 									radius='sm'>
-									Columns
+									Filters
 								</Button>
 							</DropdownTrigger>
 							<DropdownMenu
@@ -282,14 +307,6 @@ export default function SalesTable({
 		return (
 			<div>
 				<div className='flex justify-center items-center py-4 space-x-1 '>
-					<Button
-						isDisabled={pages === 1}
-						size='md'
-						variant='flat'
-						className='bg-black text-white'
-						onPress={onPreviousPage}>
-						Previous
-					</Button>
 					<Pagination
 						isCompact
 						showControls
@@ -299,15 +316,6 @@ export default function SalesTable({
 						total={pages}
 						onChange={setPage}
 					/>
-
-					<Button
-						isDisabled={pages === 1}
-						size='md'
-						variant='flat'
-						className='bg-black text-white'
-						onPress={onNextPage}>
-						Next
-					</Button>
 				</div>
 				<div className='flex justify-end items-center'>
 					<label className='flex items-center text-default-400 text-small'>
@@ -339,7 +347,7 @@ export default function SalesTable({
 				{topContent}
 			</div>
 			<Table
-				aria-label='Example table with custom cells, pagination and sorting'
+				aria-label='Tablesales'
 				removeWrapper
 				bottomContent={bottomContent}
 				bottomContentPlacement='outside'
@@ -347,7 +355,9 @@ export default function SalesTable({
 				sortDescriptor={sortDescriptor}
 				topContentPlacement='outside'
 				onSelectionChange={setSelectedKeys}
-				onSortChange={setSortDescriptor}>
+				onSortChange={setSortDescriptor}
+				classNames={{ th: 'bg-slate-900 text-white', td: 'border-b-1' }}
+				className='p-2 w-full rounded-none'>
 				<TableHeader columns={headerColumns}>
 					{(column) => (
 						<TableColumn
@@ -358,14 +368,18 @@ export default function SalesTable({
 						</TableColumn>
 					)}
 				</TableHeader>
-				<TableBody
-					emptyContent={'No payment found'}
-					items={sortedItems}>
-					{(item) => (
-						<TableRow key={item.id}>
-							{(columnKey) => <TableCell>{renderCell(item, columnKey)}</TableCell>}
-						</TableRow>
-					)}
+				<TableBody emptyContent={'No receivable found'}>
+					{sortedItems && sortedItems.length > 0
+						? sortedItems.map((item, index) =>
+								item ? (
+									<TableRow key={item.id}>
+										{(columnKey) => (
+											<TableCell>{renderCell(item, columnKey, index)}</TableCell>
+										)}
+									</TableRow>
+								) : null,
+						  )
+						: null}
 				</TableBody>
 			</Table>
 		</>

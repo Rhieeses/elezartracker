@@ -64,14 +64,13 @@ export default function ConfirmModal({ isOpen, onOpenChange, projectId, clientId
 						</ModalBody>
 						<ModalFooter>
 							<Button
-								color='danger'
-								variant='solid'
+								variant='bordered'
 								onPress={onClose}>
 								Cancel
 							</Button>
 							<Button
-								variant='flat'
-								color='primary'
+								variant='solid'
+								className='bg-red-900 text-white'
 								onPress={handleDelete}>
 								Confirm
 							</Button>

@@ -14,6 +14,23 @@ export const columns = [
 	{ name: 'ACTIONS', uid: 'actions' },
 ];
 
+export const columnsReceivables = [
+	{ name: 'No', uid: 'no' },
+	{ name: 'DESCRIPTION', uid: 'description' },
+	{ name: 'PAID', uid: 'paid_amount', sortable: true },
+	{ name: 'BALANCE', uid: 'balance', sortable: true },
+	{ name: 'CLIENT NAME', uid: 'name', sortable: true },
+	{ name: 'DUE DATE', uid: 'due_date', sortable: true },
+	{ name: 'STATUS', uid: 'status', sortable: true },
+	{ name: 'ACTIONS', uid: 'actions' },
+];
+
+export const paymentOptions = [
+	{ name: 'BANK', uid: 'BANK' },
+	{ name: 'GCASH', uid: 'GCASH' },
+	{ name: 'CASH', uid: 'CASH' },
+];
+
 export const statusOptions = [
 	{ name: 'Paid', uid: 'FULLY PAID' },
 	{ name: 'Unpaid', uid: 'UNPAID' },
@@ -28,8 +45,9 @@ export const statusColorMap = {
 //
 
 //expense table
-
 export const columnExpense = [
+	{ name: 'NO.', uid: 'no' },
+
 	{ name: 'INVOICE', uid: 'invoiceNo' },
 	{ name: 'VENDOR', uid: 'vendor_name', sortable: true },
 	{ name: 'PROJECT', uid: 'project_name', sortable: true },
@@ -40,14 +58,16 @@ export const columnExpense = [
 	{ name: 'ACTIONS', uid: 'actions' },
 ];
 
-export const paymentOptions = [
-	{ name: 'Cash', uid: 'CASH' },
-	{ name: 'Bank Transfer', uid: 'BANK TRANSFER' },
+export const services = [
+	{ name: 'Tools And Equipment', uid: 'Tools And Equipment' },
+	{ name: 'Food', uid: 'Food' },
+	{ name: 'Others', uid: 'Others' },
 ];
 
 //expense project table
 
 export const columnProjectExpense = [
+	{ name: 'No', uid: 'no' },
 	{ name: 'INVOICE', uid: 'invoiceNo' },
 	{ name: 'VENDOR', uid: 'vendor_name', sortable: true },
 	{ name: 'DESCRIPTION', uid: 'expense_description' },
@@ -58,6 +78,7 @@ export const columnProjectExpense = [
 ];
 
 export const transactionColumnsProject = [
+	{ name: 'No', uid: 'no' },
 	{ name: 'INVOICE', uid: 'invoice_id' },
 	{ name: 'DATE', uid: 'transaction_date', sortable: true },
 	{ name: 'CLIENT/VENDOR', uid: 'name', sortable: true },
@@ -78,22 +99,34 @@ export const paymentType = [
 ];
 
 export const transactionColumns = [
-	{ name: 'INVOICE', uid: 'invoice_id' },
+	{ name: 'No', uid: 'no' },
+	{ name: 'DESCRIPTION', uid: 'payment_description', sortable: true },
 	{ name: 'CLIENT', uid: 'name' },
-	{ name: 'DESCRIPTION', uid: 'payment_description' },
 	{ name: 'DATE', uid: 'payment_date', sortable: true },
-	{ name: 'AMOUNT', uid: 'payment_amount', sortable: true },
 	{ name: 'PAYMENT TYPE', uid: 'payment_type', sortable: true },
 	{ name: 'ACTIONS', uid: 'actions' },
 ];
 
 export const transactionClientColumns = [
+	{ name: 'No', uid: 'no' },
 	{ name: 'INVOICE', uid: 'invoice_id' },
 	{ name: 'PROJECT', uid: 'project_name' },
 	{ name: 'DESCRIPTION', uid: 'payment_description' },
 	{ name: 'DATE', uid: 'payment_date', sortable: true },
 	{ name: 'AMOUNT', uid: 'payment_amount', sortable: true },
 	{ name: 'PAYMENT TYPE', uid: 'payment_type', sortable: true },
+];
+
+//vendor table
+export const vendorColumns = [
+	{ name: 'No', uid: 'no' },
+	{ name: 'NAME', uid: 'vendor_name', sortable: true },
+	{ name: 'CONTACT', uid: 'vendor_contactNo' },
+	{ name: 'ADDRESS', uid: 'vendor_address' },
+	{ name: 'SERVICES', uid: 'vendor_services' },
+	{ name: 'TOTAL ORDERS', uid: 'total_expenses' },
+	{ name: 'TOTAL PURCHASED', uid: 'total_purchase_amount' },
+	{ name: 'ACTIONS', uid: 'actions' },
 ];
 
 export const ProjectData = () => {
@@ -242,6 +275,7 @@ export const ProjectDataId = ({ projectId }) => {
 		setLoading(true);
 		try {
 			const projectsResponse = await axios.get(`/api/project-details/${projectId}`);
+
 			setProject(projectsResponse.data);
 		} catch (err) {
 			console.error('Error fetching your project data:', err);
@@ -593,4 +627,30 @@ export const AllTransactions = () => {
 	}, []);
 
 	return { transactions, loading, refetch: fetchAllTransactions };
+};
+
+export const TopVendorData = ({ projectId }) => {
+	const [topVendor, setTopVendor] = useState([null]);
+	const [loading, setLoading] = useState(true);
+	const [error, setError] = useState(null);
+
+	const fetchTopVendorData = useCallback(async () => {
+		setLoading(true);
+		try {
+			const topVendorRes = await axios.get(`/api/top-vendor/${projectId}`);
+			setTopVendor(topVendorRes.data);
+		} catch (err) {
+			console.error('Error fetching your top vendor data:', err);
+			setError(err);
+		} finally {
+			setLoading(false);
+		}
+	}, [projectId]);
+
+	useEffect(() => {
+		if (projectId) {
+			fetchTopVendorData();
+		}
+	}, [fetchTopVendorData, projectId]);
+	return { topVendor, loading, error };
 };

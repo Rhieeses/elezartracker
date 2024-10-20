@@ -21,12 +21,7 @@ import { useState, useMemo, useCallback, useEffect } from 'react';
 import { capitalizeOnlyFirstLetter, formatNumber, formatDate } from '@/utils/inputFormatter';
 import { transactionClientColumns, paymentType } from '@/backend/data/dataHooks';
 
-export default function TransactionClientTable({
-	clientTransaction,
-	filterValue,
-	onSearchChange,
-	onRowSelect,
-}) {
+export default function TransactionClientTable({ clientTransaction, filterValue }) {
 	const [selectedKeys, setSelectedKeys] = useState(new Set([]));
 	const [visibleColumns, setVisibleColumns] = useState('all');
 	const [statusFilter, setStatusFilter] = useState('all');
@@ -74,10 +69,15 @@ export default function TransactionClientTable({
 		});
 	}, [sortDescriptor, items]);
 
-	const renderCell = useCallback((user, columnKey) => {
+	const renderCell = useCallback((user, columnKey, index) => {
+		if (!user) return null;
+
 		const cellValue = user[columnKey];
+		var rowNumber = (page - 1) * rowsPerPage + index + 1;
 
 		switch (columnKey) {
+			case 'no':
+				return rowNumber;
 			case 'vendor_name':
 				return (
 					<User
@@ -94,7 +94,12 @@ export default function TransactionClientTable({
 			case 'invoice_id':
 				return '#' + cellValue;
 			case 'payment_date':
-				return formatDate(cellValue);
+				return (
+					<div className='flex items-center gap-1'>
+						<span className='material-symbols-outlined text-slate-500'>calendar_today</span>
+						{formatDate(cellValue)}
+					</div>
+				);
 
 			case 'payment_amount':
 				return formatNumber(cellValue);
@@ -103,18 +108,6 @@ export default function TransactionClientTable({
 				return cellValue;
 		}
 	}, []);
-
-	const onNextPage = useCallback(() => {
-		if (page < pages) {
-			setPage(page + 1);
-		}
-	}, [page, pages]);
-
-	const onPreviousPage = useCallback(() => {
-		if (page > 1) {
-			setPage(page - 1);
-		}
-	}, [page]);
 
 	const onRowsPerPageChange = useCallback((e) => {
 		setRowsPerPage(Number(e.target.value));
@@ -133,12 +126,16 @@ export default function TransactionClientTable({
 						<Dropdown>
 							<DropdownTrigger className='hidden sm:flex'>
 								<Button
-									startContent={
-										<span className='material-symbols-outlined'>filter_list</span>
+									endContent={
+										<span className='material-symbols-outlined'>keyboard_arrow_down</span>
 									}
 									size='md'
-									className='bg-black text-white'
-									variant='flat'>
+									color='default'
+									className='font-semibold'
+									disableRipple
+									disableAnimations
+									variant='bordered'
+									radius='sm'>
 									Type
 								</Button>
 							</DropdownTrigger>
@@ -163,13 +160,17 @@ export default function TransactionClientTable({
 						<Dropdown>
 							<DropdownTrigger className='hidden sm:flex'>
 								<Button
-									startContent={
-										<span className='material-symbols-outlined'>filter_list</span>
+									endContent={
+										<span className='material-symbols-outlined'>keyboard_arrow_down</span>
 									}
 									size='md'
-									className='bg-black text-white'
-									variant='flat'>
-									Columns
+									color='default'
+									className='font-semibold'
+									disableRipple
+									disableAnimations
+									variant='bordered'
+									radius='sm'>
+									Filters
 								</Button>
 							</DropdownTrigger>
 							<DropdownMenu
@@ -210,39 +211,18 @@ export default function TransactionClientTable({
 	const bottomContent = useMemo(() => {
 		return (
 			<div className='flex justify-center items-center py-5 space-x-1 '>
-				<Button
-					isDisabled={pages === 1}
-					size='md'
-					variant='flat'
-					className='bg-black text-white'
-					onPress={onPreviousPage}>
-					Previous
-				</Button>
 				<Pagination
 					isCompact
 					showControls
 					showShadow
-					color='primary'
+					color='default'
 					page={page}
 					total={pages}
 					onChange={setPage}
 				/>
-
-				<Button
-					isDisabled={pages === 1}
-					size='md'
-					variant='flat'
-					className='bg-black text-white'
-					onPress={onNextPage}>
-					Next
-				</Button>
 			</div>
 		);
-	}, [page, pages, onPreviousPage, onNextPage]);
-
-	const handleRowChange = (row) => {
-		onRowSelect(row);
-	};
+	}, [page, pages]);
 
 	return (
 		<Table
@@ -256,7 +236,9 @@ export default function TransactionClientTable({
 			topContent={topContent}
 			topContentPlacement='outside'
 			onSelectionChange={setSelectedKeys}
-			onSortChange={setSortDescriptor}>
+			onSortChange={setSortDescriptor}
+			classNames={{ th: 'bg-slate-900 text-white', td: 'border-b-1' }}
+			className='p-2 w-full rounded-none'>
 			<TableHeader columns={headerColumns}>
 				{(column) => (
 					<TableColumn
@@ -270,11 +252,17 @@ export default function TransactionClientTable({
 			<TableBody
 				emptyContent={'No expense for this project is found'}
 				items={sortedItems}>
-				{(item) => (
-					<TableRow key={item.id}>
-						{(columnKey) => <TableCell>{renderCell(item, columnKey)}</TableCell>}
-					</TableRow>
-				)}
+				{sortedItems && sortedItems.length > 0
+					? sortedItems.map((item, index) =>
+							item ? (
+								<TableRow key={item.id}>
+									{(columnKey) => (
+										<TableCell>{renderCell(item, columnKey, index)}</TableCell>
+									)}
+								</TableRow>
+							) : null,
+					  )
+					: null}
 			</TableBody>
 		</Table>
 	);

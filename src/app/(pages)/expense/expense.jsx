@@ -184,8 +184,8 @@ export default function ExpenseContent() {
 									</ModalBody>
 									<ModalFooter>
 										<Button
-											color='danger'
-											variant='flat'
+											color='none'
+											variant='bordered'
 											size='lg'
 											onClick={onClose}>
 											Cancel
@@ -291,8 +291,9 @@ export default function ExpenseContent() {
 							</ModalBody>
 							<ModalFooter>
 								<Button
-									color='danger'
-									variant='flat'
+									color='none'
+									variant='bordered'
+									size='lg'
 									onPress={onOpenChangeCreate}>
 									Cancel
 								</Button>

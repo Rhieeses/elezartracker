@@ -1,6 +1,6 @@
 import ProjectsContent from './project';
 export const metadata = {
-	title: 'Capstone | Projects',
+	title: 'Projects',
 	description: 'Capstone',
 };
 

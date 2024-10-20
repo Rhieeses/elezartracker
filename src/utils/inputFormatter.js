@@ -12,6 +12,10 @@ const capitalizeFirstLetter = (input) => {
 		.join(' ');
 };
 const capitalizeOnlyFirstLetter = (string) => {
+	if (string == null || typeof string !== 'string') return '';
+
+	if (string.trim() === '') return string;
+
 	if (!string) return '';
 	return string.charAt(0).toUpperCase() + string.slice(1);
 };
@@ -55,6 +59,32 @@ const calculateDateDifference = (startDate, endDate) => {
 	} else {
 		return `${diffDays} Days`;
 	}
+};
+
+const calculateDuration = (startDate, endDate) => {
+	const start = new Date(startDate);
+	const end = new Date(endDate);
+	const today = new Date(); // Get today's date
+
+	if (start <= today) {
+		//mag bilang kana
+		const daysFromToday = Math.ceil((today - start) / (1000 * 60 * 60 * 24));
+		if (daysFromToday === 1) {
+			return `${daysFromToday} Day`;
+		}
+		return `${daysFromToday} Days`;
+	} else if (start > today) {
+		return 'Starting soon!';
+	} else if (end === today) {
+		return 'Project Ended!';
+	}
+
+	//const diffTime = end - start;
+	//const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+	//const daysFromToday = Math.ceil((end - today) / (1000 * 60 * 60 * 24));
+
+	//return `${daysFromToday} Day`;
 };
 
 const formatDate = (dateString) => {
@@ -163,6 +193,21 @@ function checkStatus(startDate, endDate) {
 	}
 }
 
+const calculatePercentageIncrease = (currentMonthValue, lastMonthValue) => {
+	// Convert lastMonthValue to a number
+	const last = Number(lastMonthValue); // or use parseFloat(lastMonthValue)
+
+	// Handle case when last month value is 0
+	if (last === 0) {
+		return currentMonthValue > 0 ? '+100% from last month' : '0%';
+	}
+
+	// Calculate the percentage increase
+	const increase = Math.round(((currentMonthValue - last) / last) * 100);
+	const sign = increase >= 0 ? '+' : '';
+	return `${sign}${increase}% from last month`;
+};
+
 const getTextColor = (type) => {
 	if (type === 'PAYMENT') {
 		return 'text-green-600';
@@ -180,11 +225,13 @@ module.exports = {
 	formatNumberDecimal,
 	removeFormatting,
 	calculateDateDifference,
+	calculateDuration,
 	formatDate,
 	formatDateTime,
 	generateRandomInvoiceNumber,
 	calculateProgressPayment,
 	formatStatusEx,
 	checkStatus,
+	calculatePercentageIncrease,
 	getTextColor,
 };

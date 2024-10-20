@@ -12,72 +12,71 @@ export default function ClientViewPage({ params }) {
 	const clientId = params.clientId;
 	const { client, project, loading, refetch } = ClientDataId({ clientId });
 
-	return (
-		<Pagelayout clientId={clientId}>
-			<div className='h-fit w-full'>
-				{client && client.length > 0 ? (
-					client.map((clientItem) => (
-						<div
-							key={clientItem.id}
-							className='grid mb-8 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5 '>
-							<div className='col-span-5 bg-gray-200 h-[10rem] w-full relative'></div>
-							<div className='col-span-2 flex items-center relative -mt-[5rem] ml-10'>
-								<img
-									src={clientItem.client_profilePicture}
-									alt=''
-									className='bg-blue-100 rounded-full object-cover w-[200px] h-[200px] border-[1px] drop-shadow-xl border-white p-1'
-								/>
-								<div className='mt-7 ml-5'>
-									<h1 className='font-bold mt-2'>{`${clientItem.client_firstName} ${clientItem.client_middleName} ${clientItem.client_lastName}`}</h1>
-									<p className='mt-1 text-slate-400'>{clientItem.client_email}</p>
-								</div>
-							</div>
-
-							<div className='flex items-center justify-start gap-3 col-span-3  ml-10 mr-10'>
-								<Card
-									className='border-none w-full'
-									shadow='sm'>
-									<CardBody>
-										<div className='grid grid-cols-6 md:grid-cols-12 gap-6 md:gap-4 items-center justify-center'>
-											<div className='flex flex-col col-span-6 md:col-span-8'>
-												<div className='flex justify-between items-start'>
-													<div className='flex-1 space-y-5'>
-														<IconText
-															iconText='email'
-															labelText='Email'
-															contentText={clientItem.client_email}
-														/>
-														<IconText
-															iconText='calendar_today'
-															labelText='Date joined'
-															contentText={formatDate(clientItem.client_dateJoined)}
-														/>
-														<IconText
-															iconText='call'
-															labelText='Contact no'
-															contentText={clientItem.client_contactNo}
-														/>
-
-														<IconText
-															iconText='home_pin'
-															labelText='Address'
-															contentText={clientItem.client_address}
-														/>
-													</div>
-												</div>
-											</div>
-										</div>
-									</CardBody>
-								</Card>
-							</div>
+	const clientheader = () => {
+		return client && client.length > 0 ? (
+			client.map((clientItem) => (
+				<div
+					key={clientItem.id}
+					className='grid mb-8 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5'>
+					<div className='col-span-5 bg-gray-200 h-[10rem] w-full relative'></div>
+					<div className='col-span-2 flex items-center relative -mt-[5rem] ml-10'>
+						<img
+							src={clientItem.client_profilePicture}
+							alt=''
+							className='rounded-full object-cover w-[250px] h-[250px] border-[1px] p-1'
+						/>
+						<div className='mt-7 ml-5'>
+							<h1 className='font-bold mt-2'>{`${clientItem.client_firstName} ${clientItem.client_middleName} ${clientItem.client_lastName}`}</h1>
+							<p className='mt-1 text-slate-400'>{clientItem.client_email}</p>
 						</div>
-					))
-				) : (
-					<div className='col-span-5'>
-						<p className='text-default-500'>No projects found</p>
 					</div>
-				)}
 
+					<div className='flex items-center justify-start gap-3 col-span-3 ml-10 mr-10'>
+						<Card
+							className='border-none w-full shadow-none'
+							shadow='sm'>
+							<CardBody>
+								<div className='flex items-center justify-center'>
+									<div className='flex flex-col space-y-5'>
+										<IconText
+											iconText='email'
+											labelText='Email'
+											contentText={clientItem.client_email}
+										/>
+										<IconText
+											iconText='calendar_today'
+											labelText='Date joined'
+											contentText={formatDate(clientItem.client_dateJoined)}
+										/>
+										<IconText
+											iconText='call'
+											labelText='Contact no'
+											contentText={clientItem.client_contactNo}
+										/>
+										<IconText
+											iconText='home_pin'
+											labelText='Address'
+											contentText={clientItem.client_address}
+										/>
+									</div>
+								</div>
+							</CardBody>
+						</Card>
+					</div>
+				</div>
+			))
+		) : (
+			<div className='col-span-5'>
+				<p className='text-default-500'>No projects found</p>
+			</div>
+		);
+	};
+
+	return (
+		<Pagelayout
+			clientId={clientId}
+			clientheader={clientheader()}>
+			<div className='h-fit w-full'>
 				<div className='m-10'>
 					<div className='space-y-2 mb-5 border-b-[1px] border-slate-400 pb-5'>
 						<p className='font-bold text-xl'>Projects</p>

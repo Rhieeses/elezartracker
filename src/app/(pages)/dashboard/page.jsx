@@ -1,7 +1,7 @@
 import DashboardContent from './dashboard';
 
 export const metadata = {
-	title: 'Capstone | Dashboard',
+	title: 'Dashboard',
 	description: 'Capstone',
 };
 

@@ -1,12 +1,14 @@
 'use client';
 import { useState, useEffect } from 'react';
 import Pagelayout from '../pagelayout';
-import { Input, Spinner, Textarea, Button } from '@nextui-org/react';
+import { Input, Spinner, Textarea, Button, useDisclosure } from '@nextui-org/react';
 import { ClientDataId } from '@/backend/data/dataHooks';
+import ConfirmModal from '@/components/ui/confirmModal';
 
 export default function EditClient({ params }) {
 	const clientId = params.clientId;
 	const { client, project, loading, error, refetch } = ClientDataId({ clientId });
+	const { isOpen, onOpen, onOpenChange } = useDisclosure();
 
 	const [formData, setFormData] = useState({
 		clientId: clientId,
@@ -98,7 +100,23 @@ export default function EditClient({ params }) {
 			<div className='h-fit'>
 				<div className='bg-white rounded-lg'>
 					<form onSubmit={handleSubmit}>
-						<div className='grid grid-cols-1 gap-6 p-5 mt-4 font-semibold'>
+						<div className='grid grid-cols-1 gap-6 p-5 mt-0 font-semibold'>
+							<span className='flex justify-between'>
+								<h1 className='font-semibold'>Client details</h1>
+								<Button
+									radius='sm'
+									size='lg'
+									className='bg-rose-600 text-white'
+									onClick={onOpen}>
+									Delete
+								</Button>
+								<ConfirmModal
+									isOpen={isOpen}
+									onOpen={onOpen}
+									onOpenChange={onOpenChange}
+									projectId={clientId}
+								/>
+							</span>
 							<div className='flex flex-col-2'>
 								<div className='w-1/4'>
 									<p>Client name</p>
@@ -220,8 +238,9 @@ export default function EditClient({ params }) {
 							<div className='flex justify-end w-3/4'>
 								<div className='flex gap-5'>
 									<Button
-										color='primary'
 										size='lg'
+										radius='sm'
+										className='bg-black text-white'
 										type='submit'>
 										Save changes
 									</Button>

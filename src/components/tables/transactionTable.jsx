@@ -15,7 +15,6 @@ import {
 	DropdownItem,
 	User,
 	Pagination,
-	Tooltip,
 } from '@nextui-org/react';
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import {
@@ -32,6 +31,14 @@ export default function TransactionTable({
 	onSearchChange,
 	onRowSelect,
 }) {
+	function formatDescription(description) {
+		return description.split('\n').map((line, index) => (
+			<React.Fragment key={index}>
+				{line}
+				<br />
+			</React.Fragment>
+		));
+	}
 	const [selectedKeys, setSelectedKeys] = useState(new Set([]));
 	const [visibleColumns, setVisibleColumns] = useState('all');
 	const [statusFilter, setStatusFilter] = useState('all');
@@ -102,10 +109,15 @@ export default function TransactionTable({
 		});
 	}, [sortDescriptor, items]);
 
-	const renderCell = useCallback((user, columnKey) => {
+	const renderCell = useCallback((user, columnKey, index) => {
+		if (!user) return null;
+
 		const cellValue = user[columnKey];
+		var rowNumber = (page - 1) * rowsPerPage + index + 1;
 
 		switch (columnKey) {
+			case 'no':
+				return rowNumber;
 			case 'name':
 				return (
 					<User
@@ -116,17 +128,28 @@ export default function TransactionTable({
 						name={cellValue}></User>
 				);
 
+			case 'description':
+				return (
+					<div className='flex gap-2'>
+						<span className='material-symbols-outlined'>description</span>
+						{formatDescription(cellValue)}
+					</div>
+				);
 			case 'invoice_id':
 				return '#' + cellValue;
 			case 'transaction_date':
-				return formatDate(cellValue);
+				return (
+					<div className='flex items-center gap-1'>
+						<span className='material-symbols-outlined text-slate-500'>calendar_today</span>
+						{formatDate(cellValue)}
+					</div>
+				);
 
-			case 'amount':
 			case 'debit':
-				return <p className='text-red-500'>{formatNumber(cellValue)}</p>;
+				return cellValue ? <p className='text-red-500'>- {formatNumber(cellValue)}</p> : null;
 
 			case 'credit':
-				return <p className='text-green-700'>{formatNumber(cellValue)}</p>;
+				return cellValue ? <p className='text-green-700'>+ {formatNumber(cellValue)}</p> : null;
 
 			default:
 				return cellValue;
@@ -167,9 +190,10 @@ export default function TransactionTable({
 									}
 									size='md'
 									color='default'
-									variant='flat'
+									className='font-semibold'
 									disableRipple
 									disableAnimations
+									variant='bordered'
 									radius='sm'>
 									Type
 								</Button>
@@ -200,11 +224,12 @@ export default function TransactionTable({
 									}
 									size='md'
 									color='default'
-									variant='flat'
+									className='font-semibold'
 									disableRipple
 									disableAnimations
+									variant='bordered'
 									radius='sm'>
-									Columns
+									Filters
 								</Button>
 							</DropdownTrigger>
 							<DropdownMenu
@@ -232,24 +257,21 @@ export default function TransactionTable({
 	const bottomContent = useMemo(() => {
 		return (
 			<div>
-				<div className='flex items-end justify-end w-full bg-default-200 space-x-40 p-5'>
-				<div>
-					<p>Total Debit <strong className='text-red-500'>{formatNumberDecimal(totalDebit)}</strong></p>
-				</div>
-				<div>
-					<p>Total Credit: <strong className='text-green-500'> {formatNumberDecimal(totalCredit)}</strong></p>
-					
-				</div>
+				<div className='flex items-end justify-end w-full space-x-[9rem] p-1 pr-[5%]'>
+					<div>
+						<span>
+							<p className=''>Debit</p>
+							<strong className='text-red-500'>{formatNumberDecimal(totalDebit)}</strong>
+						</span>
+					</div>
+					<div>
+						<span>
+							<p className=''>Credit</p>
+							<strong className='text-green-500'> {formatNumberDecimal(totalCredit)}</strong>
+						</span>
+					</div>
 				</div>
 				<div className='flex justify-center items-center py-4 space-x-1 '>
-					<Button
-						isDisabled={pages === 1}
-						size='md'
-						variant='flat'
-						className='bg-black text-white'
-						onPress={onPreviousPage}>
-						Previous
-					</Button>
 					<Pagination
 						isCompact
 						showControls
@@ -259,15 +281,6 @@ export default function TransactionTable({
 						total={pages}
 						onChange={setPage}
 					/>
-
-					<Button
-						isDisabled={pages === 1}
-						size='md'
-						variant='flat'
-						className='bg-black text-white'
-						onPress={onNextPage}>
-						Next
-					</Button>
 				</div>
 				<div className='flex justify-end items-center'>
 					<label className='flex items-center text-default-400 text-small'>
@@ -307,7 +320,9 @@ export default function TransactionTable({
 				sortDescriptor={sortDescriptor}
 				topContentPlacement='outside'
 				onSelectionChange={setSelectedKeys}
-				onSortChange={setSortDescriptor}>
+				onSortChange={setSortDescriptor}
+				classNames={{ th: 'bg-slate-900 text-white', td: 'border-b-1' }}
+				className='p-2 w-full rounded-none'>
 				<TableHeader columns={headerColumns}>
 					{(column) => (
 						<TableColumn
@@ -321,11 +336,17 @@ export default function TransactionTable({
 				<TableBody
 					emptyContent={'No Transaction for this project is found'}
 					items={sortedItems}>
-					{(item) => (
-						<TableRow key={item.id}>
-							{(columnKey) => <TableCell>{renderCell(item, columnKey)}</TableCell>}
-						</TableRow>
-					)}
+					{sortedItems && sortedItems.length > 0
+						? sortedItems.map((item, index) =>
+								item ? (
+									<TableRow key={item.id}>
+										{(columnKey) => (
+											<TableCell>{renderCell(item, columnKey, index)}</TableCell>
+										)}
+									</TableRow>
+								) : null,
+						  )
+						: null}
 				</TableBody>
 			</Table>
 		</>

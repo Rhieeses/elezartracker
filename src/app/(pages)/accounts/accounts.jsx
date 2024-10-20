@@ -89,23 +89,18 @@ export default function AccountsContent() {
 	const handleInput = (field) => (event) => {
 		let value = event.target.value || '';
 
-		// Special handling for transferAmount
 		if (field === 'transferAmount') {
-			// Allow only digits and a single decimal point
 			const rawValue = value.replace(/[^0-9.]/g, '');
 
-			// Ensure only one decimal point exists
 			const parts = rawValue.split('.');
 			if (parts.length > 2) {
-				return; // Ignore the input if there are more than one decimal point
+				return;
 			}
 
-			// Format the integer part of the number
 			let formattedValue = rawValue;
 			if (parts[1] === undefined || parts[1] !== '') {
-				const numericValue = parseFloat(parts[0]); // Parse the integer part
+				const numericValue = parseFloat(parts[0]);
 				if (!isNaN(numericValue)) {
-					// Format only the integer part
 					formattedValue =
 						formatNumber(numericValue) + (parts[1] !== undefined ? '.' + parts[1] : '');
 				}
@@ -121,7 +116,6 @@ export default function AccountsContent() {
 			value = formattedValue;
 		}
 
-		// Update form data for all fields
 		setFormData((prevData) => ({
 			...prevData,
 			[field]: value,
@@ -160,6 +154,12 @@ export default function AccountsContent() {
 				return formatDateTime(cellValue);
 			case 'amount':
 				return formatNumber(cellValue);
+			case 'status':
+				return cellValue === 'SUCCESSFUL' ? (
+					<p className='text-green-700'>{cellValue}</p>
+				) : (
+					<p className='text-red-500'>{cellValue}</p>
+				);
 
 			default:
 				return cellValue;
@@ -179,7 +179,7 @@ export default function AccountsContent() {
 						<h1 className='font-semibold tracking-wide text-3xl text-left'>Accounts</h1>
 					</div>
 					<div className='grid grid-cols-2 lg:grid-cols-4 gap-5 col-span-1 p-3'>
-						<Card className='bg-gradient-to-l from-purple-600 to-purple-800 p-2'>
+						<Card className='bg-gradient-to-l from-purple-900 to-black p-2'>
 							<CardHeader className='flex items-start justify-between'>
 								<span
 									className='material-symbols-outlined text-white col-span-2'
@@ -237,7 +237,7 @@ export default function AccountsContent() {
 						<div className='flex items-center justify-between'>
 							<h1>Transactions</h1>
 							<Button
-								color='secondary'
+								className='bg-black text-white'
 								startContent={<span className='material-symbols-outlined'>move_up</span>}
 								onPress={onOpen}>
 								Transfer fund
@@ -246,7 +246,8 @@ export default function AccountsContent() {
 
 						<Table
 							aria-label='Transaction table'
-							className='p-2'
+							classNames={{ th: 'bg-slate-900 text-white', td: 'border-b-1' }}
+							className='p-2 w-full rounded-none'
 							removeWrapper>
 							<TableHeader columns={columns}>
 								{(column) => <TableColumn key={column.key}>{column.label}</TableColumn>}

@@ -1,6 +1,6 @@
 import VendorsContent from './vendor';
 export const metadata = {
-	title: 'Capstone | Vendors',
+	title: 'Vendors',
 	description: 'Capstone',
 };
 

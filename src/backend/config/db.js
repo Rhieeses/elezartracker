@@ -1,26 +1,19 @@
-/**const dotenv = require('dotenv');
-dotenv.config();
-require('dotenv').config();
-
-const { Pool } = require('pg');
-
-const pool = new Pool({
-	connectionString: process.env.POSTGRES_URL,
-});
-
-pool.connect((error) => {
-	if (error) throw error; // Correct error handling
-	console.log('connected to database');
-});
-
-module.exports = pool;**/
-
 const dotenv = require('dotenv');
 dotenv.config();
 
 const { Pool } = require('pg');
 
+/** 
+const connection = new Pool({
+	user: process.env.DB_USER,
+	host: process.env.DB_HOST,
+	database: process.env.DB_NAME,
+	password: process.env.DB_PASSWORD,
+	port: process.env.DB_PORT,
+});*/
+
 // Use DATABASE_URL from .env for Heroku
+
 const connection = new Pool({
 	connectionString: process.env.DATABASE_URL,
 	ssl: {
@@ -34,4 +27,3 @@ connection.connect((error) => {
 });
 
 module.exports = connection;
-

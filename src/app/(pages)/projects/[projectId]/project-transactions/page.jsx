@@ -21,7 +21,7 @@ import {
 } from '@nextui-org/react';
 import { ProjectDataId } from '@/backend/data/dataHooks';
 import TransactionTable from '@/components/tables/transactionTable';
-import { ContentBoxProject, IconTextBox } from '@/components/ui/uiComponent';
+import { IconTextBox } from '@/components/ui/uiComponent';
 import {
 	formatNumber,
 	formatDate,
@@ -30,6 +30,7 @@ import {
 } from '@/utils/inputFormatter';
 import ReceivablesTableProject from '@/components/tables/receivableTableProject';
 import { ReceivableDataProject } from '@/backend/data/dataHooks';
+import { useRouter } from 'next/navigation';
 
 const statusColorMap = {
 	'FULLY PAID': 'success',
@@ -39,6 +40,7 @@ const statusColorMap = {
 
 export default function ProjectTransactions({ params }) {
 	const projectId = params.projectId;
+	const router = useRouter();
 	const { project, loading, error, refetch } = ProjectDataId({ projectId });
 	const [projectName, setProjectName] = useState('Projects');
 	const [transactions, setTransactions] = useState([]);
@@ -193,74 +195,65 @@ export default function ProjectTransactions({ params }) {
 		}
 	};
 
+	if (loading) {
+		return (
+			<Pagelayout>
+				<div className='absolute top-1/2 left-1/2 text-center'>
+					<Spinner />
+					<p>Loading Project data...</p>
+				</div>
+			</Pagelayout>
+		);
+	}
+
+	if (error) {
+		return (
+			<Pagelayout>
+				<div className='absolute top-1/2 left-1/2 text-center'>
+					<h2>Error loading Project data</h2>
+					<p>{error.message}</p>
+				</div>
+			</Pagelayout>
+		);
+	}
+
 	return (
-		<Pagelayout projectId={projectId}>
-			{loading ? (
-				<div className='flex justify-center items-center h-screen'>
-					<Spinner size='lg' />
-				</div>
-			) : error ? (
-				<div className='flex justify-center items-center h-full'>
-					<p>Error: {error.message}</p>
-				</div>
-			) : project ? (
-				<div className='h-fit'>
-					<div className='bg-white rounded-lg'>
-						<div className='flex flex-col p-5'>
-							<div className='grid grid-cols-3 gap-10 p-5'>
-								<ContentBoxProject
-									iconText='balance'
-									labelText='Balance'
-									strongText={formatNumberDecimal(
-										accounts.contract_price - accounts.total_paid,
-									)}
-									descriptionText={`${formatNumber(
-										accounts.contract_price,
-									)} contract price`}
+		<Pagelayout
+			projectId={projectId}
+			projectName={project.projectDetails.project_name}
+			projectPicture={project.projectDetails.project_projectPicture}>
+			<div className='h-fit'>
+				<div className='bg-white rounded-lg'>
+					<div className='flex flex-col p-5'>
+						<Tabs
+							variant='underlined'
+							aria-label='Transaction tabs'>
+							<Tab
+								key='transactions'
+								title='Transactions'>
+								<TransactionTable transactions={transactions} />
+							</Tab>
+							<Tab
+								key='outstanding'
+								title='Payments'>
+								<ReceivablesTableProject
+									filterValue={filterValue}
+									onSearchChange={onSearchChange}
+									onRowSelect={modalPayment}
+									receivable={receivableProject}
+									onOpen={openAdditionals}
 								/>
-								<ContentBoxProject
-									iconText='payment'
-									labelText='Payments'
-									strongText={formatNumber(accounts.total_paid)}
-									descriptionText='12 payments made out of 14'
-								/>
-								<ContentBoxProject
-									iconText='shopping_cart'
-									labelText='Expenses'
-									strongText={formatNumber(accounts.total_expenses)}
-									descriptionText='Total expenses'
-								/>
-							</div>
-							<Tabs
-								variant='underlined'
-								aria-label='Transaction tabs'>
-								<Tab
-									key='transactions'
-									title='Transactions'>
-									<TransactionTable transactions={transactions} />
-								</Tab>
-								<Tab
-									key='outstanding'
-									title='Payments'>
-									<ReceivablesTableProject
-										filterValue={filterValue}
-										onSearchChange={onSearchChange}
-										onRowSelect={modalPayment}
-										receivable={receivableProject}
-										onOpen={openAdditionals}
-									/>
-								</Tab>
-							</Tabs>
-						</div>
+							</Tab>
+						</Tabs>
 					</div>
 				</div>
-			) : null}
+			</div>
 
 			<Modal
 				isOpen={isOpen}
+				radius='sm'
 				onOpenChange={onOpenChange}
-				placement='top-center'
-				isDismissable={false}
+				placement='top'
 				onClose={onClose}
 				size='xl'>
 				<form onSubmit={handleSubmit}>
@@ -269,9 +262,13 @@ export default function ProjectTransactions({ params }) {
 								<ModalContent key={invoiceItem.id}>
 									{(onClose) => (
 										<>
-											<ModalHeader className='flex gap-1 mb-5'>
-												<span className='material-symbols-outlined'>receipt</span>
-												<p>Bill Details</p>
+											<ModalHeader className='flex flex-col gap-1 mb-5'>
+												<div className='flex'>
+													<span className='material-symbols-outlined'>receipt</span>
+													<p>Bill Details - #{invoiceItem.invoice_no}</p>
+												</div>
+
+												<h1 className='text-center'>{invoiceItem.description}</h1>
 											</ModalHeader>
 											<ModalBody>
 												<div>
@@ -290,30 +287,13 @@ export default function ProjectTransactions({ params }) {
 																{invoiceItem.status}
 															</Chip>
 														</div>
-
-														<div className='flex justify-end col-span-1 text-white w-full gap-2 p-2'>
-															<Button
-																variant='solid'
-																size='md'
-																isIconOnly
-																color='success'
-																className='text-white'
-																startContent={
-																	<span className='material-symbols-outlined'>
-																		download
-																	</span>
-																}></Button>
-															<Button
-																variant='solid'
-																fullWidth
-																size='md'
-																isIconOnly
-																color='primary'
-																startContent={
-																	<span className='material-symbols-outlined'>
-																		mail
-																	</span>
-																}></Button>
+														<div className='col-span-1'>
+															<label className='block text-sm font-medium text-gray-700'>
+																Due Date
+															</label>
+															<span className='mt-1 text-md font-bold'>
+																{formatDate(invoiceItem.due_date)}
+															</span>
 														</div>
 
 														<div className='flex border-[1px] col-span-3 p-5 rounded-md justify-between items-center'>
@@ -341,49 +321,18 @@ export default function ProjectTransactions({ params }) {
 															</div>
 														</div>
 
-														<div className='grid grid-cols-3 gap-5 col-span-3 border-b-[1px] p-5'>
+														<div className='grid grid-cols-2 gap-5 col-span-3 p-5'>
 															<IconTextBox
-																iconText='description'
-																labelText='DESCRIPTION'
-																contentText={invoiceItem.description}
+																iconText='paid'
+																labelText='PAID AMOUNT'
+																contentText={formatNumber(invoiceItem.paid_amount)}
 															/>
-
-															<IconTextBox
-																iconText='event'
-																labelText='DUE DATE'
-																contentText={formatDate(invoiceItem.due_date)}
-															/>
-
 															<IconTextBox
 																iconText='account_balance_wallet'
 																labelText='BILLED AMOUNT'
 																contentText={formatNumberDecimal(
 																	invoiceItem.billed_amount,
 																)}
-															/>
-														</div>
-
-														<div className='grid grid-cols-3 gap-5 col-span-3 p-5'>
-															<IconTextBox
-																iconText='paid'
-																labelText='PAID AMOUNT'
-																contentText={formatNumberDecimal(
-																	invoiceItem.paid_amount,
-																)}
-															/>
-
-															<IconTextBox
-																iconText='balance'
-																labelText='BALANCE'
-																contentText={formatNumberDecimal(
-																	invoiceItem.balance,
-																)}
-															/>
-
-															<IconTextBox
-																iconText='hourglass_bottom'
-																labelText='DUE BY'
-																contentText={formatDate(invoiceItem.due_date)}
 															/>
 														</div>
 													</div>
@@ -489,29 +438,29 @@ export default function ProjectTransactions({ params }) {
 													)}
 												</div>
 											</ModalBody>
+
 											<ModalFooter>
 												{invoiceItem.status === 'FULLY PAID' ? (
 													<Button
-														color='danger'
-														variant='light'
-														size='md'
-														onClick={onClose}
-														className='bg-gray-200'>
+														color='none'
+														variant='bordered'
+														size='lg'
+														onClick={onClose}>
 														Cancel
 													</Button>
 												) : (
 													<>
 														<Button
-															color='danger'
-															variant='light'
-															size='md'
-															onClick={onClose}
-															className='bg-gray-200'>
+															color='none'
+															variant='bordered'
+															size='lg'
+															onClick={onClose}>
 															Cancel
 														</Button>
 														<Button
-															color='primary'
-															size='md'
+															className='bg-black text-white'
+															radius='sm'
+															size='lg'
 															type='submit'
 															loading={loading}
 															disabled={loading}>

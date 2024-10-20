@@ -1,6 +1,6 @@
 import ExpenseContent from './expense';
 export const metadata = {
-	title: 'Capstone | Expense',
+	title: 'Expense',
 	description: 'Capstone',
 };
 

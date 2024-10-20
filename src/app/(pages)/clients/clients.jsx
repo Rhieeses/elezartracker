@@ -9,6 +9,7 @@ import {
 	ModalBody,
 	ModalFooter,
 	Card,
+	CardBody,
 	CardHeader,
 	CardFooter,
 	useDisclosure,
@@ -17,6 +18,7 @@ import {
 	Input,
 	Link,
 	Spinner,
+	Image,
 } from '@nextui-org/react';
 import { useState } from 'react';
 import { ClientData } from '@/backend/data/dataHooks';
@@ -40,6 +42,14 @@ export default function ClientsContent() {
 	const [loadingSubmit, setLoadingSubmit] = useState(false);
 	const [successMessage, setSuccessMessage] = useState(''); //use later for alert success
 	const [errorMessage, setErrorMessage] = useState(''); //use later for alert success
+
+	const [searchTerm, setSearchTerm] = useState('');
+
+	const filteredClients = client.filter(
+		(clientItem) =>
+			clientItem.client_firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+			clientItem.client_lastName.toLowerCase().includes(searchTerm.toLowerCase()),
+	);
 
 	let x = 0;
 
@@ -105,7 +115,7 @@ export default function ClientsContent() {
 	return (
 		<Layout>
 			<>
-				<div className='p-10 border-b-[1px] flex justify-between items-center'>
+				<div className='p-10 flex justify-between items-center'>
 					<div className='flex space-x-4'>
 						<span
 							className='material-symbols-outlined'
@@ -116,7 +126,18 @@ export default function ClientsContent() {
 					</div>
 					<div className='flex items-center justify-end gap-2'>
 						<div className='lg:w-[25rem] w-1/2'>
-							<Search />
+							<Input
+								isClearable
+								type='text'
+								color='default'
+								variant='bordered'
+								radius='sm'
+								size='lg'
+								placeholder='Type to search...'
+								value={searchTerm}
+								onChange={(e) => setSearchTerm(e.target.value)}
+								startContent={<span className='material-symbols-outlined'>search</span>}
+							/>
 						</div>
 
 						<Button
@@ -130,37 +151,38 @@ export default function ClientsContent() {
 					</div>
 				</div>
 				{!loading ? (
-					<div className='p-3 h-fit'>
-						<div className='grid grid-cols-1 sm:grid-cols-1 lg:grid-cols-3 gap-5'>
-							<div className='flex items-center justify-between col-span-1 md:col-span-2 lg:col-span-3 p-3'>
+					<div className='p-10 h-full bg-white overflow-y-scroll no-scrollbar'>
+						<div className='grid grid-cols-1 sm:grid-cols-1 lg:grid-cols-4 gap-5'>
+							<div className='flex items-center justify-between col-span-1 md:col-span-2 lg:col-span-4 p-3'>
 								<div className='flex justify-center items-start gap-2 hidden lg:flex'>
 									<p className='text-lg font-semibold'>All clients</p>
 									<p className='text-slate text-xl'>{x}</p>
 								</div>
 							</div>
 
-							{client && client.length > 0 ? (
-								client.map((clientItem) => (
+							{filteredClients && filteredClients.length > 0 ? (
+								filteredClients.map((clientItem) => (
 									<Link
 										key={clientItem.id}
 										href={`/clients/${clientItem.id}`}>
 										<Card
-											className='group bg-white p-1 relative overflow-hidden w-full h-full'
+											className='w-full h-full'
 											shadow='none'>
-											<CardHeader className='relative p-0'>
-												<img
-													alt='Card background'
-													className='object-cover rounded-xl w-full h-[20rem]'
+											<CardBody className='overflow-visible p-0'>
+												<Image
+													radius='sm'
+													width='100%'
+													className='w-full object-cover h-[15rem]'
 													src={clientItem.client_profilePicture || '/house.jpg'}
 												/>
-												<div className='absolute rounded-xl inset-x-0 bottom-[-1px] h-1/3 bg-gradient-to-b from-transparent via-black to-gray-900 opacity-50 pointer-events-none'></div>
-												<h4 className='font-bold text-2xl absolute inset-0 flex items-end m-5 justify-start text-white opacity-100 transition-opacity duration-300'>
+											</CardBody>
+											<CardFooter className='flex flex-col items-start'>
+												<p className='text-md font-semibold'>
 													{`${clientItem.client_firstName} ${clientItem.client_lastName}`}
-												</h4>
-											</CardHeader>
-											<CardFooter className='text-small justify-between'>
-												<p>{clientItem.client_email}</p>
-												<p>{formatDate(clientItem.client_dateJoined)}</p>
+												</p>
+												<p className='text-default-500 text-sm'>
+													{clientItem.client_email}
+												</p>
 											</CardFooter>
 										</Card>
 									</Link>
@@ -280,18 +302,18 @@ export default function ClientsContent() {
 							</ModalBody>
 							<ModalFooter>
 								<Button
-									color='danger'
-									variant='light'
+									color='none'
+									variant='bordered'
 									size='lg'
-									onClick={onCloseModal}
-									className='bg-gray-200'>
-									Close
+									onClick={onCloseModal}>
+									Cancel
 								</Button>
 								<Button
-									color='primary'
+									className='bg-black text-white'
 									size='lg'
+									radius='sm'
 									type='submit'
-									loading={loadingSubmit}
+									isLoading={loadingSubmit}
 									disabled={loadingSubmit}>
 									Create
 								</Button>

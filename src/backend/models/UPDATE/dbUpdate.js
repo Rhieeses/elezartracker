@@ -1,4 +1,5 @@
 const connection = require('../../config/db');
+const bcrypt = require('bcrypt');
 
 async function updateProject(formData, id) {
 	const {
@@ -45,6 +46,31 @@ async function updateProject(formData, id) {
 		]);
 
 		return result.rows[0]; // Return the updated project row
+	} catch (error) {
+		console.error(`Error updating data: ${error.message}`);
+		throw new Error(`Error updating data: ${error.message}`);
+	}
+}
+
+async function updateAccount(formData, id) {
+	const { username, name, email, imageFile } = formData;
+
+	const queryAccount = `
+      UPDATE users 
+      SET 
+	   username = $1, 
+	   name = $2,
+	   email = $3,
+	   profilepicture = $4
+      WHERE 
+        id = $5
+      RETURNING *;
+    `;
+
+	try {
+		const result = await connection.query(queryAccount, [username, name, email, imageFile, id]);
+
+		return result.rows[0];
 	} catch (error) {
 		console.error(`Error updating data: ${error.message}`);
 		throw new Error(`Error updating data: ${error.message}`);
@@ -107,8 +133,39 @@ async function ApproveTransfer(id) {
 	}
 }
 
+async function changePassword(changePasswordForm, id, res) {
+	const { oldPassword, newPassword } = changePasswordForm;
+
+	const queryCheckPassword = `
+        SELECT password FROM users WHERE id = $1;
+    `;
+
+	const queryUpdatePassword = `
+        UPDATE users SET password = $1 WHERE id = $2;
+    `;
+
+	try {
+		const resultPassword = await connection.query(queryCheckPassword, [id]);
+		const user = resultPassword.rows[0];
+
+		if (!user || !(await bcrypt.compare(oldPassword, user.password))) {
+			return res.status(400).json({ message: 'Old password is incorrect' });
+		}
+
+		const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+		await connection.query(queryUpdatePassword, [hashedNewPassword, id]);
+
+		return res.json({ message: 'Password changed successfully' });
+	} catch (error) {
+		console.error(error);
+		return res.status(500).json({ message: 'Server error' });
+	}
+}
+
 module.exports = {
 	updateProject,
+	updateAccount,
 	editVendor,
 	ApproveTransfer,
+	changePassword,
 };

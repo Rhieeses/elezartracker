@@ -180,12 +180,16 @@ export default function ReceivablesTableProject({
 						<Dropdown>
 							<DropdownTrigger className='hidden sm:flex'>
 								<Button
-									startContent={
-										<span className='material-symbols-outlined'>filter_list</span>
+									endContent={
+										<span className='material-symbols-outlined'>keyboard_arrow_down</span>
 									}
 									size='md'
-									className='bg-black text-white'
-									variant='flat'>
+									color='default'
+									className='font-semibold'
+									disableRipple
+									disableAnimations
+									variant='bordered'
+									radius='sm'>
 									Status
 								</Button>
 							</DropdownTrigger>
@@ -210,13 +214,17 @@ export default function ReceivablesTableProject({
 						<Dropdown>
 							<DropdownTrigger className='hidden sm:flex'>
 								<Button
-									startContent={
-										<span className='material-symbols-outlined'>filter_list</span>
+									endContent={
+										<span className='material-symbols-outlined'>keyboard_arrow_down</span>
 									}
 									size='md'
-									className='bg-black text-white'
-									variant='flat'>
-									Columns
+									color='default'
+									className='font-semibold'
+									disableRipple
+									disableAnimations
+									variant='bordered'
+									radius='sm'>
+									Filters
 								</Button>
 							</DropdownTrigger>
 							<DropdownMenu
@@ -272,14 +280,6 @@ export default function ReceivablesTableProject({
 	const bottomContent = useMemo(() => {
 		return (
 			<div className='flex justify-center items-center py-4 space-x-1 '>
-				<Button
-					isDisabled={pages === 1}
-					size='md'
-					variant='flat'
-					className='bg-black text-white'
-					onPress={onPreviousPage}>
-					Previous
-				</Button>
 				<Pagination
 					isCompact
 					showControls
@@ -289,18 +289,9 @@ export default function ReceivablesTableProject({
 					total={pages}
 					onChange={setPage}
 				/>
-
-				<Button
-					isDisabled={pages === 1}
-					size='md'
-					variant='flat'
-					className='bg-black text-white'
-					onPress={onNextPage}>
-					Next
-				</Button>
 			</div>
 		);
-	}, [page, pages, onPreviousPage, onNextPage]);
+	}, [page, pages]);
 
 	return (
 		<Table

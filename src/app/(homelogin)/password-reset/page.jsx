@@ -11,7 +11,7 @@ export default function ResetPassword() {
 		<div className='flex flex-col min-h-screen bg-white'>
 			<header className='bg-white p-2 border-b border-gray-300'>
 				<div className='flex items-center p-1 rounded-lg pointer-events-none ml-2 lg:ml-[3rem]'>
-					<div className='flex items-center border-r-1 border-black p-1 pr-5 h-fit'>
+					<div className='flex items-center p-1 pr-5 h-fit'>
 						<img
 							src='logo.jpg'
 							alt='Logo'
@@ -25,11 +25,17 @@ export default function ResetPassword() {
 			</header>
 			<div className='flex justify-start items-end m-4'>
 				<span
-					className='material-symbols-outlined'
-					style={{ fontSize: '24px' }}>
-					chevron_left
+					className='flex items-center cursor-pointer'
+					onClick={() => {
+						router.back();
+					}}>
+					<span
+						className='material-symbols-outlined'
+						style={{ fontSize: '24px' }}>
+						chevron_left
+					</span>
+					{'Back to login'}
 				</span>
-				{'Back to login'}
 			</div>
 
 			<main className='flex flex-1 justify-center items-top mt-20 '>

@@ -525,7 +525,18 @@ async function fetchInvoiceExpensesData(id) {
 }
 
 async function fetchVendor() {
-	const selectResult = `SELECT * FROM vendor`;
+	const selectResult = `SELECT v.*, 
+       COALESCE(e.total_expenses, 0) AS total_expenses, 
+       COALESCE(e.total_purchase_amount, 0) AS total_purchase_amount
+FROM vendor v
+LEFT JOIN (
+    SELECT vendor_name, 
+           COUNT(*) AS total_expenses, 
+           SUM(purchase_amount) AS total_purchase_amount
+    FROM expense
+    GROUP BY vendor_name
+) e ON v.vendor_name = e.vendor_name
+ORDER BY v.vendor_name ASC`;
 
 	try {
 		const result = await connection.query(selectResult);
@@ -656,12 +667,61 @@ FROM accounts ORDER BY ID ASC;
 }
 
 async function fetchDashboardData() {
+	const activeResult = `SELECT COUNT(*) from project where status = 'ACTIVE';`;
+
 	const selectResult = `
-      SELECT 
-        (SELECT SUM(total_sales) FROM accounts) AS revenue, 
+      
+SELECT 
+  (SELECT SUM(total_sales) FROM accounts) AS revenue, 
         (SELECT SUM(total_expense) FROM accounts) AS expenses, 
         (SELECT SUM(total_sales) - SUM(total_expense) FROM accounts) AS income,
-        (SELECT COUNT(*) FROM project) AS total_projects;
+    -- Total revenue for the current month (from payments)
+    (SELECT COALESCE(SUM(payment_amount), 0) 
+     FROM payments 
+     WHERE DATE_TRUNC('month', NOW()) = DATE_TRUNC('month', payment_date)) AS current_month_revenue,
+
+    -- Total expenses for the current month (from expense)
+    (SELECT COALESCE(SUM(purchase_amount), 0) 
+     FROM expense 
+     WHERE DATE_TRUNC('month', NOW()) = DATE_TRUNC('month', purchase_date)) AS current_month_expenses,
+
+    -- Income for the current month (revenue - expenses)
+    (
+      (SELECT COALESCE(SUM(payment_amount), 0) 
+       FROM payments 
+       WHERE DATE_TRUNC('month', NOW()) = DATE_TRUNC('month', payment_date))
+      -
+      (SELECT COALESCE(SUM(purchase_amount), 0) 
+       FROM expense 
+       WHERE DATE_TRUNC('month', NOW()) = DATE_TRUNC('month', purchase_date))
+    ) AS current_month_income,
+
+    -- Total revenue for the last month (from payments)
+    (SELECT COALESCE(SUM(payment_amount), 0) 
+     FROM payments 
+     WHERE DATE_TRUNC('month', NOW() - INTERVAL '1 month') = DATE_TRUNC('month', payment_date)) AS last_month_revenue,
+
+    -- Total expenses for the last month (from expense)
+    (SELECT COALESCE(SUM(purchase_amount), 0) 
+     FROM expense 
+     WHERE DATE_TRUNC('month', NOW() - INTERVAL '1 month') = DATE_TRUNC('month', purchase_date)) AS last_month_expenses,
+
+    -- Income for the last month (revenue - expenses)
+    (
+      (SELECT COALESCE(SUM(payment_amount), 0) 
+       FROM payments 
+       WHERE DATE_TRUNC('month', NOW() - INTERVAL '1 month') = DATE_TRUNC('month', payment_date))
+      -
+      (SELECT COALESCE(SUM(purchase_amount), 0) 
+       FROM expense 
+       WHERE DATE_TRUNC('month', NOW() - INTERVAL '1 month') = DATE_TRUNC('month', purchase_date))
+    ) AS last_month_income,
+
+    -- Total projects
+    (SELECT COUNT(*) FROM project) AS total_projects,
+
+    (SELECT COUNT(*) FROM project WHERE status = 'ACTIVE') AS total_active_project;
+    ;
     `;
 
 	const selectChartResultSales = `
@@ -711,11 +771,13 @@ async function fetchDashboardData() {
     `;
 
 	try {
+		const activeCountResult = await connection.query(activeResult);
 		const result = await connection.query(selectResult);
 		const resultChartSales = await connection.query(selectChartResultSales);
 		const resultChartExpense = await connection.query(selectChartResultExpense);
 
 		return {
+			activeProjectCount: activeCountResult[0],
 			dashboard: result.rows[0],
 			chartData: {
 				sales: resultChartSales.rows,
@@ -838,6 +900,32 @@ async function fetchProjectName(id) {
 	}
 }
 
+async function fetchTopVendor(id) {
+	const projectNameQuery = `SELECT 
+    v.id, 
+    v.vendor_name, 
+    v.vendor_picture, 
+    v.vendor_services, 
+    COUNT(e.*) AS total_expenses, 
+    SUM(e.purchase_amount) AS total_purchase_amount
+FROM 
+    expense e
+JOIN 
+    vendor v ON e.vendor_id = v.id 
+WHERE 
+    e.project_id = $1
+GROUP BY 
+    v.id, v.vendor_name, v.vendor_picture, v.vendor_services;
+        `;
+
+	try {
+		const topVendorResult = await connection.query(projectNameQuery, [id]);
+		return topVendorResult.rows;
+	} catch (error) {
+		throw new Error('Failed to fetch project name: ' + error.message);
+	}
+}
+
 module.exports = {
 	fetchClients,
 	fetchProject,
@@ -866,4 +954,5 @@ module.exports = {
 	fetchNotifications,
 	fetchAlltransaction,
 	fetchProjectName,
+	fetchTopVendor,
 };

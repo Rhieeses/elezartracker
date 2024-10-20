@@ -26,6 +26,31 @@ module.exports = {
 					'Noto Color Emoji',
 				],
 			},
+
+			keyframes: {
+				fadeInTopToBottom: {
+					'0%': { opacity: '0', transform: 'translateY(-10px)' },
+					'100%': { opacity: '1', transform: 'translateY(0)' },
+				},
+				zoomImage: {
+					'0%': {
+						'background-size': '100%',
+					},
+					'50%': {
+						'background-size': '110%',
+					},
+				},
+				typewriter: {
+					to: {
+						left: '100%',
+					},
+				},
+			},
+			animation: {
+				fadeInTopToBottom: 'fadeInTopToBottom 0.4s ease-in-out',
+				zoomImage: 'zoomImage 15s ease-in-out infinite',
+				typewriter: 'typewriter 2s steps(11) forwards',
+			},
 		},
 	},
 	darkMode: 'class',

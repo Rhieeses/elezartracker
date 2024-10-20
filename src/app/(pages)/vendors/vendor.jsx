@@ -1,5 +1,4 @@
 'use client';
-import React from 'react';
 import axios from 'axios';
 import { useState, useEffect, useCallback } from 'react';
 import Layout from '@/components/ui/layout';
@@ -28,15 +27,11 @@ import {
 import { VendorData, VendorDataID } from '@/backend/data/dataHooks';
 import { capitalizeFirstLetter, formatDate } from '@/utils/inputFormatter';
 import { IconTextBox } from '@/components/ui/uiComponent';
+import VendorTable from './vendorTable';
 
 export default function VendorsContent() {
 	const [deleteVendor, setDeleteVendor] = useState(null);
 	const [editVendorId, setEditVendor] = useState(null);
-
-	const handleRowEdit = (id) => {
-		setEditVendor(id);
-		openEdit(true);
-	};
 
 	const onCloseEdit = () => {
 		closeEdit();
@@ -68,6 +63,8 @@ export default function VendorsContent() {
 		vendorPicture: '',
 	};
 
+	console.log(vendor);
+
 	const [formData, setFormData] = useState(initialFormData);
 	const [file, setFile] = useState(null);
 	const [loadingForm, setLoadingForm] = useState(false); //use later for success alert
@@ -75,6 +72,11 @@ export default function VendorsContent() {
 	const [errorMessage, setErrorMessage] = useState(''); //use later for success alert
 	const [errorTable, setErrorTable] = useState('');
 	const [loadingTable, setLoadingTable] = useState(false);
+	const [searchTerm, setSearchTerm] = useState('');
+
+	const filteredVendor = vendor.filter((vendorItem) =>
+		vendorItem.vendor_name.toLowerCase().includes(searchTerm.toLowerCase()),
+	);
 
 	const [editForm, setEditForm] = useState({
 		vendorPicture: '',
@@ -145,8 +147,8 @@ export default function VendorsContent() {
 
 	let x = 0;
 
-	if (vendor && vendor.length > 0) {
-		x = vendor.length;
+	if (filteredVendor && filteredVendor.length > 0) {
+		x = filteredVendor.length;
 	}
 
 	const handleInput = (field) => (event) => {
@@ -218,8 +220,8 @@ export default function VendorsContent() {
 		if (errorTable) return [];
 
 		// If vendor data is available
-		return vendor.length > 0
-			? vendor.map((vendorItem) => ({
+		return filteredVendor.length > 0
+			? filteredVendor.map((vendorItem) => ({
 					key: vendorItem.id,
 					name: vendorItem.vendor_name,
 					picture: vendorItem.vendor_picture,
@@ -289,18 +291,15 @@ export default function VendorsContent() {
 		}
 	};
 
-	const handleRowDelete = useCallback(
-		(row) => {
-			setDeleteVendor(row);
-			openConfirm(true);
-		},
-		[setDeleteVendor, openConfirm],
-	);
+	const handleRowEdit = (id) => {
+		setEditVendor(id);
+		openEdit(true);
+	};
 
-	//const handleRowDelete = (id) => {
-	//setDeleteVendor(id);
-	//openConfirm(true);
-	//};
+	const handleRowDelete = (row) => {
+		setDeleteVendor(row);
+		openConfirm(true);
+	};
 
 	const handleDelete = async () => {
 		if (!deleteVendor) {
@@ -318,65 +317,20 @@ export default function VendorsContent() {
 	return (
 		<Layout>
 			<>
-				<div className='p-10 border-b-[1px] flex justify-between items-center'>
-					<div className='flex space-x-4'>
-						<span
-							className='material-symbols-outlined'
-							style={{ fontSize: '36px' }}>
-							local_shipping
-						</span>
-						<h1 className='font-semibold tracking-wide text-3xl text-left'>Vendors</h1>
-					</div>
-					<div className='flex items-center justify-end gap-2'>
-						<div className='lg:w-[25rem] w-1/2'>
-							<Search />
-						</div>
-						<Button
-							color='secondary'
-							className='text-white bg-black rounded-md p-3 tracking-wider '
-							size='lg'
-							onPress={onOpen}
-							radius='none'>
-							+ Add Vendor
-						</Button>
-					</div>
-				</div>
 				<div className='grid grid-cols-1 gap-5 p-3 h-fit'>
-					<div className='flex items-center justify-between col-span-1 md:col-span-2 lg:col-span-3 p-3'>
-						<div className='flex justify-center items-start gap-2 hidden lg:flex'>
-							<p className='text-lg font-semibold'>All vendors</p>
-							<p className='text-slate text-xl'>{x}</p>
-						</div>
-					</div>
-
-					<Table
-						removeWrapper
-						aria-label='vendors-list'>
-						<TableHeader columns={columns}>
-							{(column) => (
-								<TableColumn
-									key={column.uid}
-									align={column.key === 'actions' ? 'center' : 'start'}>
-									{column.label}
-								</TableColumn>
-							)}
-						</TableHeader>
-						<TableBody
-							items={vendors}
-							emptyContent={'No rows to display.'}>
-							{(item) => (
-								<TableRow key={item.id}>
-									{(columnKey) => <TableCell>{renderCell(item, columnKey)}</TableCell>}
-								</TableRow>
-							)}
-						</TableBody>
-					</Table>
+					<VendorTable
+						vendor={vendor}
+						onRowSelect={handleRowEdit}
+						onRowDelete={handleRowDelete}
+						onOpen={onOpen}
+					/>
 				</div>
 			</>
 			<Modal
 				isOpen={isOpen}
 				onOpenChange={onOpenChange}
 				placement='top-center'
+				radius='sm'
 				size='2xl'>
 				<form onSubmit={handleSubmit}>
 					<ModalContent>
@@ -463,19 +417,21 @@ export default function VendorsContent() {
 							</ModalBody>
 							<ModalFooter>
 								<Button
-									color='danger'
-									variant='light'
+									variant='bordered'
 									size='lg'
 									onClick={onCloseModal}
-									className='bg-gray-200'>
+									radius='sm'
+									className='bg-gray-300'>
 									Close
 								</Button>
+
 								<Button
-									color='primary'
 									size='lg'
 									type='submit'
 									loading={loadingForm}
-									disabled={loadingForm}>
+									disabled={loadingForm}
+									radius='sm'
+									className='bg-black text-white'>
 									Create
 								</Button>
 							</ModalFooter>
@@ -490,6 +446,7 @@ export default function VendorsContent() {
 				placement='top'
 				aria-labelledby='edit-vendor-title'
 				aria-modal='true'
+				radius='sm'
 				role='dialog'
 				size='2xl'>
 				<form onSubmit={handleEdit}>
@@ -530,7 +487,7 @@ export default function VendorsContent() {
 														type='file'
 														color='primary'
 														aria-label='image'
-														className='w-fit'
+														className='w-fit w-[7rem]'
 														style={{ backgroundColor: '#0000FF' }}
 														variant='flat'
 														onChange={handleFileEdit}
@@ -610,16 +567,19 @@ export default function VendorsContent() {
 									</ModalBody>
 									<ModalFooter>
 										<Button
-											color='danger'
-											variant='light'
+											variant='bordered'
 											size='lg'
+											radius='sm'
 											onClick={onCloseEdit}
-											className='bg-gray-200'>
+											className='bg-gray-300'>
 											Close
 										</Button>
 										<Button
 											color='primary'
 											size='lg'
+											startContent={
+												<span className='material-symbols-outlined'>edit</span>
+											}
 											type='submit'>
 											Edit
 										</Button>
@@ -638,3 +598,63 @@ export default function VendorsContent() {
 		</Layout>
 	);
 }
+/**
+ * <div className='p-10 flex justify-between items-center'>
+					<div className='flex space-x-4'>
+						<span
+							className='material-symbols-outlined'
+							style={{ fontSize: '36px' }}>
+							local_shipping
+						</span>
+						<h1 className='font-semibold tracking-wide text-3xl text-left'>Vendors</h1>
+					</div>
+					<div className='flex items-center justify-end gap-2'>
+						<div className='lg:w-[25rem] w-1/2 hidden lg:inline'>
+							<Input
+								isClearable
+								type='text'
+								color='default'
+								variant='bordered'
+								radius='sm'
+								size='lg'
+								placeholder='Type to search...'
+								value={searchTerm}
+								onChange={(e) => setSearchTerm(e.target.value)}
+								startContent={<span className='material-symbols-outlined'>search</span>}
+							/>
+						</div>
+						<Button
+							color='secondary'
+							className='text-white bg-black rounded-md p-3 tracking-wider '
+							size='lg'
+							onPress={onOpen}
+							radius='none'>
+							+ Add Vendor
+						</Button>
+					</div>
+				</div>
+ * 	<Table
+						classNames={{ th: 'bg-slate-900 text-white', td: 'border-b-1' }}
+						className='p-2 w-full rounded-none overflow-x-scroll lg:overflow-x-hidden'
+						removeWrapper
+						aria-label='vendors-list'>
+						<TableHeader columns={columns}>
+							{(column) => (
+								<TableColumn
+									key={column.uid}
+									align={column.key === 'actions' ? 'center' : 'start'}>
+									{column.label}
+								</TableColumn>
+							)}
+						</TableHeader>
+						<TableBody
+							items={vendors}
+							emptyContent={'No rows to display.'}>
+							{(item) => (
+								<TableRow key={item.id}>
+									{(columnKey) => <TableCell>{renderCell(item, columnKey)}</TableCell>}
+								</TableRow>
+							)}
+						</TableBody>
+					</Table>
+ */

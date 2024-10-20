@@ -9,6 +9,7 @@ import {
 	removeFormatting,
 	capitalizeFirstLetter,
 	checkStatus,
+	capitalizeOnlyFirstLetter,
 } from '@/utils/inputFormatter';
 import {
 	Modal,
@@ -31,6 +32,7 @@ import {
 	Textarea,
 	Slider,
 	Link,
+	Image,
 	Spinner,
 } from '@nextui-org/react';
 import { ProjectData } from '@/backend/data/dataHooks';
@@ -62,6 +64,12 @@ export default function ProjectsContent() {
 	const [file, setFile] = useState(null);
 	const [submitLoading, setsubmitLoading] = useState();
 	const [message, setMessage] = useState({ success: '', error: '' });
+
+	const [searchTerm, setSearchTerm] = useState('');
+
+	const filteredProjects = project.filter((projectItem) =>
+		projectItem.project_name.toLowerCase().includes(searchTerm.toLowerCase()),
+	);
 
 	//category options
 	let paymentOption = [
@@ -100,6 +108,8 @@ export default function ProjectsContent() {
 					? formatNumber(value.replace(/[^0-9.]/g, ''))
 					: ['startDate', 'endDate', 'downpayment', 'paymentTerms'].includes(field)
 					? value
+					: field === 'projectDescription'
+					? capitalizeOnlyFirstLetter(value)
 					: capitalizeFirstLetter(value),
 		}));
 	};
@@ -136,21 +146,56 @@ export default function ProjectsContent() {
 		}
 	};
 
+	if (loading) {
+		return (
+			<Layout>
+				<div className='flex justify-center items-center h-[50rem]'>
+					<Spinner />
+					<p>Loading projects...</p>
+				</div>
+			</Layout>
+		);
+	}
+
+	if (error) {
+		return (
+			<Layout>
+				<div className='flex justify-center items-center h-[50rem]'>
+					<h2>Error loading projects</h2>
+					<p>{error.message}</p>
+				</div>
+			</Layout>
+		);
+	}
+
 	return (
 		<Layout>
 			<>
-				<div className='p-10 border-b-[1px] flex justify-between items-center'>
+				<div className='p-10 flex justify-between items-center'>
 					<div className='flex space-x-4'>
 						<span
 							className='material-symbols-outlined'
 							style={{ fontSize: '36px' }}>
 							foundation
 						</span>
-						<h1 className='font-semibold tracking-wide text-3xl text-left'>Projects</h1>
+						<h1 className='font-bold tracking-wide text-3xl text-left'>Projects</h1>
 					</div>
 					<div className='flex items-center justify-end gap-2'>
-						<div className='lg:w-[25rem] w-1/2'>
-							<Search />
+						<div className='lg:w-[25rem] w-1/2 lg:visible invisible'>
+							<div className='relative flex items-center justify-center w-full '>
+								<Input
+									isClearable
+									type='text'
+									color='default'
+									variant='bordered'
+									radius='sm'
+									size='lg'
+									placeholder='Type to search...'
+									value={searchTerm}
+									onChange={(e) => setSearchTerm(e.target.value)}
+									startContent={<span className='material-symbols-outlined'>search</span>}
+								/>
+							</div>
 						</div>
 
 						<Button
@@ -164,31 +209,32 @@ export default function ProjectsContent() {
 					</div>
 				</div>
 
-				<div className='p-3 h-fit'>
+				<div className='p-10 h-full bg-white overflow-y-scroll no-scrollbar'>
 					<div className='grid grid-cols-1 sm:grid-cols-1 lg:grid-cols-3 gap-5'>
 						<div className='flex items-center justify-between col-span-1 md:col-span-2 lg:col-span-3 p-3'>
-							<div className='flex justify-center items-start gap-2 hidden lg:flex'>
+							<div className='flex justify-center items-start gap-2'>
 								<h1 className='text-xl font-semibold'>All projects</h1>
 								<p className='text-slate text-2xl'>{x}</p>
 							</div>
 						</div>
-						{project && project.length > 0 ? (
-							project.map((projectItem) => (
+						{filteredProjects && filteredProjects.length > 0 ? (
+							filteredProjects.map((projectItem) => (
 								<Link
 									key={projectItem.id}
 									href={`/projects/${projectItem.id}`}>
 									<Card
-										className='bg-white p-1 relative overflow-hidden w-full h-full border-none'
+										className='bg-white p-1 relative overflow-hidden'
 										shadow='none'
-										radius='none'>
+										size='sm'>
 										<CardHeader className='relative p-0'>
-											<img
+											<Image
+												isZoomed
 												alt='Card background'
-												className='object-cover rounded-xl w-full h-[20rem] radius-sm'
+												className='object-cover w-full h-[20rem]'
 												src={projectItem.project_projectPicture}
 											/>
-											<div className='absolute rounded-xl inset-x-0 bottom-[-1px] h-1/3 bg-gradient-to-b from-transparent via-black to-gray-900 opacity-50 pointer-events-none'></div>
-											<h4 className='font-bold text-2xl absolute inset-0 flex items-end m-5 justify-start text-white opacity-100 transition-opacity duration-300'>
+											<div className='absolute rounded-xl inset-x-0 bottom-[-1px] h-1/3 bg-gradient-to-b from-transparent via-black to-gray-900 opacity-50'></div>
+											<h4 className='font-bold text-2xl absolute inset-0 flex items-end m-5 justify-start text-white opacity-100'>
 												{projectItem.project_name}
 											</h4>
 										</CardHeader>
@@ -201,7 +247,6 @@ export default function ProjectsContent() {
 												description={
 													<span className='text-xs'>{projectItem.client_email}</span>
 												}
-												className=''
 												avatarProps={{
 													src: `${projectItem.client_profilePicture}`,
 												}}
@@ -228,8 +273,10 @@ export default function ProjectsContent() {
 			</>
 			<Modal
 				isOpen={isOpen}
+				variant='bordered'
 				onOpenChange={onOpenChange}
 				placement='top-center'
+				radius='sm'
 				size='2xl'>
 				<form onSubmit={handleSubmit}>
 					<ModalContent>
@@ -244,7 +291,6 @@ export default function ProjectsContent() {
 										items={clients}
 										value={formData.selectClient}
 										onChange={handleInputChange('selectClient')}
-										label='Select client'
 										variant='bordered'
 										placeholder='Select a user'
 										labelPlacement='outside'
@@ -391,18 +437,18 @@ export default function ProjectsContent() {
 									/>
 								</div>
 							</ModalBody>
-							<ModalFooter>
+							<ModalFooter className='border-t-1'>
 								<Button
-									color='danger'
-									variant='light'
+									color='none'
+									variant='bordered'
 									size='lg'
-									onClick={onCloseModal}
-									className='bg-gray-200'>
-									Close
+									onClick={onCloseModal}>
+									Cancel
 								</Button>
 								<Button
-									color='primary'
+									className='bg-black text-white'
 									size='lg'
+									radius='sm'
 									type='submit'
 									isLoading={submitLoading}
 									disabled={submitLoading}>

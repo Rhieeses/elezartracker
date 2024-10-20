@@ -42,8 +42,6 @@
 @layer base {
 	* {
 		@apply text-sm lg:text-base;
-		font-family: 'Inter var', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
-			'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
 	}
 
 	h1 {
@@ -146,16 +144,24 @@
 	.sales-table {
 		@apply table-auto w-full text-left overflow-y-scroll;
 
+		thead {
+			tr {
+				@apply bg-slate-900 text-white; /* Removed rounded-t-lg */
+			}
+			th {
+				@apply bg-gray-100 text-slate-500 text-sm p-4 text-left;
+			}
+		}
+
 		td {
 			@apply py-3 p-1 text-left;
 		}
-		tr {
-			@apply p-5 border-b-[1px] border-slate-300;
+		tbody {
+			tr {
+				@apply p-5 border-b-[1px] border-slate-300;
+			}
 		}
 
-		th {
-			@apply bg-gray-100 text-slate-500 text-sm p-4 text-left;
-		}
 		input {
 			@apply rounded-lg p-1 text-left w-3/4;
 		}

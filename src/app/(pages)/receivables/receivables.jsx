@@ -237,280 +237,243 @@ export default function ReceivablesContent() {
 					onOpen={openAdditionals}
 				/>
 			</div>
-			<Modal
-				isOpen={isOpen}
-				onOpenChange={onOpenChange}
-				placement='top-center'
-				isDismissable={false}
-				onClose={onClose}
-				size='xl'>
-				<form onSubmit={handleSubmit}>
-					{invoice && invoice.length > 0
-						? invoice.map((invoiceItem) => (
-								<ModalContent key={invoiceItem.id}>
-									{(onClose) => (
-										<>
-											<ModalHeader className='flex gap-1 mb-5'>
-												<span className='material-symbols-outlined'>receipt</span>
-												<p>Bill Details</p>
-											</ModalHeader>
-											<ModalBody>
-												<div>
-													<div className='grid grid-cols-3 gap-5 w-full'>
-														<div className='col-span-2'>
-															<label className='block text-sm font-medium text-gray-700'>
-																Balance
-															</label>
-															<span className='mt-1 text-xl font-bold'>
-																{formatNumberDecimal(remainingAmount)}
-															</span>
-															<Chip
-																color={statusColorMap[invoiceItem.status]}
-																size='sm'
-																variant='flat'>
-																{invoiceItem.status}
-															</Chip>
-														</div>
-
-														<div className='flex justify-end col-span-1 text-white w-full gap-2 p-2'>
-															<Button
-																variant='solid'
-																size='md'
-																isIconOnly
-																color='success'
-																className='text-white'
-																startContent={
-																	<span className='material-symbols-outlined'>
-																		download
-																	</span>
-																}></Button>
-															<Button
-																variant='solid'
-																fullWidth
-																size='md'
-																isIconOnly
-																color='primary'
-																startContent={
-																	<span className='material-symbols-outlined'>
-																		mail
-																	</span>
-																}></Button>
-														</div>
-
-														<div className='flex border-[1px] col-span-3 p-5 rounded-md justify-between items-center'>
-															<User
-																name={`${invoiceItem.client_firstName} ${invoiceItem.client_lastName}`}
-																description='Client'
-																isBordered
-																className='font-bold'
-																avatarProps={{
-																	src: invoiceItem.client_profilePicture,
-																	style: {
-																		width: '70px',
-																		height: '70px',
-																	},
-																}}
-															/>
-
-															<div className=''>
-																<p className='self-center font-semibold'>
-																	{invoiceItem.project_name}
-																</p>
-																<p className='text-xs text-gray-400'>
-																	Project name
-																</p>
-															</div>
-														</div>
-
-														<div className='grid grid-cols-3 gap-5 col-span-3 border-b-[1px] p-5'>
-															<IconTextBox
-																iconText='description'
-																labelText='DESCRIPTION'
-																contentText={invoiceItem.description}
-															/>
-
-															<IconTextBox
-																iconText='event'
-																labelText='DUE DATE'
-																contentText={formatDate(invoiceItem.due_date)}
-															/>
-
-															<IconTextBox
-																iconText='account_balance_wallet'
-																labelText='BILLED AMOUNT'
-																contentText={formatNumberDecimal(
-																	invoiceItem.billed_amount,
-																)}
-															/>
-														</div>
-
-														<div className='grid grid-cols-3 gap-5 col-span-3 p-5'>
-															<IconTextBox
-																iconText='paid'
-																labelText='PAID AMOUNT'
-																contentText={formatNumber(invoiceItem.paid_amount)}
-															/>
-
-															<IconTextBox
-																iconText='balance'
-																labelText='BALANCE'
-																contentText={formatNumberDecimal(
-																	invoiceItem.balance,
-																)}
-															/>
-
-															<IconTextBox
-																iconText='hourglass_bottom'
-																labelText='DUE BY'
-																contentText={formatDate(invoiceItem.due_date)}
-															/>
-														</div>
+			<div className='flex justify-end items-stretch'>
+				<Modal
+					isOpen={isOpen}
+					onOpenChange={onOpenChange}
+					radius='sm'
+					placement='right'
+					isDismissable={false}
+					size='xl'>
+					<form onSubmit={handleSubmit}>
+						{invoice && invoice.length > 0
+							? invoice.map((invoiceItem) => (
+									<ModalContent key={invoiceItem.id}>
+										{(onClose) => (
+											<>
+												<ModalHeader className='flex flex-col gap-1 mb-5'>
+													<div className='flex'>
+														<span className='material-symbols-outlined'>receipt</span>
+														<p>Bill Details - #{invoiceItem.invoice_no}</p>
 													</div>
 
-													{invoiceItem.status === 'FULLY PAID' ? (
-														<>
-															<div className='flex col-span-3 ml-5'>
-																<div className='bg-slate-200 p-1 rounded-md h-[36px]'>
-																	<span className='material-symbols-outlined ml-1 text-slate-500'>
-																		payment
-																	</span>
-																</div>
-																<div className='ml-3'>
-																	<p className='flex text-xs text-slate-500 items-start'>
-																		EXCESS PAYMENT
-																	</p>
-																	<div className='flex'>
-																		<p className='flex items-end'>
-																			{formatNumber(
-																				invoiceItem.paid_amount -
-																					invoiceItem.billed_amount,
-																			)}
-																		</p>
-																		<p className='ml-2 text-slate-500'>
-																			FORWARDED TO THE NEXT BILLING
-																		</p>
-																	</div>
-																</div>
-															</div>
-														</>
-													) : (
-														<div className='grid grid-cols-2 gap-5 col-span-3 p-5'>
-															<Input
-																type='text'
-																label='Payment amount'
-																name='paymentAmount'
-																value={paymentData.paymentAmount}
-																onChange={handleInputChange('paymentAmount')}
-																required
-																isRequired
-																size='sm'
-																variant='bordered'
-																placeholder='Enter Payment Amount'
-																labelPlacement='outside'
-																className='font-bold'
-																startContent={
-																	<span className='material-symbols-outlined'>
-																		payment
-																	</span>
-																}
-															/>
-
-															<Input
-																type='datetime-local'
-																label='Payment date'
-																name='paymentDate'
-																value={paymentData.paymentDate}
-																onChange={handleInputChange('paymentDate')}
-																required
-																isRequired
-																size='sm'
-																variant='bordered'
-																placeholder='Enter Payment Amount'
-																labelPlacement='outside'
-																className='font-bold'
-																startContent={
-																	<span className='material-symbols-outlined'>
-																		event
-																	</span>
-																}
-															/>
-
-															<div className='p-5'>
+													<h1 className='text-center'>{invoiceItem.description}</h1>
+												</ModalHeader>
+												<ModalBody>
+													<div>
+														<div className='grid grid-cols-3 gap-5'>
+															<div className='col-span-2'>
 																<label className='block text-sm font-medium text-gray-700'>
-																	Remaining Balance
+																	Balance
 																</label>
-																<p className='mt-1 text-xl font-bold text-red-600'>
-																	{formatNumberDecimal(invoiceItem.balance)}
-																</p>
+																<span className='mt-1 text-xl font-bold'>
+																	{formatNumberDecimal(remainingAmount)}
+																</span>
+																<Chip
+																	color={statusColorMap[invoiceItem.status]}
+																	size='sm'
+																	variant='flat'>
+																	{invoiceItem.status}
+																</Chip>
+															</div>
+															<div className='col-span-1'>
+																<label className='block text-sm font-medium text-gray-700'>
+																	Due Date
+																</label>
+																<span className='mt-1 text-md font-bold'>
+																	{formatDate(invoiceItem.due_date)}
+																</span>
 															</div>
 
-															<div>
-																<Select
-																	variant='bordered'
-																	label='Category'
-																	name='paymentType'
-																	required
-																	size='sm'
-																	value={paymentData.paymentType}
-																	onChange={handleInputChange('paymentType')}
-																	isRequired
-																	className='col-span-1'>
-																	{categoryOptions.map((option) => (
-																		<SelectItem
-																			key={option.value}
-																			value={option.value}>
-																			{option.label}
-																		</SelectItem>
-																	))}
-																</Select>
+															<div className='flex border-[1px] col-span-3 p-5 rounded-md justify-between items-center'>
+																<User
+																	name={`${invoiceItem.client_firstName} ${invoiceItem.client_lastName}`}
+																	description='Client'
+																	isBordered
+																	className='font-bold'
+																	avatarProps={{
+																		src: invoiceItem.client_profilePicture,
+																		style: {
+																			width: '70px',
+																			height: '70px',
+																		},
+																	}}
+																/>
+
+																<div className=''>
+																	<p className='self-center font-semibold'>
+																		{invoiceItem.project_name}
+																	</p>
+																	<p className='text-xs text-gray-400'>
+																		Project name
+																	</p>
+																</div>
+															</div>
+
+															<div className='grid grid-cols-2 gap-5 col-span-3 p-5'>
+																<IconTextBox
+																	iconText='paid'
+																	labelText='PAID AMOUNT'
+																	contentText={formatNumber(
+																		invoiceItem.paid_amount,
+																	)}
+																/>
+																<IconTextBox
+																	iconText='account_balance_wallet'
+																	labelText='BILLED AMOUNT'
+																	contentText={formatNumberDecimal(
+																		invoiceItem.billed_amount,
+																	)}
+																/>
 															</div>
 														</div>
-													)}
-												</div>
-											</ModalBody>
-											<ModalFooter>
-												{invoiceItem.status === 'FULLY PAID' ? (
-													<Button
-														color='danger'
-														variant='light'
-														size='md'
-														onClick={onClose}
-														className='bg-gray-200'>
-														Cancel
-													</Button>
-												) : (
-													<>
+
+														{invoiceItem.status === 'FULLY PAID' ? (
+															<>
+																<div className='flex col-span-3 ml-5'>
+																	<div className='bg-slate-200 p-1 rounded-md h-[36px]'>
+																		<span className='material-symbols-outlined ml-1 text-slate-500'>
+																			payment
+																		</span>
+																	</div>
+																	<div className='ml-3'>
+																		<p className='flex text-xs text-slate-500 items-start'>
+																			EXCESS PAYMENT
+																		</p>
+																		<div className='flex'>
+																			<p className='flex items-end'>
+																				{formatNumber(
+																					invoiceItem.paid_amount -
+																						invoiceItem.billed_amount,
+																				)}
+																			</p>
+																			<p className='ml-2 text-slate-500'>
+																				FORWARDED TO THE NEXT BILLING
+																			</p>
+																		</div>
+																	</div>
+																</div>
+															</>
+														) : (
+															<div className='grid grid-cols-2 gap-5 col-span-3 p-5'>
+																<Input
+																	type='text'
+																	label='Payment amount'
+																	name='paymentAmount'
+																	value={paymentData.paymentAmount}
+																	onChange={handleInputChange('paymentAmount')}
+																	required
+																	isRequired
+																	size='sm'
+																	variant='bordered'
+																	placeholder='Enter Payment Amount'
+																	labelPlacement='outside'
+																	className='font-bold'
+																	startContent={
+																		<span className='material-symbols-outlined'>
+																			payment
+																		</span>
+																	}
+																/>
+
+																<Input
+																	type='datetime-local'
+																	label='Payment date'
+																	name='paymentDate'
+																	value={paymentData.paymentDate}
+																	onChange={handleInputChange('paymentDate')}
+																	required
+																	isRequired
+																	size='sm'
+																	variant='bordered'
+																	placeholder='Enter Payment Amount'
+																	labelPlacement='outside'
+																	className='font-bold'
+																	startContent={
+																		<span className='material-symbols-outlined'>
+																			event
+																		</span>
+																	}
+																/>
+
+																<div className='p-5'>
+																	<label className='block text-sm font-medium text-gray-700'>
+																		Remaining Balance
+																	</label>
+																	<p className='mt-1 text-xl font-bold text-red-600'>
+																		{formatNumberDecimal(invoiceItem.balance)}
+																	</p>
+																</div>
+
+																<div>
+																	<Select
+																		variant='bordered'
+																		label='Category'
+																		name='paymentType'
+																		required
+																		size='sm'
+																		value={paymentData.paymentType}
+																		onChange={handleInputChange('paymentType')}
+																		isRequired
+																		className='col-span-1'>
+																		{categoryOptions.map((option) => (
+																			<SelectItem
+																				key={option.value}
+																				value={option.value}>
+																				{option.label}
+																			</SelectItem>
+																		))}
+																	</Select>
+																</div>
+															</div>
+														)}
+													</div>
+												</ModalBody>
+
+												<ModalFooter>
+													{invoiceItem.status === 'FULLY PAID' ? (
 														<Button
-															color='danger'
-															variant='light'
-															size='md'
-															onClick={onClose}
-															className='bg-gray-200'>
+															color='none'
+															variant='bordered'
+															size='lg'
+															onClick={onClose}>
 															Cancel
 														</Button>
-														<Button
-															color='primary'
-															size='md'
-															type='submit'
-															loading={loading}
-															disabled={loading}>
-															Confirm
-														</Button>
-													</>
-												)}
-											</ModalFooter>
-										</>
-									)}
-								</ModalContent>
-						  ))
-						: null}
-				</form>
-			</Modal>
+													) : (
+														<>
+															<Button
+																color='none'
+																variant='bordered'
+																size='lg'
+																onClick={onClose}>
+																Cancel
+															</Button>
+															<Button
+																className='bg-black text-white'
+																radius='sm'
+																size='lg'
+																type='submit'
+																loading={loading}
+																disabled={loading}>
+																Confirm
+															</Button>
+														</>
+													)}
+												</ModalFooter>
+											</>
+										)}
+									</ModalContent>
+							  ))
+							: null}
+					</form>
+				</Modal>
+			</div>
 
 			<Modal
 				isOpen={isAddtionalsOpen}
 				isDismissable={false}
 				onOpenChange={changeAdditionals}
+				radius='sm'
 				placement='top-center'
 				size='2xl'>
 				<form onSubmit={handleSubmitForm}>
@@ -594,15 +557,16 @@ export default function ReceivablesContent() {
 								</ModalBody>
 								<ModalFooter>
 									<Button
-										color='danger'
-										variant='light'
+										color='none'
+										variant='bordered'
 										size='lg'
-										onClick={onClose}
-										className='bg-gray-200'>
-										Close
+										onClick={onClose}>
+										Cancel
 									</Button>
+
 									<Button
-										color='primary'
+										className='bg-black text-white'
+										radius='sm'
 										size='lg'
 										type='submit'>
 										Create

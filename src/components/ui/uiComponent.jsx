@@ -2,17 +2,21 @@ import React from 'react';
 
 const ContentBox = ({ iconText, labelText, strongText, descriptionText }) => {
 	return (
-		<div className='group hover:bg-black hover:text-white hover:scale-105 duration-300 border-1 bg-white rounded-md shadow-[0_5px_5px_-6px_rgba(0,0,0,0.3)] p-5 h-fit'>
-			<div className='flex items-start flex-col'>
-				<div className='flex items-center'>
-					<span className='rounded-md material-symbols-outlined block'>{iconText}</span>
-					<p className='ml-2'>{labelText}</p>
+		<div className='group hover:bg-black hover:text-white hover:scale-105 duration-300 border-1 bg-white rounded-2xl shadow-sm p-8 h-fit'>
+			<div className='flex items-start flex-col gap-2'>
+				<div className='flex items-center justify-between w-full'>
+					<p className='text-lg'>{labelText}</p>
+					<span
+						className='material-symbols-outlined'
+						style={{ fontSize: '32px' }}>
+						{iconText}
+					</span>
 				</div>
 
-				<div className='ml-12 m-5'>
-					<div className='text-3xl'>{strongText}</div>
-					<p className='text-slate mt-4'>{descriptionText}</p>
+				<div className='flex flex-col sm:flex-row items-center gap-5'>
+					<div className='font-semibold text-sm lg:text-2xl'>{strongText}</div>
 				</div>
+				<p className='group-hover:text-default-200 text-default-500'>{descriptionText}</p>
 			</div>
 		</div>
 	);
