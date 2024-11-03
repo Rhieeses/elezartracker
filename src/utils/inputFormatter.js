@@ -26,7 +26,7 @@ const allCapitalize = (string) => {
 };
 
 const formatNumber = (amount) => {
-	if (isNaN(amount) || amount === null || amount === undefined || amount === '') return '';
+	if (isNaN(amount) || amount === null || amount === undefined || amount === '') return;
 
 	const parts = amount.toString().split('.');
 	parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
@@ -78,13 +78,6 @@ const calculateDuration = (startDate, endDate) => {
 	} else if (end === today) {
 		return 'Project Ended!';
 	}
-
-	//const diffTime = end - start;
-	//const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-	//const daysFromToday = Math.ceil((end - today) / (1000 * 60 * 60 * 24));
-
-	//return `${daysFromToday} Day`;
 };
 
 const formatDate = (dateString) => {
@@ -194,16 +187,14 @@ function checkStatus(startDate, endDate) {
 }
 
 const calculatePercentageIncrease = (currentMonthValue, lastMonthValue) => {
-	// Convert lastMonthValue to a number
-	const last = Number(lastMonthValue); // or use parseFloat(lastMonthValue)
+	const current = Number(currentMonthValue);
+	const last = Number(lastMonthValue);
 
-	// Handle case when last month value is 0
 	if (last === 0) {
-		return currentMonthValue > 0 ? '+100% from last month' : '0%';
+		return current > 0 ? '+100% increase from last month' : '0% changes from last month';
 	}
 
-	// Calculate the percentage increase
-	const increase = Math.round(((currentMonthValue - last) / last) * 100);
+	const increase = Math.round(((current - last) / Math.abs(last)) * 100);
 	const sign = increase >= 0 ? '+' : '';
 	return `${sign}${increase}% from last month`;
 };
@@ -215,6 +206,18 @@ const getTextColor = (type) => {
 		return 'text-red-500';
 	}
 	return '';
+};
+
+const addAndFormatIncome = (income1, income2) => {
+	const value1 = Number(income1);
+	const value2 = Number(income2);
+
+	if (isNaN(value1) || isNaN(value2)) {
+		return '';
+	}
+
+	const total = value1 + value2;
+	return formatNumberDecimal(total);
 };
 
 module.exports = {
@@ -234,4 +237,5 @@ module.exports = {
 	checkStatus,
 	calculatePercentageIncrease,
 	getTextColor,
+	addAndFormatIncome,
 };

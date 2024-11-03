@@ -63,7 +63,11 @@ async function projectInsertData(projectFormData) {
     RETURNING id;
   `;
 
-	console.log(contractPrice);
+	const queryInsertSales = `
+	INSERT INTO sales_project
+  	("client_id", "project_id", "description", "date", "amount", "amount_paid", "end_date", "payment_terms")
+	VALUES ($1, $2, $3, $4, $5, $6, $7, $8);
+	`;
 
 	try {
 		// Insert the project details
@@ -82,6 +86,25 @@ async function projectInsertData(projectFormData) {
 			20,
 		]);
 		const projectId = result.rows[0].id;
+
+		let payTermsDetails;
+
+		if (paymentTerms === 'Full payment') {
+			payTermsDetails = 'Full payment';
+		} else {
+			payTermsDetails = `${downpayment}% Downpayment, progress ${paymentTerms}.`;
+		}
+
+		await connection.query(queryInsertSales, [
+			selectClient,
+			projectId,
+			projectDescription,
+			startDate,
+			contractPrice,
+			0,
+			endDate,
+			payTermsDetails,
+		]);
 
 		const accountsProjectSql = `
 					INSERT INTO accounts_project
@@ -243,6 +266,12 @@ async function salesPaymentInsert(salesPaymentData) {
 		RETURNING project_id;
 	`;
 
+	const querySalesProjectUpdate = `
+	UPDATE sales_project
+	SET amount_paid = amount_paid + $1
+	WHERE project_id = $2;
+`;
+
 	const accountsPaidSql = `
 	UPDATE accounts_project
 	SET total_paid = total_paid + $1
@@ -252,14 +281,7 @@ async function salesPaymentInsert(salesPaymentData) {
 
 	try {
 		await connection.query(accountsPaidSql, [paymentAmount, projectId]);
-		console.log('Expenses inserted in accounts!');
-	} catch (error) {
-		console.error(`Error processing paid data: ${error.message}`);
-		console.error(`Error processing accounts paid data: ${error.message}`);
-	}
-
-	try {
-		// Insert the payment
+		console.log('Sales inserted in accounts!');
 		await connection.query(queryPaymentInsert, [
 			clientId,
 			projectId,
@@ -271,10 +293,11 @@ async function salesPaymentInsert(salesPaymentData) {
 		]);
 
 		await connection.query(querySalesUpdate, [paymentAmount, invoiceId]);
+		await connection.query(querySalesProjectUpdate, [paymentAmount, projectId]);
 		console.log('Sales updated and Payment inserted!');
 	} catch (error) {
-		console.error(`Error processing payment data: ${error.message}`);
-		throw new Error(`Error processing payment data: ${error.message}`);
+		console.error(`Error processing paid data: ${error.message}`);
+		console.error(`Error processing accounts paid data: ${error.message}`);
 	}
 }
 
@@ -291,11 +314,37 @@ async function expenseInsert(expenseFormData) {
 	} = expenseFormData;
 
 	const queryExpenseInsert = `
+		WITH vendor_insert AS (
+			INSERT INTO vendor (vendor_name)
+			VALUES ($2) 
+			ON CONFLICT (vendor_name) DO NOTHING
+			RETURNING id
+		),
+		selected_vendor AS (
+			SELECT id FROM vendor WHERE vendor_name = $2
+			UNION ALL
+			SELECT id FROM vendor_insert
+		)
+		INSERT INTO expense (
+			"project_id", 
+			"vendor_name", 
+			"purchase_date", 
+			"expense_description", 
+			"purchase_amount", 
+			"payment_type", 
+			"invoiceNo",
+			"vendor_id"
+		) 
+		VALUES ($1, $2, $3, $4, $5, $6, $7, (SELECT id FROM selected_vendor LIMIT 1))
+		RETURNING *;
+	`;
+
+	/**const queryExpenseInsert = `
 		INSERT INTO expense
 		("project_id", "vendor_id", "purchase_date", "expense_description", "purchase_amount", "payment_type", "invoiceNo", "vendor_name")
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 		RETURNING *;
-	`;
+	`;**/
 
 	const accountsExpenseSql = `
 		UPDATE accounts_project
@@ -314,7 +363,19 @@ async function expenseInsert(expenseFormData) {
 
 	try {
 		// Insert the expense
+
 		await connection.query(queryExpenseInsert, [
+			projectId,
+			vendorName,
+			purchaseDate,
+			description,
+			purchaseAmount,
+			paymentType,
+			invoiceNo,
+		]);
+
+		/** 
+		await connection.query(queryExpenseInsertss, [
 			projectId,
 			vendor,
 			purchaseDate,
@@ -323,7 +384,7 @@ async function expenseInsert(expenseFormData) {
 			paymentType,
 			invoiceNo,
 			vendorName,
-		]);
+		]);*/
 		console.log('Expense inserted!');
 	} catch (error) {
 		console.error(`Error processing expense data: ${error.message}`);
@@ -394,6 +455,234 @@ async function expenseScanInsert(expenseFormData) {
 	}
 }
 
+async function payablePaymentInsert(expenseFormData) {
+	const {
+		projectId,
+		invoiceId,
+		vendor,
+		description,
+		purchaseDate,
+		purchaseAmount,
+		paymentType,
+		invoiceNo,
+		vendorName,
+	} = expenseFormData;
+
+	// Queries
+	const queryUpdatePayable = `
+		UPDATE payable
+		SET amount_paid = amount_paid + $1
+		WHERE id = $2
+		RETURNING balance, amount_paid, status, amount, is_direct;
+	`;
+
+	const queryUpdateExpense = `
+		UPDATE expense
+		SET balance = $1,
+			status = $3
+		WHERE "invoiceNo" = $2
+		RETURNING *; 
+	`;
+
+	const accountsExpenseSql = `
+		UPDATE accounts_project
+		SET total_expenses = total_expenses + $1
+		WHERE project_id = $2
+		RETURNING *;
+	`;
+
+	const checkInvoiceExist = `
+		SELECT COUNT(*) AS count
+		FROM expense
+		WHERE "invoiceNo" = $1;
+	`;
+
+	const transactionSql = `
+		INSERT INTO payables_transaction
+		("vendor_id", "invoice_id", "payment_description", "payment_amount", "payment_date", "payment_type", "project_id")
+		VALUES ($1, $2, $3, $4, $5, $6, $7);
+	`;
+
+	const queryExpensensert = `
+	INSERT INTO expense
+		("project_id", "vendor_id", "purchase_date", "expense_description", "purchase_amount", "payment_type", "invoiceNo", "vendor_name", "direct_expense","status", "is_payable","balance")
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11 , $12)
+		RETURNING *;
+	`;
+
+	try {
+		// Insert transaction data
+		await connection.query(transactionSql, [
+			vendor,
+			invoiceNo,
+			description,
+			purchaseAmount,
+			purchaseDate,
+			paymentType,
+			projectId,
+		]);
+		console.log('Transaction inserted!');
+
+		// Update payable amount and retrieve updated balance and amount_paid
+		const { rows: payableRows } = await connection.query(queryUpdatePayable, [
+			purchaseAmount,
+			invoiceId,
+		]);
+		const { balance, amount_paid, amount, status, is_direct } = payableRows[0];
+
+		// Check if the invoice already exists
+		const { rows: invoiceRows } = await connection.query(checkInvoiceExist, [invoiceNo]);
+		const invoiceExists = parseInt(invoiceRows[0].count, 10) > 0;
+
+		if (!invoiceExists) {
+			await connection.query(queryExpensensert, [
+				projectId,
+				vendor,
+				purchaseDate,
+				description,
+				amount,
+				paymentType,
+				invoiceNo,
+				vendorName,
+				is_direct,
+				status,
+				true,
+				balance,
+			]);
+			console.log('Payable inserted in expense!');
+		} else {
+			// Update existing expense if invoice exists
+			await connection.query(queryUpdateExpense, [balance, invoiceId, status]);
+			console.log('Expense updated!');
+		}
+
+		// Update accounts project expenses
+		await connection.query(accountsExpenseSql, [purchaseAmount, projectId]);
+		console.log('Expenses inserted in accounts!');
+	} catch (error) {
+		console.error(`Error processing payment data: ${error.message}`);
+		throw new Error(`Error processing payment data: ${error.message}`);
+	}
+}
+
+async function payableInsert(payableFormData) {
+	const {
+		invoiceNo,
+		vendorName,
+		vendor,
+		projectId,
+		invoiceDate,
+		dueDate,
+		description,
+		amount,
+		isDirect,
+	} = payableFormData;
+
+	const queryExpensensert = `
+	INSERT INTO expense
+		("project_id", "vendor_id", "purchase_date", "expense_description", "purchase_amount", "payment_type", "invoiceNo", "vendor_name", "direct_expense","status", "is_payable","balance")
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11 , $12)
+		RETURNING *;
+	`;
+
+	const queryPayableInsert = `
+		INSERT INTO payable
+		("project_id", "invoice_date", "due_date", "description", "amount", "amount_paid" , "vendor_id" , "invoice_no", "is_direct")
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+		RETURNING *;
+	`;
+
+	const queryPayableOthersInsert = `
+		WITH vendor_insert AS (
+			INSERT INTO vendor (vendor_name)
+			VALUES ($2) 
+			ON CONFLICT (vendor_name) DO NOTHING
+			RETURNING id
+		),
+		selected_vendor AS (
+			SELECT id FROM vendor WHERE vendor_name = $2
+			UNION ALL
+			SELECT id FROM vendor_insert
+		)
+		INSERT INTO payable (
+			project_id, 
+			invoice_date, 
+			due_date, 
+			description, 
+			amount, 
+			amount_paid, 
+			vendor_id, 
+			invoice_no,
+			is_direct
+		)
+		VALUES ($1, $3, $4, $5, $6, $7, (SELECT id FROM selected_vendor LIMIT 1), $8, $9)
+		RETURNING *;
+	`;
+
+	try {
+		if (vendor === 'Others') {
+			await connection.query(queryPayableOthersInsert, [
+				projectId,
+				vendorName,
+				invoiceDate,
+				dueDate,
+				description,
+				amount,
+				0, // amount_paid
+				invoiceNo,
+				isDirect,
+			]);
+		} else {
+			await connection.query(queryPayableInsert, [
+				projectId,
+				invoiceDate,
+				dueDate,
+				description,
+				amount,
+				0,
+				vendor,
+				invoiceNo,
+				isDirect,
+			]);
+		}
+
+		await connection.query(queryExpensensert, [
+			projectId,
+			vendor,
+			invoiceDate,
+			description,
+			amount,
+			'N/A',
+			invoiceNo,
+			vendorName,
+			isDirect,
+			'UNPAID',
+			true,
+			amount,
+		]);
+		console.log('Payable inserted in expense!');
+	} catch (error) {
+		console.error('Error inserting payable:', error);
+	}
+
+	/**try {
+		await connection.query(queryPayableInsert, [
+			projectId,
+			invoiceDate,
+			dueDate,
+			description,
+			amount,
+			0,
+			vendor,
+			invoiceNo,
+		]);
+		console.log('Payable inserted!');
+	} catch (error) {
+		console.error(`Error processing Payable data: ${error.message}`);
+		throw new Error(`Error processing Payable data: ${error.message}`);
+	}**/
+}
+
 async function salesInsert(salesFormData) {
 	const { projectId, dueDate, description, amount } = salesFormData;
 
@@ -411,7 +700,6 @@ async function salesInsert(salesFormData) {
 	`;
 
 	try {
-		// Insert the expense
 		await connection.query(queryExpenseInsert, [
 			projectId,
 			generateRandomInvoiceNumber(),
@@ -426,8 +714,8 @@ async function salesInsert(salesFormData) {
 
 		await connection.query(queryUpdateProject, [amount, projectId]);
 	} catch (error) {
-		console.error(`Error processing expense data: ${error.message}`);
-		throw new Error(`Error processing expense data: ${error.message}`);
+		console.error(`Error processing sales data: ${error.message}`);
+		throw new Error(`Error processing sales data: ${error.message}`);
 	}
 }
 
@@ -520,6 +808,8 @@ module.exports = {
 	expenseInsert,
 	expenseScanInsert,
 	salesInsert,
+	payableInsert,
+	payablePaymentInsert,
 	transferDataInsert,
 	notificationStatusInsert,
 	setNotificationInsert,

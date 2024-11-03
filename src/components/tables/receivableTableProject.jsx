@@ -56,6 +56,8 @@ export default function ReceivablesTableProject({
 	const filteredItems = useMemo(() => {
 		let filteredUsers = [...receivable];
 
+		//filteredUsers = filteredUsers.filter((user) => user && user.status === 'UNPAID');
+
 		if (hasSearchFilter) {
 			filteredUsers = filteredUsers.filter(
 				(user) =>
@@ -284,7 +286,7 @@ export default function ReceivablesTableProject({
 					isCompact
 					showControls
 					showShadow
-					color='primary'
+					classNames={{ cursor: 'bg-slate-900 text-white' }}
 					page={page}
 					total={pages}
 					onChange={setPage}
@@ -294,36 +296,50 @@ export default function ReceivablesTableProject({
 	}, [page, pages]);
 
 	return (
-		<Table
-			aria-label='Example table with custom cells, pagination and sorting'
-			removeWrapper
-			bottomContent={bottomContent}
-			bottomContentPlacement='outside'
-			selectedKeys={selectedKeys}
-			sortDescriptor={sortDescriptor}
-			topContent={topContent}
-			topContentPlacement='outside'
-			onSelectionChange={setSelectedKeys}
-			onSortChange={setSortDescriptor}>
-			<TableHeader columns={headerColumns}>
-				{(column) => (
-					<TableColumn
-						key={column.uid}
-						align={column.uid === 'actions' ? 'center' : 'start'}
-						allowsSorting={column.sortable}>
-						{column.name}
-					</TableColumn>
-				)}
-			</TableHeader>
-			<TableBody
-				emptyContent={'No receivable found'}
-				items={sortedItems}>
-				{(item) => (
-					<TableRow key={item.id}>
-						{(columnKey) => <TableCell>{renderCell(item, columnKey)}</TableCell>}
-					</TableRow>
-				)}
-			</TableBody>
-		</Table>
+		<div className='h-fit bg-white rounded-lg'>
+			<div className='flex flex-col p-5'>
+				<div className='flex items-center space-x-4 col-span-2 lg:col-span-4 p-10 pb-5 h-full'>
+					<span
+						className='material-symbols-outlined'
+						style={{ fontSize: '36px' }}>
+						payments
+					</span>
+					<h1 className='font-bold tracking-wide text-3xl text-center'>Outstanding</h1>
+				</div>
+				<Table
+					aria-label='Example table with custom cells, pagination and sorting'
+					removeWrapper
+					bottomContent={bottomContent}
+					bottomContentPlacement='outside'
+					selectedKeys={selectedKeys}
+					sortDescriptor={sortDescriptor}
+					topContent={topContent}
+					topContentPlacement='outside'
+					onSelectionChange={setSelectedKeys}
+					onSortChange={setSortDescriptor}
+					classNames={{ th: 'bg-slate-900 text-white', td: 'border-b-1' }}
+					className='p-2 w-full rounded-none'>
+					<TableHeader columns={headerColumns}>
+						{(column) => (
+							<TableColumn
+								key={column.uid}
+								align={column.uid === 'actions' ? 'center' : 'start'}
+								allowsSorting={column.sortable}>
+								{column.name}
+							</TableColumn>
+						)}
+					</TableHeader>
+					<TableBody
+						emptyContent={'No receivable found'}
+						items={sortedItems}>
+						{(item) => (
+							<TableRow key={item.id}>
+								{(columnKey) => <TableCell>{renderCell(item, columnKey)}</TableCell>}
+							</TableRow>
+						)}
+					</TableBody>
+				</Table>
+			</div>
+		</div>
 	);
 }

@@ -1,12 +1,11 @@
 'use client';
-import { PieChart, LineChart } from '@/components/ui/chart';
+import { LineChart } from '@/components/ui/chart';
 import Layout from '@/components/ui/layout';
 import { ContentBox } from '@/components/ui/uiComponent';
 import { DashboardData } from '@/backend/data/dataHooks';
-import { formatNumber } from '@/utils/inputFormatter';
+import { formatNumberDecimal, calculatePercentageIncrease } from '@/utils/inputFormatter';
 import { Spinner, User } from '@nextui-org/react';
 import { PaymentData } from '@/backend/data/dataHooks';
-import { calculatePercentageIncrease } from '@/utils/inputFormatter';
 
 export default function DashboardContent() {
 	const { dashboard, loading, error } = DashboardData();
@@ -37,7 +36,7 @@ export default function DashboardContent() {
 	return (
 		<Layout>
 			<div className='bg-white grid gap-5 border-slate-400 m-5 grid-cols-2 md:grid-cols-4 lg:grid-cols-4'>
-				<div className='flex space-x-4 col-span-2 lg:col-span-4 p-5'>
+				<div className='flex space-x-4 col-span-2 lg:col-span-5 p-5'>
 					<span
 						className='material-symbols-outlined'
 						style={{ fontSize: '36px' }}>
@@ -50,22 +49,23 @@ export default function DashboardContent() {
 					iconText='construction'
 					labelText='Projects'
 					strongText={dashboard.dashboard.total_projects}
-					descriptionText={`${dashboard.dashboard.total_active_project} active project `}
+					descriptionText={`${dashboard.dashboard.total_active_projects} active project `}
 				/>
 
 				<ContentBox
 					iconText='attach_money'
 					labelText='Total Revenue'
-					strongText={formatNumber(dashboard.dashboard.revenue)}
+					strongText={formatNumberDecimal(dashboard.dashboard.revenue)}
 					descriptionText={calculatePercentageIncrease(
 						dashboard.dashboard.current_month_revenue,
 						dashboard.dashboard.last_month_revenue,
 					)}
 				/>
+
 				<ContentBox
 					iconText='trending_up'
-					labelText='Sales'
-					strongText={formatNumber(dashboard.dashboard.income)}
+					labelText='Net Profit'
+					strongText={formatNumberDecimal(dashboard.dashboard.net_profit)}
 					descriptionText={calculatePercentageIncrease(
 						dashboard.dashboard.current_month_income,
 						dashboard.dashboard.last_month_income,
@@ -75,7 +75,7 @@ export default function DashboardContent() {
 				<ContentBox
 					iconText='trending_down'
 					labelText='Expenses'
-					strongText={formatNumber(dashboard.dashboard.expenses)}
+					strongText={formatNumberDecimal(dashboard.dashboard.expenses)}
 					descriptionText={calculatePercentageIncrease(
 						dashboard.dashboard.current_month_expenses,
 						dashboard.dashboard.last_month_expenses,
@@ -90,7 +90,7 @@ export default function DashboardContent() {
 					</div>
 				</div>
 
-				<div className='col-span-2 lg:col-span-1'>
+				<div className='col-span-2 lg:col-span-2'>
 					<div className='bg-white rounded-2xl shadow-lg p-8 border-1 space-y-5'>
 						<span>
 							<h1 className='font-semibold text-xl'>Recent Sales</h1>
@@ -109,7 +109,7 @@ export default function DashboardContent() {
 									}}
 								/>
 
-								<p className='text-green-600 text-lg'>{`+ ${formatNumber(
+								<p className='text-green-600 text-lg'>{`+ ${formatNumberDecimal(
 									item.payment_amount,
 								)}`}</p>
 							</div>

@@ -1,6 +1,6 @@
 import ReportsContent from './reports';
 export const metadata = {
-	title: 'Capstone | Expense',
+	title: 'Reports',
 	description: 'Capstone',
 };
 

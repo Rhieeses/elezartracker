@@ -1,6 +1,6 @@
 import ReceivablesContent from '../receivables/receivables';
 export const metadata = {
-	title: 'Capstone | Receivables',
+	title: 'Receivables',
 	description: 'Capstone',
 };
 

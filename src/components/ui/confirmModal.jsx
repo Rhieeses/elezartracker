@@ -55,22 +55,19 @@ export default function ConfirmModal({ isOpen, onOpenChange, projectId, clientId
 					<>
 						<ModalHeader className='flex flex-col gap-1'>Are you sure?</ModalHeader>
 						<ModalBody>
-							<span
-								className='material-symbols-outlined text-red-500 text-center'
-								style={{ fontSize: '64px' }}>
-								warning
-							</span>
 							<p>Do you really want to delete this? This action cannot be undone.</p>
 						</ModalBody>
 						<ModalFooter>
 							<Button
+								radius='sm'
 								variant='bordered'
 								onPress={onClose}>
 								Cancel
 							</Button>
 							<Button
 								variant='solid'
-								className='bg-red-900 text-white'
+								radius='sm'
+								className='bg-rose-700 text-white'
 								onPress={handleDelete}>
 								Confirm
 							</Button>

@@ -16,7 +16,9 @@ const ContentBox = ({ iconText, labelText, strongText, descriptionText }) => {
 				<div className='flex flex-col sm:flex-row items-center gap-5'>
 					<div className='font-semibold text-sm lg:text-2xl'>{strongText}</div>
 				</div>
-				<p className='group-hover:text-default-200 text-default-500'>{descriptionText}</p>
+				<div className='group-hover:text-default-200 text-default-500 w-full'>
+					{descriptionText}
+				</div>
 			</div>
 		</div>
 	);

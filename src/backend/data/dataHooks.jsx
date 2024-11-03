@@ -17,10 +17,10 @@ export const columns = [
 export const columnsReceivables = [
 	{ name: 'No', uid: 'no' },
 	{ name: 'DESCRIPTION', uid: 'description' },
+	{ name: 'DUE DATE', uid: 'due_date', sortable: true },
+	{ name: 'CLIENT NAME', uid: 'name', sortable: true },
 	{ name: 'PAID', uid: 'paid_amount', sortable: true },
 	{ name: 'BALANCE', uid: 'balance', sortable: true },
-	{ name: 'CLIENT NAME', uid: 'name', sortable: true },
-	{ name: 'DUE DATE', uid: 'due_date', sortable: true },
 	{ name: 'STATUS', uid: 'status', sortable: true },
 	{ name: 'ACTIONS', uid: 'actions' },
 ];
@@ -39,22 +39,28 @@ export const statusOptions = [
 
 export const statusColorMap = {
 	'FULLY PAID': 'success',
+	PAID: 'success',
 	UNPAID: 'danger',
 	'PARTIALLY PAID': 'warning',
+	'ON PROGRESS': 'primary',
+	PENDING: 'warning',
+	FINISHED: 'success',
 };
 //
 
 //expense table
 export const columnExpense = [
 	{ name: 'NO.', uid: 'no' },
-
 	{ name: 'INVOICE', uid: 'invoiceNo' },
+	{ name: 'PURCHASE DATE', uid: 'purchase_date', sortable: true },
 	{ name: 'VENDOR', uid: 'vendor_name', sortable: true },
 	{ name: 'PROJECT', uid: 'project_name', sortable: true },
-	{ name: 'PURCHASE DATE', uid: 'purchase_date', sortable: true },
-	{ name: 'PAYMENT TYPE', uid: 'payment_type', sortable: true },
+	//{ name: 'PAYMENT TYPE', uid: 'payment_type', sortable: true },
 	{ name: 'DESCRIPTION', uid: 'expense_description' },
 	{ name: 'AMOUNT', uid: 'purchase_amount', sortable: true },
+	{ name: 'BALANCE', uid: 'balance', sortable: true },
+	{ name: 'STATUS', uid: 'status', sortable: true },
+	{ name: 'DIRECT EXPENSE', uid: 'direct_expense', sortable: true },
 	{ name: 'ACTIONS', uid: 'actions' },
 ];
 
@@ -78,7 +84,7 @@ export const columnProjectExpense = [
 ];
 
 export const transactionColumnsProject = [
-	{ name: 'No', uid: 'no' },
+	//{ name: 'No', uid: 'no' },
 	{ name: 'INVOICE', uid: 'invoice_id' },
 	{ name: 'DATE', uid: 'transaction_date', sortable: true },
 	{ name: 'CLIENT/VENDOR', uid: 'name', sortable: true },
@@ -99,11 +105,52 @@ export const paymentType = [
 ];
 
 export const transactionColumns = [
-	{ name: 'No', uid: 'no' },
+	{ name: 'No', uid: 'no', sortable: true },
 	{ name: 'DESCRIPTION', uid: 'payment_description', sortable: true },
 	{ name: 'CLIENT', uid: 'name' },
 	{ name: 'DATE', uid: 'payment_date', sortable: true },
 	{ name: 'PAYMENT TYPE', uid: 'payment_type', sortable: true },
+	{ name: 'ACTIONS', uid: 'actions' },
+];
+
+export const salesProjectColumns = [
+	{ name: 'No', uid: 'no', sortable: true },
+	{ name: 'CLIENT', uid: 'name' },
+	{ name: 'DESCRIPTION', uid: 'description' },
+	{ name: 'PAYMENT TERMS', uid: 'payment_terms' },
+	{ name: 'CONTRACT PRICE', uid: 'amount', sortable: true },
+	{ name: 'AMOUNT RECEIVED', uid: 'amount_paid' },
+	{ name: 'BALANCE', uid: 'balance' },
+	{ name: 'START DATE', uid: 'date', sortable: true },
+	{ name: 'END DATE', uid: 'end_date', sortable: true },
+	{ name: 'STATUS', uid: 'project_status', sortable: true },
+	//{ name: 'STATUS', uid: 'status', sortable: true },
+	{ name: 'ACTIONS', uid: 'actions' },
+];
+
+export const payablestransactionColumns = [
+	{ name: 'No', uid: 'no' },
+	{ name: 'INVOICE NO.', uid: 'invoice_id', sortable: true },
+	{ name: 'DESCRIPTION', uid: 'payment_description', sortable: true },
+	{ name: 'VENDOR', uid: 'name' },
+	{ name: 'DATE', uid: 'payment_date', sortable: true },
+	{ name: 'AMOUNT', uid: 'payment_amount', sortable: true },
+	{ name: 'PAYMENT TYPE', uid: 'payment_type', sortable: true },
+	{ name: 'ACTIONS', uid: 'actions' },
+];
+
+export const payablesColumns = [
+	{ name: 'No', uid: 'no' },
+	{ name: 'INVOICE NO.', uid: 'invoice_no', sortable: true },
+	{ name: 'VENDOR', uid: 'vendor_name', sortable: true },
+	{ name: 'PROJECT', uid: 'project_id' },
+	{ name: 'INVOICE DATE', uid: 'invoice_date', sortable: true },
+	{ name: 'DUE DATE', uid: 'due_date', sortable: true },
+	{ name: 'DESCRIPTION', uid: 'description', sortable: true },
+	{ name: 'AMOUNT', uid: 'amount', sortable: true },
+	{ name: 'PAID', uid: 'amount_paid', sortable: true },
+	{ name: 'BALANCE', uid: 'balance', sortable: true },
+	{ name: 'STATUS', uid: 'status', sortable: true },
 	{ name: 'ACTIONS', uid: 'actions' },
 ];
 
@@ -124,8 +171,8 @@ export const vendorColumns = [
 	{ name: 'CONTACT', uid: 'vendor_contactNo' },
 	{ name: 'ADDRESS', uid: 'vendor_address' },
 	{ name: 'SERVICES', uid: 'vendor_services' },
-	{ name: 'TOTAL ORDERS', uid: 'total_expenses' },
-	{ name: 'TOTAL PURCHASED', uid: 'total_purchase_amount' },
+	{ name: 'TOTAL ORDERS', uid: 'total_expenses', sortable: true },
+	{ name: 'TOTAL PURCHASED', uid: 'total_purchase_amount', sortable: true },
 	{ name: 'ACTIONS', uid: 'actions' },
 ];
 
@@ -157,6 +204,27 @@ export const ProjectData = () => {
 	}, []);
 
 	return { project, clients, loading, error, refetch: fetchProjectData };
+};
+
+export const ProjectName = ({ projectId }) => {
+	const [projectName, setProjectName] = useState('');
+
+	const fetchProjectName = async () => {
+		try {
+			const response = await axios.get(`/api/project-name/${projectId}`);
+			setProjectName(response.data[0].project_name);
+		} catch (err) {
+			console.log(err);
+		}
+	};
+
+	useEffect(() => {
+		if (projectId) {
+			fetchProjectName();
+		}
+	}, [projectId]);
+
+	return { projectName };
 };
 
 export const ClientData = () => {
@@ -502,6 +570,87 @@ export const PaymentData = () => {
 	}, []);
 
 	return { payment, loading, refetch: fetchPaymentData };
+};
+
+export const Sales = () => {
+	const [sales, setSales] = useState([]);
+	const [loading, setLoading] = useState(true);
+
+	const fetchSalesData = async () => {
+		setLoading(true);
+		try {
+			const response = await axios.get('/api/salesProject-details');
+			if (Array.isArray(response.data)) {
+				setSales(response.data);
+			} else {
+				console.error('Data is not an array:', response.data);
+			}
+		} catch (error) {
+			console.error('Error fetching sales data:', error);
+		} finally {
+			setLoading(false);
+		}
+	};
+
+	useEffect(() => {
+		fetchSalesData();
+	}, []);
+
+	return { sales, loading, refetch: fetchSalesData };
+};
+
+export const PayablesTransaction = () => {
+	const [payableTransaction, setPayment] = useState([]);
+	const [loading, setLoading] = useState(true);
+
+	const fetchPayableData = async () => {
+		setLoading(true);
+		try {
+			const response = await axios.get('/api/payabletransaction-details');
+			if (Array.isArray(response.data)) {
+				setPayment(response.data);
+			} else {
+				console.error('Data is not an array:', response.data);
+			}
+		} catch (error) {
+			console.error('Error fetching sales data:', error);
+		} finally {
+			setLoading(false);
+		}
+	};
+
+	useEffect(() => {
+		fetchPayableData();
+	}, []);
+
+	return { payableTransaction, loading, refetch: fetchPayableData };
+};
+
+export const PayablesData = () => {
+	const [payables, setPayables] = useState([]);
+	const [loading, setLoading] = useState(true);
+
+	const fetchPayableData = async () => {
+		setLoading(true);
+		try {
+			const response = await axios.get('/api/payables-details');
+			if (Array.isArray(response.data)) {
+				setPayables(response.data);
+			} else {
+				console.error('Data is not an array:', response.data);
+			}
+		} catch (error) {
+			console.error('Error fetching payables data:', error);
+		} finally {
+			setLoading(false);
+		}
+	};
+
+	useEffect(() => {
+		fetchPayableData();
+	}, []);
+
+	return { payables, loading, refetch: fetchPayableData };
 };
 
 export const DashboardData = () => {

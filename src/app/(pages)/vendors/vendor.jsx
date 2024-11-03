@@ -3,7 +3,6 @@ import axios from 'axios';
 import { useState, useEffect, useCallback } from 'react';
 import Layout from '@/components/ui/layout';
 import ConfirmDelete from '@/components/ui/confirmDelete';
-import { Search } from '@/components/ui/search';
 import {
 	Modal,
 	ModalContent,
@@ -32,7 +31,6 @@ import VendorTable from './vendorTable';
 export default function VendorsContent() {
 	const [deleteVendor, setDeleteVendor] = useState(null);
 	const [editVendorId, setEditVendor] = useState(null);
-
 	const onCloseEdit = () => {
 		closeEdit();
 		setEditVendor(null);
@@ -63,20 +61,26 @@ export default function VendorsContent() {
 		vendorPicture: '',
 	};
 
-	console.log(vendor);
-
 	const [formData, setFormData] = useState(initialFormData);
 	const [file, setFile] = useState(null);
 	const [loadingForm, setLoadingForm] = useState(false); //use later for success alert
 	const [successMessage, setSuccessMessage] = useState(''); //use later for success alert
 	const [errorMessage, setErrorMessage] = useState(''); //use later for success alert
-	const [errorTable, setErrorTable] = useState('');
-	const [loadingTable, setLoadingTable] = useState(false);
+
 	const [searchTerm, setSearchTerm] = useState('');
+	const [filterValue, setFilterValue] = useState('');
 
 	const filteredVendor = vendor.filter((vendorItem) =>
 		vendorItem.vendor_name.toLowerCase().includes(searchTerm.toLowerCase()),
 	);
+
+	const onSearchChange = useCallback((value) => {
+		if (value) {
+			setFilterValue(value);
+		} else {
+			setFilterValue('');
+		}
+	}, []);
 
 	const [editForm, setEditForm] = useState({
 		vendorPicture: '',
@@ -128,7 +132,7 @@ export default function VendorsContent() {
 
 		try {
 			const response = await axios.post(`/api/edit-vendor/${editVendorId}`, submitData);
-			console.log(response.data.message);
+			//console.log(response.data.message);
 			refetch();
 		} catch (error) {
 			console.error('Failed to edit vendor:', error);
@@ -207,90 +211,6 @@ export default function VendorsContent() {
 		}
 	};
 
-	const columns = [
-		{ key: 'name', label: 'NAME' },
-		{ key: 'contact', label: 'CONTACT' },
-		{ key: 'address', label: 'ADDRESS' },
-		{ key: 'services', label: 'SERVICES' },
-		{ key: 'actions', label: 'ACTIONS' },
-	];
-
-	const getRows = () => {
-		if (loadingTable) return [];
-		if (errorTable) return [];
-
-		// If vendor data is available
-		return filteredVendor.length > 0
-			? filteredVendor.map((vendorItem) => ({
-					key: vendorItem.id,
-					name: vendorItem.vendor_name,
-					picture: vendorItem.vendor_picture,
-					contact: vendorItem.vendor_contactNo,
-					email: vendorItem.vendor_email,
-					address: vendorItem.vendor_address,
-					services: vendorItem.vendor_services,
-			  }))
-			: [];
-	};
-
-	const vendors = getRows();
-
-	const renderCell = (vendor, columnKey) => {
-		const cellValue = vendor[columnKey];
-
-		switch (columnKey) {
-			case 'name':
-				return (
-					<User
-						avatarProps={{ radius: 'lg', src: vendor.picture }}
-						description={vendor.vendor_name}
-						name={cellValue}></User>
-				);
-
-			case 'contact':
-				return (
-					<div>
-						{cellValue}
-						<p className='text-blue-600'>{vendor.email}</p>
-					</div>
-				);
-			case 'actions':
-				return (
-					<div className='relative flex items-center gap-2 justify-center'>
-						<Tooltip
-							content='Edit user'
-							color='primary'>
-							<Button
-								isIconOnly
-								color='primary'
-								variant='flat'
-								onPress={() => handleRowEdit(vendor.key)}>
-								<span className='material-symbols-outlined text-lg text-blue-400 cursor-pointer active:opacity-50'>
-									edit
-								</span>
-							</Button>
-						</Tooltip>
-						<Tooltip
-							color='danger'
-							content='Delete user'>
-							<Button
-								isIconOnly
-								color='danger'
-								variant='flat'
-								onPress={() => handleRowDelete(vendor.key)}>
-								<span className='material-symbols-outlined text-lg cursor-pointer active:opacity-50'>
-									delete
-								</span>
-							</Button>
-						</Tooltip>
-					</div>
-				);
-
-			default:
-				return cellValue;
-		}
-	};
-
 	const handleRowEdit = (id) => {
 		setEditVendor(id);
 		openEdit(true);
@@ -320,6 +240,8 @@ export default function VendorsContent() {
 				<div className='grid grid-cols-1 gap-5 p-3 h-fit'>
 					<VendorTable
 						vendor={vendor}
+						filterValue={filterValue}
+						onSearchChange={onSearchChange}
 						onRowSelect={handleRowEdit}
 						onRowDelete={handleRowDelete}
 						onOpen={onOpen}
@@ -598,63 +520,3 @@ export default function VendorsContent() {
 		</Layout>
 	);
 }
-/**
- * <div className='p-10 flex justify-between items-center'>
-					<div className='flex space-x-4'>
-						<span
-							className='material-symbols-outlined'
-							style={{ fontSize: '36px' }}>
-							local_shipping
-						</span>
-						<h1 className='font-semibold tracking-wide text-3xl text-left'>Vendors</h1>
-					</div>
-					<div className='flex items-center justify-end gap-2'>
-						<div className='lg:w-[25rem] w-1/2 hidden lg:inline'>
-							<Input
-								isClearable
-								type='text'
-								color='default'
-								variant='bordered'
-								radius='sm'
-								size='lg'
-								placeholder='Type to search...'
-								value={searchTerm}
-								onChange={(e) => setSearchTerm(e.target.value)}
-								startContent={<span className='material-symbols-outlined'>search</span>}
-							/>
-						</div>
-						<Button
-							color='secondary'
-							className='text-white bg-black rounded-md p-3 tracking-wider '
-							size='lg'
-							onPress={onOpen}
-							radius='none'>
-							+ Add Vendor
-						</Button>
-					</div>
-				</div>
- * 	<Table
-						classNames={{ th: 'bg-slate-900 text-white', td: 'border-b-1' }}
-						className='p-2 w-full rounded-none overflow-x-scroll lg:overflow-x-hidden'
-						removeWrapper
-						aria-label='vendors-list'>
-						<TableHeader columns={columns}>
-							{(column) => (
-								<TableColumn
-									key={column.uid}
-									align={column.key === 'actions' ? 'center' : 'start'}>
-									{column.label}
-								</TableColumn>
-							)}
-						</TableHeader>
-						<TableBody
-							items={vendors}
-							emptyContent={'No rows to display.'}>
-							{(item) => (
-								<TableRow key={item.id}>
-									{(columnKey) => <TableCell>{renderCell(item, columnKey)}</TableCell>}
-								</TableRow>
-							)}
-						</TableBody>
-					</Table>
- */

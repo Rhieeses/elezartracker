@@ -19,15 +19,19 @@ import jwtDecode from 'jwt-decode'; // Ensure jwt-decode is installed
 import { useState, useEffect } from 'react';
 
 export default function Header({ children }) {
-	const [username, setUsername] = useState('');
+	const [user, setUser] = useState(null);
 
 	useEffect(() => {
-		// Get the user data from session storage
-		const user = JSON.parse(sessionStorage.getItem('user'));
+		const fetchUser = async () => {
+			try {
+				const response = await axios.get('/api/getUser', { withCredentials: true });
+				setUser(response.data);
+			} catch (err) {
+				setError(err.response ? err.response.data : 'Error fetching user');
+			}
+		};
 
-		if (user) {
-			setUsername(user.username);
-		}
+		fetchUser();
 	}, []);
 
 	let pathname = usePathname();
@@ -86,7 +90,7 @@ export default function Header({ children }) {
 						</div>
 					</div>
 
-					<div className='flex items-center space-x-5'>
+					<div className='flex items-center space-x-5 pr-3'>
 						<div className='flex space-x-2'>
 							<Dropdown
 								radius='sm'
@@ -153,11 +157,12 @@ export default function Header({ children }) {
 							<DropdownTrigger>
 								<User
 									as='button'
-									className='my-2'
+									className='text-sm p-2'
 									avatarProps={{
-										src: '/bookkeeper.jpg',
+										src: user?.profilepicture,
 									}}
-									name={username}
+									name={user?.name}
+									description={user?.position}
 								/>
 							</DropdownTrigger>
 							<DropdownMenu aria-label='Action event example'>

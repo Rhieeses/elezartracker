@@ -139,7 +139,7 @@ export default function ExpenseProjectTable({
 			case 'no':
 				return rowNumber;
 			case 'vendor_name':
-				return (
+				return cellValue ? (
 					<User
 						avatarProps={{ radius: 'full', size: 'sm', src: user.vendor_picture }}
 						classNames={{
@@ -147,14 +147,27 @@ export default function ExpenseProjectTable({
 						}}
 						description='5/12 payments paid'
 						name={cellValue}></User>
+				) : (
+					<p className='text-sm text-default-500'>No applicable vendor</p>
 				);
 
 			case 'expense_description':
-				return (
+				let count = (cellValue.match(/\n/g) || []).length;
+
+				return count <= 3 ? (
 					<div className='flex gap-2'>
 						<span className='material-symbols-outlined'>receipt_long</span>
-						{formatDescription(cellValue)}
+						<p className='text-blue-500'>{formatDescription(cellValue)}</p>
 					</div>
+				) : (
+					<details className='cursor-pointer'>
+						<summary className='flex gap-2'>
+							<span className='material-symbols-outlined'>receipt_long</span>
+							<p className='text-default-400'>Show more...</p>
+							<span className='material-symbols-outlined'>arrow_drop_down</span>
+						</summary>
+						<p className='ml-5 text-blue-500'>{formatDescription(cellValue)}</p>
+					</details>
 				);
 
 			case 'invoiceNo':
@@ -254,9 +267,6 @@ export default function ExpenseProjectTable({
 				<div className='flex justify-end gap-3 items-end'>
 					<div className='flex gap-3 items-center'>
 						<Button
-							startContent={
-								<span className='material-symbols-outlined'>document_scanner</span>
-							}
 							size='md'
 							variant='solid'
 							radius='sm'
@@ -387,13 +397,14 @@ export default function ExpenseProjectTable({
 
 	const initialFormData = {
 		invoiceNo: '',
-		vendor: '',
+		vendor: null,
+		other: '',
 		vendorName: '',
 		purchaseDate: '',
 		description: '',
 		purchaseAmount: '',
 		paymentType: '',
-		projectId: projectId[0],
+		projectId: projectId,
 	};
 
 	let categoryOptions = [
@@ -403,8 +414,11 @@ export default function ExpenseProjectTable({
 	];
 	const [formData, setFormData] = useState(initialFormData);
 	const [vendor, setVendor] = useState([]);
+	const [isOther, setIsOthers] = useState(false);
 	const [message, setMessage] = useState(false);
 	const [loading, setLoading] = useState(false);
+
+	const vendorWithOthers = [...vendor, { id: 333333, vendor_name: 'Others' }];
 
 	const handleInput = (field) => (event) => {
 		const value = event.target.value;
@@ -421,7 +435,7 @@ export default function ExpenseProjectTable({
 
 			const newVendorName =
 				field === 'vendor'
-					? vendor.find((v) => v.id === Number(value))?.vendor_name || ''
+					? vendorWithOthers.find((v) => v.id === Number(value))?.vendor_name || ''
 					: prev.vendorName;
 
 			return {
@@ -430,6 +444,10 @@ export default function ExpenseProjectTable({
 				vendorName: newVendorName,
 			};
 		});
+
+		if (field === 'vendor') {
+			setIsOthers(value === '333333');
+		}
 	};
 
 	const handleSubmit = async (event) => {
@@ -439,6 +457,7 @@ export default function ExpenseProjectTable({
 			...formData,
 			purchaseAmount: removeFormatting(formData.purchaseAmount),
 			invoiceNo: removeFormatting(formData.invoiceNo),
+			vendorName: formData.vendorName === 'Others' ? formData.other : formData.vendorName,
 		};
 
 		try {
@@ -456,6 +475,7 @@ export default function ExpenseProjectTable({
 			});
 			console.error('Error:', error);
 		} finally {
+			setFormData(initialFormData);
 			setLoading(false);
 		}
 	};
@@ -488,14 +508,7 @@ export default function ExpenseProjectTable({
 						arrow_back_ios_new
 					</span>
 
-					<div className='flex gap-1 items-center w-full'>
-						<span
-							className='material-symbols-outlined'
-							style={{ fontSize: '42px' }}>
-							house
-						</span>
-						<p className='text-4xl font-bold text-blue-800'>{projectName || 'Loading...'}</p>
-					</div>
+					<p className='text-4xl font-bold text-blue-800'>{projectName || 'Loading...'}</p>
 				</div>
 				{topContent}
 			</div>
@@ -529,7 +542,7 @@ export default function ExpenseProjectTable({
 						<TableCell colSpan={headerColumns.length}>
 							<form
 								onSubmit={handleSubmit}
-								className='grid grid-cols-7 gap-4'>
+								className='grid grid-cols-7 gap-4 space-x-10'>
 								<Input
 									type='text'
 									label='Invoice'
@@ -540,37 +553,67 @@ export default function ExpenseProjectTable({
 									placeholder='Enter your invoice no'
 									isRequired
 								/>
-								<Select
-									items={vendor}
-									value={formData.vendor}
-									onChange={handleInput('vendor')}
-									label='Select vendor'
-									variant='underlined'
-									labelPlacement='inside'
-									isRequired
-									className='w-full'>
-									{(vendor) => (
-										<SelectItem
-											key={vendor.id}
-											value={vendor.id}
-											textValue={vendor.vendor_name}>
-											<div className='flex gap-2 items-center'>
-												<Avatar
-													alt={vendor.vendor_name}
-													className='flex-shrink-0'
-													size='sm'
-													src={vendor.vendor_picture}
-												/>
-												<div className='flex flex-col'>
-													<span className='text-small'>{vendor.vendor_name}</span>
-													<span className='text-tiny text-default-400'>
-														{vendor.vendor_services}
-													</span>
+								<div className='flex flex-col '>
+									<Select
+										items={vendorWithOthers}
+										value={formData.vendor}
+										onChange={handleInput('vendor')}
+										label='Select vendor'
+										variant='underlined'
+										placeholder='Select a vendor'
+										renderValue={(items) => {
+											return items.map((item) => (
+												<div
+													key={item.key}
+													className='flex gap-2 items-center'>
+													<Avatar
+														alt={item.data.vendor_name}
+														className='flex-shrink-0'
+														size='sm'
+														src={item.data.vendor_picture}
+													/>
+													<div className='flex flex-col'>
+														<span>{item.data.vendor_name}</span>
+													</div>
 												</div>
-											</div>
-										</SelectItem>
-									)}
-								</Select>
+											));
+										}}>
+										{(vendor) => (
+											<SelectItem
+												key={vendor.id}
+												value={vendor.id}
+												textValue={vendor.vendor_name}>
+												<div className='flex gap-2 items-center'>
+													<Avatar
+														alt={vendor.vendor_name}
+														className='flex-shrink-0'
+														size='sm'
+														src={vendor.vendor_picture}
+													/>
+													<div className='flex flex-col'>
+														<span className='text-small'>{vendor.vendor_name}</span>
+														<span className='text-tiny text-default-400'>
+															{vendor.vendor_services}
+														</span>
+													</div>
+												</div>
+											</SelectItem>
+										)}
+									</Select>
+
+									<Input
+										type='text'
+										label='Vendor Name'
+										labelPlacement='inside'
+										placeholder='Enter vendor name'
+										variant='underlined'
+										name='other'
+										className={`${isOther ? '' : 'hidden'}`}
+										value={formData.other}
+										onChange={handleInput('other')}
+									/>
+								</div>
+
 								<Textarea
 									type='text'
 									label='Description'

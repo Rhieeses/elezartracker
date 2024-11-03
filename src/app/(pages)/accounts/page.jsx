@@ -1,7 +1,7 @@
 import AccountsContent from './accounts';
 
 export const metadata = {
-	title: 'Capstone | Accounts',
+	title: 'Accounts',
 	description: 'Capstone',
 };
 

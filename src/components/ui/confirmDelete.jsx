@@ -23,23 +23,19 @@ export default function ConfirmDelete({ isOpen, onOpenChange, confirmCallback })
 					<>
 						<ModalHeader className='flex flex-col gap-1'>Are you sure?</ModalHeader>
 						<ModalBody>
-							<span
-								className='material-symbols-outlined text-red-500 text-center'
-								style={{ fontSize: '64px' }}>
-								warning
-							</span>
 							<p>Do you really want to delete this? This action cannot be undone.</p>
 						</ModalBody>
 						<ModalFooter>
 							<Button
-								color='danger'
-								variant='solid'
+								radius='sm'
+								variant='bordered'
 								onClick={onClose}>
 								Cancel
 							</Button>
 							<Button
-								variant='flat'
-								color='primary'
+								variant='solid'
+								radius='sm'
+								className='bg-rose-700 text-white'
 								onClick={() => {
 									confirmCallback(); // Call the confirmation callback
 									onClose(); // Close the modal

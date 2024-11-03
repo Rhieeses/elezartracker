@@ -18,18 +18,18 @@ import Layout from '@/components/ui/layout';
 import { formatDate, formatNumber } from '@/utils/inputFormatter';
 import { IconTextBox } from '@/components/ui/uiComponent';
 import SalesTable from '@/components/tables/salesTable';
-import { PaymentData } from '@/backend/data/dataHooks';
+import { Sales } from '@/backend/data/dataHooks';
 import ConfirmDelete from '@/components/ui/confirmDelete';
 
 export default function SalesContent() {
-	const { payment, loading, refetch } = PaymentData();
+	const { sales, loading, refetch } = Sales();
 	const [filterValue, setFilterValue] = useState('');
 	const { isOpen, onOpen, onOpenChange } = useDisclosure();
 	const { isOpen: isConfirm, onOpen: openConfirm, onOpenChange: closeConfirm } = useDisclosure();
 
 	const [invoice, setInvoice] = useState([]);
 	const [viewId, setViewId] = useState(null);
-	const [expenseDelete, seteExpenseDelete] = useState(null);
+	const [salesDelete, setSalesDelete] = useState(null);
 
 	const [receiptData, setReceiptData] = useState({
 		clientName: '',
@@ -42,10 +42,10 @@ export default function SalesContent() {
 		if (viewId) {
 			if (invoice && invoice.length > 0) {
 				setReceiptData({
-					clientName: invoice[0].name,
-					paymentDate: invoice[0].payment_date,
-					projectName: invoice[0].project_name,
-					paymentAmount: invoice[0].payment_amount,
+					clientName: invoice[0].vendor_name,
+					paymentDate: invoice[0].invoice_date,
+					projectName: invoice[0].project_id,
+					paymentAmount: invoice[0].amount,
 				});
 			}
 		}
@@ -53,6 +53,7 @@ export default function SalesContent() {
 
 	const handleNavigate = () => {
 		const { clientName, paymentDate, projectName, paymentAmount } = receiptData;
+		console.log(receiptData);
 
 		// Create a single params string
 		const name = encodeURIComponent(clientName);
@@ -82,17 +83,30 @@ export default function SalesContent() {
 		setViewId(null);
 	};
 	const handleDelete = (id) => {
-		seteExpenseDelete(id);
+		setSalesDelete(id);
 		openConfirm(true);
 	};
 
-	const handleRowDelete = async () => {
-		if (!expenseDelete) {
+	const handleArchive = async (id) => {
+		if (!id) {
 			console.error('No expense ID provided for deletion');
 			return;
 		}
 		try {
-			await axios.delete(`/api/sales-delete/${expenseDelete}`);
+			await axios.patch(`/api/sales-archive/${id}`);
+			refetch();
+		} catch (error) {
+			console.error('Error deleting vendor:', error);
+		}
+	};
+
+	const handleRowDelete = async () => {
+		if (!salesDelete) {
+			console.error('No expense ID provided for deletion');
+			return;
+		}
+		try {
+			await axios.delete(`/api/salesproject-delete/${salesDelete}`);
 			refetch();
 		} catch (error) {
 			console.error('Error deleting vendor:', error);
@@ -122,7 +136,8 @@ export default function SalesContent() {
 					onSearchChange={onSearchChange}
 					onRowSelect={modalPayment}
 					onRowDelete={handleDelete}
-					payment={payment}
+					onRowArchive={handleArchive}
+					payment={sales}
 				/>
 			</div>
 			<Modal

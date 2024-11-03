@@ -170,7 +170,7 @@ export const LineChart = ({ dashboard }) => {
 		],
 		datasets: [
 			{
-				label: 'Income',
+				label: 'Sales',
 				data: chartData.income,
 				borderColor: 'rgba(75, 192, 192, 1)',
 				backgroundColor: 'rgba(75, 192, 192, 0.2)',

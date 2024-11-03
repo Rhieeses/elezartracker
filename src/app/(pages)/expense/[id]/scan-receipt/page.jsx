@@ -233,7 +233,7 @@ export default function ScanReceipt({ params }) {
 					</div>
 				</div>
 
-				<div className='grid grid-cols-7 grid-rows-7 h-full w-full gap-4 pt-5'>
+				<div className='grid grid-cols-7 grid-rows-7 h-full w-full gap-4 p-5'>
 					<div className='row-span-5 overflow-y-auto max-h-1/2'>
 						<div className=' border-t-0'>
 							<div className='border-1 flex items-center p-5 '>
@@ -336,7 +336,6 @@ export default function ScanReceipt({ params }) {
 							<TableHeader>
 								<TableColumn>NO.</TableColumn>
 								<TableColumn>FILE</TableColumn>
-								<TableColumn>PROJ ID</TableColumn>
 								<TableColumn>INVOICE #</TableColumn>
 								<TableColumn>VENDOR</TableColumn>
 								<TableColumn>DESCRIPTION</TableColumn>
@@ -345,14 +344,13 @@ export default function ScanReceipt({ params }) {
 								<TableColumn>AMOUNT</TableColumn>
 								<TableColumn>ACTION</TableColumn>
 							</TableHeader>
-							<TableBody>
+							<TableBody emptyContent={'No results found'}>
 								{(results || []).map((result, index) => (
 									<TableRow
 										key={index}
 										className={index === currentIndex ? 'bg-default-300' : ''}>
 										<TableCell>{index + 1}</TableCell>
 										<TableCell>{result.fileName}</TableCell>
-										<TableCell>{result.projectId}</TableCell>
 
 										<TableCell>
 											<Input

@@ -13,19 +13,18 @@ import {
 	Dropdown,
 	DropdownMenu,
 	DropdownItem,
-	Chip,
 	User,
 	Pagination,
-	Tooltip,
+	Chip,
 } from '@nextui-org/react';
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import {
 	capitalizeOnlyFirstLetter,
 	formatNumber,
-	formatDateTime,
+	formatDate,
 	formatNumberDecimal,
 } from '@/utils/inputFormatter';
-import { transactionColumns } from '@/backend/data/dataHooks';
+import { salesProjectColumns, statusColorMap } from '@/backend/data/dataHooks';
 import { Search } from '@/components/ui/search';
 
 export default function SalesTable({
@@ -34,10 +33,12 @@ export default function SalesTable({
 	onSearchChange,
 	onRowSelect,
 	onRowDelete,
+	onRowArchive,
 }) {
 	const [selectedKeys, setSelectedKeys] = useState(new Set([]));
 	const [visibleColumns, setVisibleColumns] = useState('all');
 	const [statusFilter, setStatusFilter] = useState('all');
+	const [isArchived, setIsArchived] = useState(false);
 	const [rowsPerPage, setRowsPerPage] = useState(20);
 	const [sortDescriptor, setSortDescriptor] = useState({
 		column: 'payment_date',
@@ -55,13 +56,17 @@ export default function SalesTable({
 	];
 
 	const headerColumns = useMemo(() => {
-		if (visibleColumns === 'all') return transactionColumns;
+		if (visibleColumns === 'all') return salesProjectColumns;
 
-		return transactionColumns.filter((column) => Array.from(visibleColumns).includes(column.uid));
+		return salesProjectColumns.filter((column) =>
+			Array.from(visibleColumns).includes(column.uid),
+		);
 	}, [visibleColumns]);
 
 	const filteredItems = useMemo(() => {
 		let filteredUsers = [...payment];
+
+		filteredUsers = filteredUsers.filter((user) => user && user.is_archived === isArchived);
 
 		if (hasSearchFilter) {
 			filteredUsers = filteredUsers.filter(
@@ -76,7 +81,7 @@ export default function SalesTable({
 		}
 
 		return filteredUsers;
-	}, [payment, filterValue, statusFilter, hasSearchFilter, paymentType.length]);
+	}, [payment, filterValue, statusFilter, hasSearchFilter, paymentType.length, isArchived]);
 
 	const items = useMemo(() => {
 		const start = (page - 1) * rowsPerPage;
@@ -104,6 +109,7 @@ export default function SalesTable({
 		switch (columnKey) {
 			case 'no':
 				return rowNumber;
+
 			case 'name':
 				return cellValue ? (
 					<User
@@ -117,62 +123,98 @@ export default function SalesTable({
 					<em className='text-default-500 text-sm'>[client not found]</em>
 				);
 
-			case 'invoice_id':
-				return '#' + cellValue;
-			case 'payment_date':
+			case 'end_date':
+			case 'date':
 				return (
 					<div className='flex items-center gap-1'>
 						<span className='material-symbols-outlined text-slate-500'>calendar_today</span>
-						{formatDateTime(cellValue)}
+						{formatDate(cellValue)}
 					</div>
 				);
 
-			case 'payment_description':
+			case 'payment_terms':
 				return (
-					<div className='flex items-center justify-start w-full gap-2'>
+					<div>
+						<p className='text-pretty max-w-[12rem]'>{cellValue}</p>
+					</div>
+				);
+			//{cellValue}
+			case 'description':
+				return (
+					<div className='flex items-center justify-start max-w-[15rem] gap-2'>
 						<span
 							className='material-symbols-sharp text-slate-700'
 							style={{ fontSize: '35px' }}>
-							receipt
+							house
 						</span>
-						<div className='w-8/12'>
-							<p className='text-sm'>#{user.invoice_id}</p>
+						<div className='text-pretty'>
+							<p className='font-semibold'> {user.project_name}</p>
 							<div className='flex w-full justify-between'>
-								<p className='font-semibold'>{cellValue}</p>
-								<div className='flex flex-col items-center'>
-									<strong className='font-semibold'>
-										{formatNumberDecimal(user.payment_amount)}
-									</strong>
-									<p className='text-default-500 text-sm'>Amount</p>
-								</div>
+								<p className='text-sm text-default-500'>{cellValue}</p>
 							</div>
 						</div>
 					</div>
 				);
 
-			case 'payment_amount':
-				return formatNumber(cellValue);
+			case 'amount_paid':
+			case 'balance':
+			case 'amount':
+				return formatNumberDecimal(cellValue);
+
+			case 'project_status':
+				return (
+					<Chip
+						className='capitalize border-none gap-1'
+						color={statusColorMap[user.project_status]}
+						size='sm'
+						variant='flat'>
+						{cellValue}
+					</Chip>
+				);
 
 			case 'actions':
-				return (
-					<div className=' flex items-center gap-2 justify-end'>
-						<Button
-							variant='bordered'
-							className='font-bold hover:scale-105'
-							onPress={() => handleRowChange(user.id)}>
-							View
-						</Button>
-						<Button
-							isIconOnly
-							variant='solid'
-							className='bg-black text-white'
-							onPress={() => handleRowDelete(user.id)}
-							startContent={
-								<span className='material-symbols-outlined text-lg cursor-pointer active:opacity-50'>
-									delete
-								</span>
-							}
-						/>
+				return isArchived ? (
+					<div className='relative flex justify-center items-center gap-2'>
+						<Dropdown>
+							<DropdownTrigger>
+								<Button
+									isIconOnly
+									size='sm'
+									variant='light'>
+									<span className='material-symbols-outlined text-lg cursor-pointer active:opacity-50'>
+										more_vert
+									</span>
+								</Button>
+							</DropdownTrigger>
+							<DropdownMenu>
+								<DropdownItem onPress={() => handleRowArchive(user.id)}>
+									Unarchive
+								</DropdownItem>
+								<DropdownItem onPress={() => handleRowDelete(user.id)}>Delete</DropdownItem>
+							</DropdownMenu>
+						</Dropdown>
+					</div>
+				) : (
+					<div className='relative flex justify-center items-center gap-2'>
+						<Dropdown>
+							<DropdownTrigger>
+								<Button
+									isIconOnly
+									size='sm'
+									variant='light'>
+									<span className='material-symbols-outlined text-lg cursor-pointer active:opacity-50'>
+										more_vert
+									</span>
+								</Button>
+							</DropdownTrigger>
+							<DropdownMenu>
+								<DropdownItem onPress={() => handleRowChange(user.id)}>View</DropdownItem>
+								<DropdownItem onPress={() => handleRowArchive(user.id)}>
+									Archive
+								</DropdownItem>
+								<DropdownItem onPress={() => handleRowDelete(user.id)}>Delete</DropdownItem>
+							</DropdownMenu>
+						</Dropdown>
 					</div>
 				);
 			default:
@@ -185,6 +227,13 @@ export default function SalesTable({
 		},
 		[onRowSelect],
 	);
+	const handleRowDelete = (row) => {
+		onRowDelete(row);
+	};
+
+	const handleRowArchive = (row) => {
+		onRowArchive(row);
+	};
 
 	const onNextPage = useCallback(() => {
 		if (page < pages) {
@@ -207,15 +256,22 @@ export default function SalesTable({
 		setPage(1);
 	}, [filterValue]);
 
-	const handleRowDelete = (row) => {
-		onRowDelete(row);
-	};
-
 	const topContent = useMemo(() => {
 		return (
 			<div className='flex flex-col gap-2'>
 				<div className='flex justify-end gap-3 items-end'>
 					<div className='flex gap-3 items-center'>
+						<Button
+							size='md'
+							color='default'
+							onPress={() => setIsArchived((prev) => !prev)}
+							className={`${isArchived ? 'bg-black text-white' : 'font-bold'}`}
+							disableRipple
+							disableAnimations
+							variant='bordered'
+							radius='sm'>
+							{isArchived ? 'Hide Archived' : 'Archived'}{' '}
+						</Button>
 						<Dropdown>
 							<DropdownTrigger className='hidden sm:flex'>
 								<Button
@@ -273,7 +329,7 @@ export default function SalesTable({
 								selectedKeys={visibleColumns}
 								selectionMode='multiple'
 								onSelectionChange={setVisibleColumns}>
-								{transactionColumns.map((column) => (
+								{salesProjectColumns.map((column) => (
 									<DropdownItem
 										key={column.uid}
 										className='capitalize'>
@@ -301,6 +357,7 @@ export default function SalesTable({
 		onSearchChange,
 		onRowsPerPageChange,
 		payment.length,
+		isArchived,
 	]);
 
 	const bottomContent = useMemo(() => {
@@ -311,7 +368,7 @@ export default function SalesTable({
 						isCompact
 						showControls
 						showShadow
-						color='primary'
+						classNames={{ cursor: 'bg-slate-900 text-white' }}
 						page={page}
 						total={pages}
 						onChange={setPage}
@@ -342,10 +399,14 @@ export default function SalesTable({
 						style={{ fontSize: '36px' }}>
 						payments
 					</span>
-					<h1 className='font-semibold tracking-wide text-3xl text-left'>Sales</h1>
+
+					<h1 className='font-semibold tracking-wide text-3xl text-left'>
+						{isArchived ? 'Archived' : 'Sales'}
+					</h1>
 				</div>
 				{topContent}
 			</div>
+
 			<Table
 				aria-label='Tablesales'
 				removeWrapper
@@ -356,7 +417,7 @@ export default function SalesTable({
 				topContentPlacement='outside'
 				onSelectionChange={setSelectedKeys}
 				onSortChange={setSortDescriptor}
-				classNames={{ th: 'bg-slate-900 text-white', td: 'border-b-1' }}
+				classNames={{ th: 'bg-slate-900 text-white', td: 'border-b-1 ' }}
 				className='p-2 w-full rounded-none'>
 				<TableHeader columns={headerColumns}>
 					{(column) => (
@@ -368,7 +429,7 @@ export default function SalesTable({
 						</TableColumn>
 					)}
 				</TableHeader>
-				<TableBody emptyContent={'No receivable found'}>
+				<TableBody emptyContent={'No Sales found'}>
 					{sortedItems && sortedItems.length > 0
 						? sortedItems.map((item, index) =>
 								item ? (

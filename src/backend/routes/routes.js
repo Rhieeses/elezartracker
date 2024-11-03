@@ -16,33 +16,6 @@ const dbInsert = require('../models/INSERT/dbInsert');
 const dbSelect = require('../models/SELECT/dbSelect');
 const dbDelete = require('../models/DELETE/dbDelete');
 const dbUpdate = require('../models/UPDATE/dbUpdate');
-const { jwtVerify } = require('jose');
-
-/**
-const password = 'capstone_admin';
-const saltRounds = 10;
-
-bcrypt.hash(password, saltRounds, function (err, hash) {
-	console.log(hash);
-}); 
- 
-const authenticateJWT = (req, res, next) => {
-	const authHeader = req.headers.authorization;
-
-	if (authHeader) {
-		const token = authHeader.split(' ')[1];
-
-		jwt.verify(token, JWT_SECRET, (err, user) => {
-			if (err) {
-				return res.status(403).json({ error: 'Forbidden: Invalid token' });
-			}
-			req.user = user; // Optional: Store user info in request object
-			next();
-		});
-	} else {
-		return res.status(401).json({ error: 'Unauthorized: Token is missing' });
-	}
-};*/
 
 router.post('/login', async (req, res) => {
 	const { username, password } = req.body;
@@ -97,22 +70,18 @@ router.get('/getUser', async (req, res) => {
 	}
 
 	try {
-		const decoded = jwt.verify(token, process.env.JWT_SECRET); // Ensure you have a secret key in .env
+		const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
 		const userId = decoded.userId;
 
-		// Query the database for the user using the userId from the token
 		const result = await connection.query('SELECT * FROM users WHERE id = $1', [userId]);
 
 		if (result.rows.length > 0) {
-			// If user is found, return user details
 			res.status(200).json(result.rows[0]);
 		} else {
-			// If no user is found, return 404
 			res.status(404).json({ message: 'User not found' });
 		}
 	} catch (error) {
-		// Handle errors such as invalid token
 		return res.status(403).json({ message: 'Invalid token', error });
 	}
 });
@@ -151,16 +120,13 @@ let storageReceipt = multer.diskStorage({
 	filename: function (req, file, cb) {
 		const newFileName = 'receipt-' + Date.now() + path.extname(file.originalname);
 		cb(null, newFileName);
-
-		//cb(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname));
 	},
 });
 
-// Initialize multer upload with storage
 const uploadReceipt = multer({
 	storage: storageReceipt,
-	limits: { fileSize: 1000000 }, // Optional: limit file size to 1MB
-}).single('file'); // Use .single() for single file upload
+	limits: { fileSize: 1000000 },
+}).single('file');
 
 router.post('/upload-receipt', (req, res) => {
 	// Use multer to handle the file upload
@@ -309,6 +275,17 @@ router.post('/add-expense', async (req, res) => {
 	}
 });
 
+router.post('/payable-payment', async (req, res) => {
+	try {
+		const expenseFormData = req.body;
+		const expenseInsertData = await dbInsert.payablePaymentInsert(expenseFormData);
+		res.status(200).json({ message: 'Expense inserted successfully' });
+	} catch (error) {
+		console.error('Error inserting expense:', error);
+		res.status(500).json({ message: 'Error inserting expense', error: error.message });
+	}
+});
+
 router.post('/scan-expense', async (req, res) => {
 	try {
 		const expenseFormData = req.body;
@@ -328,6 +305,17 @@ router.post('/add-sales', async (req, res) => {
 	} catch (error) {
 		console.error('Error inserting expense:', error);
 		res.status(500).json({ message: 'Error inserting sales expense', error: error.message });
+	}
+});
+
+router.post('/add-payables', async (req, res) => {
+	try {
+		const payableFormData = req.body;
+		await dbInsert.payableInsert(payableFormData);
+		res.status(200).json({ message: 'Payable inserted successfully' });
+	} catch (error) {
+		console.error('Error inserting expense:', error);
+		res.status(500).json({ message: 'Error inserting payable', error: error.message });
 	}
 });
 
@@ -423,6 +411,34 @@ router.put('/update-project/:id', (req, res, next) => {
 	});
 });
 
+router.put('/update-client', (req, res, next) => {
+	const upload = multer({ storage: storage });
+
+	upload.single('imageFile')(req, res, async (err) => {
+		if (err) {
+			return res.status(500).json({ message: 'File upload failed', error: err.message });
+		}
+
+		try {
+			const fileName = req.file ? path.basename(req.file.path) : null;
+			const profilePicturePath = fileName ? `/uploads/${fileName}` : null;
+
+			const formData = {
+				...req.body,
+				imageFile: profilePicturePath || req.body.clientPicture,
+			};
+
+			// Update project in the database
+			const clientUpdateData = await dbUpdate.updateClient(formData);
+
+			res.status(201).json({ message: 'Data updated successfully', data: clientUpdateData });
+		} catch (error) {
+			console.error('Error handling request:', error);
+			res.status(500).json({ message: 'Failed to update data', error: error.message });
+		}
+	});
+});
+
 router.put('/update-account/:id', (req, res, next) => {
 	const upload = multer({ storage: storage });
 
@@ -481,6 +497,46 @@ router.put('/edit-vendor/:id', (req, res, next) => {
 			res.status(500).json({ message: 'Failed to update data', error: error.message });
 		}
 	});
+});
+
+router.patch('/sales-archive/:id', async (req, res) => {
+	try {
+		const { id } = req.params;
+		const salesArchive = await dbUpdate.salesArchive(id);
+		res.json(salesArchive);
+	} catch (error) {
+		res.status(500).json({ error: 'Failed to archive sales' });
+	}
+});
+
+router.patch('/payablesTransaction-archive/:id', async (req, res) => {
+	try {
+		const { id } = req.params;
+		const salesArchive = await dbUpdate.payablesTransactionArchive(id);
+		res.json(salesArchive);
+	} catch (error) {
+		res.status(500).json({ error: 'Failed to archive transaction' });
+	}
+});
+
+router.patch('/expense-archive/:id', async (req, res) => {
+	try {
+		const { id } = req.params;
+		const expenseArchive = await dbUpdate.expenseArchive(id);
+		res.json(expenseArchive);
+	} catch (error) {
+		res.status(500).json({ error: 'Failed to archive expense' });
+	}
+});
+
+router.patch('/payable-archive/:id', async (req, res) => {
+	try {
+		const { id } = req.params;
+		const payableArchive = await dbUpdate.payableArchive(id);
+		res.json(payableArchive);
+	} catch (error) {
+		res.status(500).json({ error: 'Failed to archive payable' });
+	}
 });
 
 //get
@@ -570,6 +626,15 @@ router.get('/sales-details', async (req, res) => {
 	}
 });
 
+router.get('/salesProject-details', async (req, res) => {
+	try {
+		const sales = await dbSelect.fetchSalesProjectTotal();
+		res.json(sales);
+	} catch (error) {
+		res.status(500).json({ error: 'Failed to dbSelect.fetch sales' });
+	}
+});
+
 router.get('/sales-details/:id', async (req, res) => {
 	try {
 		const { id } = req.params;
@@ -599,6 +664,15 @@ router.get('/payment-details', async (req, res) => {
 	}
 });
 
+router.get('/payabletransaction-details', async (req, res) => {
+	try {
+		const payables = await dbSelect.fetchPayableTransaction();
+		res.json(payables);
+	} catch (error) {
+		res.status(500).json({ error: 'Failed to select payable transaction' });
+	}
+});
+
 router.get('/payment-details/:id', async (req, res) => {
 	try {
 		const { id } = req.params;
@@ -606,6 +680,25 @@ router.get('/payment-details/:id', async (req, res) => {
 		res.json(invoiceData);
 	} catch (error) {
 		res.status(500).json({ error: 'Failed to dbSelect.fetch payment' });
+	}
+});
+
+router.get('/payables-details', async (req, res) => {
+	try {
+		const payables = await dbSelect.fetchPayablesData();
+		res.json(payables);
+	} catch (error) {
+		res.status(500).json({ error: 'Failed to fetch Payables' });
+	}
+});
+
+router.get('/payables-details/:id', async (req, res) => {
+	try {
+		const { id } = req.params;
+		const payables = await dbSelect.fetchPayablesDataId(id);
+		res.json(payables);
+	} catch (error) {
+		res.status(500).json({ error: 'Failed to fetch payables' });
 	}
 });
 
@@ -754,6 +847,34 @@ router.get('/top-vendor/:id', async (req, res) => {
 	}
 });
 
+//
+router.get('/all-transactions', async (req, res) => {
+	try {
+		const transactions = await dbSelect.fetchAlltransaction();
+		res.json(transactions);
+	} catch (error) {
+		res.status(500).json({ error: 'Failed to dbSelect.fetch transactions' });
+	}
+});
+
+router.get('/generate-report', async (req, res) => {
+	try {
+		const reportBody = {
+			quarters: req.query.quarters,
+			timeFrame: req.query.timeFrame,
+			formattedMonth: Number(req.query.formattedMonth),
+			selectedYear: Number(req.query.selectedYear),
+		};
+
+		const reportData = await dbSelect.fetchReport(reportBody);
+		res.json(reportData);
+	} catch (error) {
+		res.status(500).json({ error: 'Failed to generate report: ' + error.message }); // Updated error message
+	}
+});
+
+//
+
 //dbDelete.delete
 
 router.delete('/project-delete/:id', async (req, res) => {
@@ -793,6 +914,36 @@ router.delete('/sales-delete/:id', async (req, res) => {
 		res.json(sales);
 	} catch (error) {
 		res.status(500).json({ error: 'Failed to dbDelete.delete sales' });
+	}
+});
+
+router.delete('/salesproject-delete/:id', async (req, res) => {
+	try {
+		const { id } = req.params;
+		const sales = await dbDelete.deleteSalesProject(id);
+		res.json(sales);
+	} catch (error) {
+		res.status(500).json({ error: 'Failed to dbDelete.delete sales' });
+	}
+});
+
+router.delete('/payable-delete/:id', async (req, res) => {
+	try {
+		const { id } = req.params;
+		const payable = await dbDelete.deletePayable(id);
+		res.json(payable);
+	} catch (error) {
+		res.status(500).json({ error: 'Failed to delete payable' });
+	}
+});
+
+router.delete('/payableTransaction-delete/:id', async (req, res) => {
+	try {
+		const { id } = req.params;
+		const payable = await dbDelete.deletePayableTransaction(id);
+		res.json(payable);
+	} catch (error) {
+		res.status(500).json({ error: 'Failed to delete payable' });
 	}
 });
 

@@ -2,7 +2,6 @@
 import { useState } from 'react';
 import axios from 'axios';
 import Layout from '@/components/ui/layout';
-import { Search } from '@/components/ui/search';
 import { formatStatus } from '@/components/ui/uiComponent';
 import {
 	formatNumber,
@@ -47,7 +46,7 @@ export default function ProjectsContent() {
 		projectAddress: '',
 		contractPrice: '',
 		paymentTerms: '',
-		downpayment: '',
+		downpayment: 15,
 		startDate: null,
 		endDate: null,
 		projectDescription: '',
@@ -171,7 +170,7 @@ export default function ProjectsContent() {
 	return (
 		<Layout>
 			<>
-				<div className='p-10 flex justify-between items-center'>
+				<div className=' p-10 flex justify-between items-center'>
 					<div className='flex space-x-4'>
 						<span
 							className='material-symbols-outlined'
@@ -223,18 +222,18 @@ export default function ProjectsContent() {
 									key={projectItem.id}
 									href={`/projects/${projectItem.id}`}>
 									<Card
-										className='bg-white p-1 relative overflow-hidden'
+										className='bg-white p-1 overflow-hidden w-full'
 										shadow='none'
 										size='sm'>
-										<CardHeader className='relative p-0'>
+										<CardHeader className='relative p-0 w-full'>
 											<Image
 												isZoomed
 												alt='Card background'
-												className='object-cover w-full h-[20rem]'
+												className='object-cover h-[20rem] w-[100rem] z-0'
 												src={projectItem.project_projectPicture}
 											/>
-											<div className='absolute rounded-xl inset-x-0 bottom-[-1px] h-1/3 bg-gradient-to-b from-transparent via-black to-gray-900 opacity-50'></div>
-											<h4 className='font-bold text-2xl absolute inset-0 flex items-end m-5 justify-start text-white opacity-100'>
+											<div className='absolute z-10 rounded-xl inset-x-0 bottom-[-1px] h-1/3 bg-gradient-to-b from-transparent via-black to-slate-900 opacity-50'></div>
+											<h4 className='font-bold text-2xl absolute z-10 inset-0 flex items-end m-5 justify-start text-white opacity-100'>
 												{projectItem.project_name}
 											</h4>
 										</CardHeader>
@@ -288,6 +287,7 @@ export default function ProjectsContent() {
 							<ModalBody>
 								<div className='grid grid-cols-4 gap-5'>
 									<Select
+										aria-label='select-user'
 										items={clients}
 										value={formData.selectClient}
 										onChange={handleInputChange('selectClient')}

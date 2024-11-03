@@ -169,7 +169,7 @@ export default function AccountsContent() {
 	return (
 		<Layout>
 			{!loading && accounts && accounts.length > 0 ? (
-				<div className='h-fit'>
+				<div className='h-fit '>
 					<div className='p-10 mb-5 border-b-[1px] flex space-x-4 items-center'>
 						<span
 							className='material-symbols-outlined'
@@ -178,25 +178,26 @@ export default function AccountsContent() {
 						</span>
 						<h1 className='font-semibold tracking-wide text-3xl text-left'>Accounts</h1>
 					</div>
-					<div className='grid grid-cols-2 lg:grid-cols-4 gap-5 col-span-1 p-3'>
-						<Card className='bg-gradient-to-l from-purple-900 to-black p-2'>
+					<div className='grid grid-cols-2 lg:grid-cols-4 gap-5 col-span-1 p-10'>
+						<Card className='border-1 border-black p-2 shadow-none'>
 							<CardHeader className='flex items-start justify-between'>
 								<span
-									className='material-symbols-outlined text-white col-span-2'
+									className='material-symbols-outlined col-span-2'
 									style={{ fontSize: '36px' }}>
 									contactless
 								</span>
-								<em className='text-right text-white font-bold tracking-wide'>VISA</em>
+								<em className='text-right font-bold tracking-wide'>VISA</em>
 							</CardHeader>
 							<CardBody>
-								<p className='text-white font-bold tracking-wide text-2xl'>REVENUE</p>
-								<p className='text-white tracking-wide'>5363 4700 0123 457</p>
+								<p className='font-bold tracking-wide text-2xl'>
+									CASH AND CASH EQUIVALENTS
+								</p>
 							</CardBody>
 							<CardFooter className='flex items-end justify-between'>
-								<p className='text-white tracking-wide col-span-2 text-2xl mt-6'>
+								<strong className='tracking-wide col-span-2 text-2xl mt-6'>
 									{formatNumber(accounts[0].total_balance_sum)}
-								</p>
-								<div className='bank-card-div-2 text-white mt-4'>
+								</strong>
+								<div className='bank-card-div-2  mt-4'>
 									<p className='text-xs text-right'>Expiry date</p>
 									<p className='text-sm text-center'>2/24</p>
 								</div>
@@ -205,26 +206,25 @@ export default function AccountsContent() {
 						{accounts.map((accountsItem) => (
 							<Card
 								key={accountsItem.id}
-								className='bg-gradient-to-l from-gray-600 to-gray-800 p-2'>
+								className='border-1 border-black p-2'>
 								<CardHeader className='flex items-start justify-between'>
 									<span
-										className='material-symbols-outlined text-white col-span-2'
+										className='material-symbols-outlined  col-span-2'
 										style={{ fontSize: '36px' }}>
 										contactless
 									</span>
-									<em className='text-right text-white font-bold tracking-wide'>VISA</em>
+									<em className='text-right  font-bold tracking-wide'>VISA</em>
 								</CardHeader>
 								<CardBody>
-									<p className='text-white font-bold tracking-wide text-2xl'>
+									<p className=' font-bold tracking-wide text-2xl'>
 										{accountsItem.account_name}
 									</p>
-									<p className='text-white tracking-wide'>5363 4700 0123 457</p>
 								</CardBody>
 								<CardFooter className='flex items-end justify-between'>
-									<p className='text-white tracking-wide col-span-2 text-2xl mt-6'>
+									<strong className=' tracking-wide col-span-2 text-2xl mt-6'>
 										{formatNumber(accountsItem.total_balance)}
-									</p>
-									<div className='bank-card-div-2 text-white mt-4'>
+									</strong>
+									<div className='bank-card-div-2  mt-4'>
 										<p className='text-xs text-right'>Expiry date</p>
 										<p className='text-sm text-center'>2/24</p>
 									</div>
@@ -233,11 +233,11 @@ export default function AccountsContent() {
 						))}
 					</div>
 
-					<div className='mt-10 p-3'>
+					<div className='mt-10 p-10 pt-0'>
 						<div className='flex items-center justify-between'>
 							<h1>Transactions</h1>
 							<Button
-								className='bg-black text-white'
+								className='bg-black text-white p-3'
 								startContent={<span className='material-symbols-outlined'>move_up</span>}
 								onPress={onOpen}>
 								Transfer fund
@@ -246,7 +246,7 @@ export default function AccountsContent() {
 
 						<Table
 							aria-label='Transaction table'
-							classNames={{ th: 'bg-slate-900 text-white', td: 'border-b-1' }}
+							classNames={{ th: 'bg-slate-900 ', td: 'border-b-1' }}
 							className='p-2 w-full rounded-none'
 							removeWrapper>
 							<TableHeader columns={columns}>

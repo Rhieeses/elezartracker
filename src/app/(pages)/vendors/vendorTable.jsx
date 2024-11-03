@@ -54,8 +54,10 @@ export default function VendorTable({
 		let filteredUsers = [...vendor];
 
 		if (hasSearchFilter) {
-			filteredUsers = filteredUsers.filter((user) =>
-				user.vendor_name.toLowerCase().includes(filterValue.toLowerCase()),
+			filteredUsers = filteredUsers.filter(
+				(user) =>
+					user.vendor_name.toLowerCase().includes(filterValue.toLowerCase()) ||
+					user.vendor_services?.toLowerCase().includes(filterValue.toLowerCase()),
 			);
 		}
 		if (statusFilter !== 'all' && statusFilter.length !== services.length) {

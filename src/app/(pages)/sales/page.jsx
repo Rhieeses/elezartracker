@@ -1,6 +1,6 @@
 import SalesContent from './sales';
 export const metadata = {
-	title: 'Capstone | Receivables',
+	title: 'Sales',
 	description: 'Capstone',
 };
 

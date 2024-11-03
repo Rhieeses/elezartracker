@@ -22,9 +22,10 @@ import ExpenseProjectTable from '@/components/tables/expenseProjectTable';
 import { ExpenseDataInvoice, ExpenseProjectView } from '@/backend/data/dataHooks';
 import ConfirmDelete from '@/components/ui/confirmDelete';
 import ScanModal from '@/components/ui/scanModal';
+import { ProjectName } from '@/backend/data/dataHooks';
 
-export default function ExpenseProject({ params }) {
-	const projectId = params.id;
+export default function ExpenseProject({ id }) {
+	const projectId = id.id;
 
 	const [viewIdExpense, setViewIdExpense] = useState(null);
 	const [deletExpenseId, setDeleteExpense] = useState(null);
@@ -32,24 +33,7 @@ export default function ExpenseProject({ params }) {
 	const { loadingExpense, error, refetchExpenseProject } = ExpenseProjectView({
 		projectId,
 	});
-
-	const [projectName, setProjectName] = useState('');
-
-	useEffect(() => {
-		const fetchProjectName = async () => {
-			try {
-				const response = await axios.get(`/api/project-name/${projectId}`);
-
-				setProjectName(response.data[0].project_name);
-			} catch (err) {
-				console.log(err);
-			}
-		};
-
-		if (projectId) {
-			fetchProjectName();
-		}
-	}, [projectId]);
+	const { projectName } = ProjectName({ projectId });
 
 	const [filterValue, setFilterValue] = useState('');
 	const onSearchChange = useCallback((value) => {
@@ -94,7 +78,7 @@ export default function ExpenseProject({ params }) {
 	if (loadingExpense) {
 		return (
 			<Layout>
-				<div className='absolute top-1/2 left-1/2 text-center'>
+				<div className='flex justify-center items-center h-[50rem]'>
 					<Spinner />
 					<p>Loading Expense data...</p>
 				</div>
@@ -105,7 +89,7 @@ export default function ExpenseProject({ params }) {
 	if (error) {
 		return (
 			<Layout>
-				<div className='absolute top-1/2 left-1/2 text-center'>
+				<div className='flex justify-center items-center h-[50rem]'>
 					<h2>Error loading dashboard data</h2>
 					<p>{error.message}</p>
 				</div>
@@ -152,6 +136,10 @@ export default function ExpenseProject({ params }) {
 											<Spinner />
 										) : (
 											<div className='grid grid-cols-2 gap-5 w-full'>
+												<div className='col-span-2'>
+													<p className='text-default-500 text-sm'>Receipt ref. :</p>
+													<p className='text-blue-500'>receipt.jpg</p>
+												</div>
 												<div className='flex border-[1px] col-span-3 p-5 rounded-md justify-between items-center'>
 													<User
 														name={invoiceItem.vendor_name}
@@ -191,10 +179,19 @@ export default function ExpenseProject({ params }) {
 
 												<div className='grid col-span-2 p-5'>
 													<Textarea
-														label='DETAILS'
-														color='primary'
+														label={
+															<div className='flex gap-2'>
+																<span className='material-symbols-outlined'>
+																	receipt_long
+																</span>
+																<p>Details</p>
+															</div>
+														}
+														classNames={{ label: 'font-bold' }}
+														labelPlacement='outside'
 														className=''
-														variant='flat'
+														readOnly
+														variant='bordered'
 														value={invoiceItem.expense_description}
 													/>
 												</div>
@@ -212,10 +209,10 @@ export default function ExpenseProject({ params }) {
 									</ModalBody>
 									<ModalFooter>
 										<Button
-											color='danger'
-											variant='flat'
+											color='none'
+											variant='bordered'
 											size='lg'
-											onClick={onClose}>
+											onPress={onClose}>
 											Cancel
 										</Button>
 									</ModalFooter>

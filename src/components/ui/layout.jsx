@@ -9,7 +9,6 @@ import {
 	DropdownMenu,
 	DropdownItem,
 	DropdownSection,
-	Avatar,
 } from '@nextui-org/react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -255,18 +254,75 @@ export default function Layout({ children }) {
 							</li>
 						</Link>
 
-						<Link
-							href='/receivables'
-							prefetch={true}
-							className={`flex items-center p-1  ${
-								isActive('Receivables')
-									? 'pointer-events-none border-b-2 border-black font-semibold'
-									: ''
-							}`}>
-							<li className='hover:bg-gray-200 p-2 rounded-lg'>
-								<p className=' md:inline'>Receivables</p>
-							</li>
-						</Link>
+						<Dropdown radius='md'>
+							<DropdownTrigger>
+								<div
+									className={`flex items-center p-1  cursor-pointer ${
+										isActive('Receivables') ? 'border-b-2 border-black font-semibold' : ''
+									}`}>
+									<li className='flex items-center hover:bg-gray-200 p-2 rounded-lg'>
+										<p className=' md:inline'>Receivables</p>
+										<span className='material-symbols-outlined'>arrow_drop_down</span>
+									</li>
+								</div>
+							</DropdownTrigger>
+							<DropdownMenu aria-label='Action event example'>
+								<DropdownItem
+									key='receivables'
+									href='/receivables'
+									prefetch={true}
+									startContent={
+										<span className='material-symbols-outlined'>payments</span>
+									}>
+									Receivables
+								</DropdownItem>
+
+								<DropdownItem
+									key='payments'
+									href='/receivables/payments'
+									prefetch={true}
+									startContent={
+										<span className='material-symbols-outlined'>receipt_long</span>
+									}>
+									Receivables payments
+								</DropdownItem>
+							</DropdownMenu>
+						</Dropdown>
+
+						<Dropdown radius='md'>
+							<DropdownTrigger>
+								<div
+									className={`flex items-center p-1  cursor-pointer ${
+										isActive('Payables') ? 'border-b-2 border-black font-semibold' : ''
+									}`}>
+									<li className='flex items-center hover:bg-gray-200 p-2 rounded-lg'>
+										<p className=' md:inline'>Payables</p>
+										<span className='material-symbols-outlined'>arrow_drop_down</span>
+									</li>
+								</div>
+							</DropdownTrigger>
+							<DropdownMenu aria-label='Action event example'>
+								<DropdownItem
+									key='payables'
+									href='/payables'
+									prefetch={true}
+									startContent={
+										<span className='material-symbols-outlined'>shopping_cart</span>
+									}>
+									Payables
+								</DropdownItem>
+
+								<DropdownItem
+									key='Payablestransaction'
+									href='/payables/transaction'
+									prefetch={true}
+									startContent={
+										<span className='material-symbols-outlined'>receipt_long</span>
+									}>
+									Payables payments
+								</DropdownItem>
+							</DropdownMenu>
+						</Dropdown>
 
 						<Link
 							href='/sales'
@@ -295,15 +351,15 @@ export default function Layout({ children }) {
 						</Link>
 
 						<Link
-							href='/transactions'
+							href='/cash-flow'
 							prefetch={true}
 							className={`flex items-center p-1  ${
-								isActive('Transactions')
+								isActive('Cash-flow')
 									? 'pointer-events-none border-b-2 border-black font-semibold'
 									: ''
 							}`}>
 							<li className='hover:bg-gray-200 p-2 rounded-lg'>
-								<p className=' md:inline'>Transactions</p>
+								<p className=' md:inline'>Cash flow</p>
 							</li>
 						</Link>
 

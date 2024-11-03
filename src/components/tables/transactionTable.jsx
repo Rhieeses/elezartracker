@@ -119,13 +119,15 @@ export default function TransactionTable({
 			case 'no':
 				return rowNumber;
 			case 'name':
-				return (
+				return cellValue ? (
 					<User
 						avatarProps={{ radius: 'full', size: 'sm', src: user.profile_picture }}
 						classNames={{
 							description: 'text-default-500',
 						}}
 						name={cellValue}></User>
+				) : (
+					<em className='text-default-500 text-sm'>[Not applicable]</em>
 				);
 
 			case 'description':
@@ -257,26 +259,12 @@ export default function TransactionTable({
 	const bottomContent = useMemo(() => {
 		return (
 			<div>
-				<div className='flex items-end justify-end w-full space-x-[9rem] p-1 pr-[5%]'>
-					<div>
-						<span>
-							<p className=''>Debit</p>
-							<strong className='text-red-500'>{formatNumberDecimal(totalDebit)}</strong>
-						</span>
-					</div>
-					<div>
-						<span>
-							<p className=''>Credit</p>
-							<strong className='text-green-500'> {formatNumberDecimal(totalCredit)}</strong>
-						</span>
-					</div>
-				</div>
 				<div className='flex justify-center items-center py-4 space-x-1 '>
 					<Pagination
 						isCompact
 						showControls
 						showShadow
-						color='primary'
+						classNames={{ cursor: 'bg-slate-900 text-white' }}
 						page={page}
 						total={pages}
 						onChange={setPage}
@@ -305,9 +293,9 @@ export default function TransactionTable({
 					<span
 						className='material-symbols-outlined'
 						style={{ fontSize: '36px' }}>
-						point_of_sale
+						chart_data
 					</span>
-					<h1 className='font-semibold tracking-wide text-3xl text-left'>Transactions</h1>
+					<h1 className='font-semibold tracking-wide text-3xl text-left'>Cash Flow</h1>
 				</div>
 				{topContent}
 			</div>
@@ -347,6 +335,44 @@ export default function TransactionTable({
 								) : null,
 						  )
 						: null}
+					<TableRow>
+						<TableCell></TableCell>
+						<TableCell></TableCell>
+						<TableCell></TableCell>
+						<TableCell></TableCell>
+						<TableCell></TableCell>
+						<TableCell colSpan={1}>
+							<span>
+								<p className=''>Debit</p>
+								<strong className='text-red-500'>{formatNumberDecimal(totalDebit)}</strong>
+							</span>
+						</TableCell>
+						<TableCell colSpan={2}>
+							<span>
+								<p className=''>Credit</p>
+								<strong className='text-green-500'>
+									{formatNumberDecimal(totalCredit)}
+								</strong>
+							</span>
+						</TableCell>
+					</TableRow>
+
+					<TableRow>
+						<TableCell>
+							<p className='flex flex-col text-lg'>
+								Balance:
+								<strong className='text-blue-800 text-lg'>
+									{formatNumberDecimal(totalCredit - totalDebit)}
+								</strong>
+							</p>
+						</TableCell>
+						<TableCell></TableCell>
+						<TableCell></TableCell>
+						<TableCell></TableCell>
+						<TableCell></TableCell>
+						<TableCell></TableCell>
+						<TableCell></TableCell>
+					</TableRow>
 				</TableBody>
 			</Table>
 		</>

@@ -23,7 +23,6 @@ async function deleteProject(id) {
 
 	try {
 		await client.query('BEGIN');
-		await client.query(deleteSalesQuery, [id]);
 
 		const result = await client.query(deleteProjectQuery, [id]);
 		const projectProfilePicturePath = result.rows[0]?.project_profilePicture;
@@ -40,6 +39,7 @@ async function deleteProject(id) {
 		}
 
 		await client.query(deleteAccountQuery, [id]);
+		await client.query(deleteSalesQuery, [id]);
 
 		if (result.rowCount === 0) {
 			await client.query('ROLLBACK');
@@ -126,6 +126,63 @@ async function deleteSales(id) {
 	}
 }
 
+async function deleteSalesProject(id) {
+	const deleteQuery = `
+        DELETE FROM sales_project
+        WHERE id = $1;
+    `;
+
+	try {
+		const result = await connection.query(deleteQuery, [id]);
+
+		if (result.rowCount === 0) {
+			throw new Error('Sales not found or already deleted.');
+		}
+
+		return { success: true, message: 'Sales deleted successfully' };
+	} catch (error) {
+		throw new Error('Failed to delete Sales');
+	}
+}
+
+async function deletePayable(id) {
+	const deleteQuery = `
+        DELETE FROM payable
+        WHERE id = $1;
+    `;
+
+	try {
+		const result = await connection.query(deleteQuery, [id]);
+
+		if (result.rowCount === 0) {
+			throw new Error('Payable not found or already deleted.');
+		}
+
+		return { success: true, message: 'Payable deleted successfully' };
+	} catch (error) {
+		throw new Error('Failed to delete Payable');
+	}
+}
+
+async function deletePayableTransaction(id) {
+	const deleteQuery = `
+        DELETE FROM payables_transaction
+        WHERE id = $1;
+    `;
+
+	try {
+		const result = await connection.query(deleteQuery, [id]);
+
+		if (result.rowCount === 0) {
+			throw new Error('Payable not found or already deleted.');
+		}
+
+		return { success: true, message: 'Payable deleted successfully' };
+	} catch (error) {
+		throw new Error('Failed to delete Payable');
+	}
+}
+
 async function deleteVendor(id) {
 	const deleteQuery = `
         DELETE FROM vendor
@@ -164,5 +221,8 @@ module.exports = {
 	deleteClient,
 	deleteExpense,
 	deleteSales,
+	deleteSalesProject,
+	deletePayable,
+	deletePayableTransaction,
 	deleteVendor,
 };

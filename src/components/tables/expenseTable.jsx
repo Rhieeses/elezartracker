@@ -15,11 +15,11 @@ import {
 	DropdownItem,
 	User,
 	Pagination,
-	Tooltip,
+	Chip,
 } from '@nextui-org/react';
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { capitalizeOnlyFirstLetter, formatNumber, formatDate } from '@/utils/inputFormatter';
-import { columnExpense, paymentOptions } from '@/backend/data/dataHooks';
+import { columnExpense, paymentOptions, statusColorMap } from '@/backend/data/dataHooks';
 import { Search } from '@/components/ui/search';
 
 export default function ExpenseTable({
@@ -27,6 +27,7 @@ export default function ExpenseTable({
 	filterValue,
 	onSearchChange,
 	onRowSelect,
+	onRowArchive,
 	onRowDelete,
 	onOpenCreate,
 }) {
@@ -41,6 +42,8 @@ export default function ExpenseTable({
 	const [selectedKeys, setSelectedKeys] = useState(new Set([]));
 	const [visibleColumns, setVisibleColumns] = useState('all');
 	const [statusFilter, setStatusFilter] = useState('all');
+	const [isArchived, setIsArchived] = useState(false);
+
 	const [rowsPerPage, setRowsPerPage] = useState(10);
 	const [sortDescriptor, setSortDescriptor] = useState({
 		column: 'age',
@@ -61,6 +64,8 @@ export default function ExpenseTable({
 	const filteredItems = useMemo(() => {
 		let filteredUsers = [...expense];
 
+		filteredUsers = filteredUsers.filter((user) => user && user.is_archived === isArchived);
+
 		if (hasSearchFilter) {
 			filteredUsers = filteredUsers.filter(
 				(user) =>
@@ -74,7 +79,7 @@ export default function ExpenseTable({
 		}
 
 		return filteredUsers;
-	}, [expense, filterValue, statusFilter, hasSearchFilter]);
+	}, [expense, filterValue, statusFilter, hasSearchFilter, isArchived]);
 
 	const items = useMemo(() => {
 		const start = (page - 1) * rowsPerPage;
@@ -112,16 +117,44 @@ export default function ExpenseTable({
 						description='Vendor'
 						name={cellValue}></User>
 				) : (
-					<em className='text-default-500 text-sm'>[vendor not found]</em>
+					<em className='text-default-500 text-sm'>[Not applicable]</em>
 				);
 
 			case 'expense_description':
-				return (
+				let count = (cellValue.match(/\n/g) || []).length;
+
+				return count <= 3 ? (
 					<div className='flex gap-2'>
+						<span className='material-symbols-outlined'>receipt_long</span>
+						<p className='text-blue-500'>{formatDescription(cellValue)}</p>
+					</div>
+				) : (
+					<details className='cursor-pointer'>
+						<summary className='flex gap-2'>
+							<span className='material-symbols-outlined'>receipt_long</span>
+							<p className='text-default-400'>Show more...</p>
+							<span className='material-symbols-outlined'>arrow_drop_down</span>
+						</summary>
+						<p className='ml-5 text-blue-500'>{formatDescription(cellValue)}</p>
+					</details>
+				);
+			/**
+			 * (
+					<details className='cursor-pointer '>
+						<summary className='flex text-blue-500'>
+							<span className='material-symbols-outlined'>receipt_long</span>
+							<p>Details</p>
+							<span className='material-symbols-outlined'>arrow_drop_down</span>
+						</summary>
+						<p className='ml-5'>{formatDescription(cellValue)}</p>
+					</details>
+				)
+
+				 * 	<div className='flex gap-2'>
 						<span className='material-symbols-outlined'>receipt_long</span>
 						{formatDescription(cellValue)}
 					</div>
-				);
+				 */
 
 			case 'project_name':
 				return cellValue ? (
@@ -140,29 +173,67 @@ export default function ExpenseTable({
 					</div>
 				);
 
+			case 'balance':
 			case 'purchase_amount':
 				return formatNumber(cellValue);
 
-			case 'actions':
+			case 'status':
 				return (
-					<div className='relative flex items-center gap-2 justify-center'>
-						<Button
-							variant='bordered'
-							className='font-bold hover:scale-105'
-							onPress={() => handleRowChange(user.id)}>
-							View
-						</Button>
-						<Button
-							isIconOnly
-							variant='solid'
-							className='bg-black text-white'
-							onPress={() => handleRowDelete(user.id)}
-							startContent={
-								<span className='material-symbols-outlined text-lg cursor-pointer active:opacity-50'>
-									delete
-								</span>
-							}
-						/>
+					<Chip
+						className='capitalize border-none gap-1'
+						color={statusColorMap[user.status]}
+						size='sm'
+						variant='flat'>
+						{cellValue}
+					</Chip>
+				);
+
+			case 'direct_expense':
+				return cellValue ? 'YES' : 'NO';
+
+			case 'actions':
+				return isArchived ? (
+					<div className='relative flex justify-center items-center gap-2'>
+						<Dropdown>
+							<DropdownTrigger>
+								<Button
+									isIconOnly
+									size='sm'
+									variant='light'>
+									<span className='material-symbols-outlined text-lg cursor-pointer active:opacity-50'>
+										more_vert
+									</span>
+								</Button>
+							</DropdownTrigger>
+							<DropdownMenu>
+								<DropdownItem onPress={() => handleRowArchive(user.id)}>
+									Unarchive
+								</DropdownItem>
+								<DropdownItem onPress={() => handleRowDelete(user.id)}>Delete</DropdownItem>
+							</DropdownMenu>
+						</Dropdown>
+					</div>
+				) : (
+					<div className='relative flex justify-center items-center gap-2'>
+						<Dropdown>
+							<DropdownTrigger>
+								<Button
+									isIconOnly
+									size='sm'
+									variant='light'>
+									<span className='material-symbols-outlined text-lg cursor-pointer active:opacity-50'>
+										more_vert
+									</span>
+								</Button>
+							</DropdownTrigger>
+							<DropdownMenu>
+								<DropdownItem onPress={() => handleRowChange(user.id)}>View</DropdownItem>
+								<DropdownItem onPress={() => handleRowArchive(user.id)}>
+									Archive
+								</DropdownItem>
+								<DropdownItem onPress={() => handleRowDelete(user.id)}>Delete</DropdownItem>
+							</DropdownMenu>
+						</Dropdown>
 					</div>
 				);
 			default:
@@ -176,6 +247,10 @@ export default function ExpenseTable({
 		},
 		[onRowSelect],
 	);
+
+	const handleRowArchive = (row) => {
+		onRowArchive(row);
+	};
 
 	const handleRowDelete = useCallback(
 		(row) => {
@@ -211,6 +286,17 @@ export default function ExpenseTable({
 				<div className='flex justify-end gap-3 items-end'>
 					<div className='flex gap-3 items-center'>
 						<Dropdown>
+							<Button
+								size='md'
+								color='default'
+								onPress={() => setIsArchived((prev) => !prev)}
+								className={`${isArchived ? 'bg-black text-white' : 'font-bold'}`}
+								disableRipple
+								disableAnimations
+								variant='bordered'
+								radius='sm'>
+								{isArchived ? 'Hide Archived' : 'Archived'}{' '}
+							</Button>
 							<DropdownTrigger className='hidden sm:flex'>
 								<Button
 									endContent={
@@ -304,6 +390,7 @@ export default function ExpenseTable({
 		onRowsPerPageChange,
 		expense.length,
 		onOpenCreate,
+		isArchived,
 	]);
 
 	const bottomContent = useMemo(() => {
@@ -314,7 +401,7 @@ export default function ExpenseTable({
 						isCompact
 						showControls
 						showShadow
-						color='default'
+						classNames={{ cursor: 'bg-slate-900 text-white' }}
 						page={page}
 						total={pages}
 						onChange={setPage}
@@ -345,7 +432,9 @@ export default function ExpenseTable({
 						style={{ fontSize: '36px' }}>
 						shopping_cart_checkout
 					</span>
-					<h1 className='font-semibold tracking-wide text-3xl text-left'>Expenses</h1>
+					<h1 className='font-semibold tracking-wide text-3xl text-left'>
+						{isArchived ? 'Archived' : 'Expenses'}
+					</h1>
 				</div>
 				{topContent}
 			</div>

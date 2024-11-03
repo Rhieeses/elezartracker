@@ -372,8 +372,62 @@ async function fetchPayment() {
         payments
     LEFT JOIN 
         client ON payments.recipient_id = client.id
+   
 	ORDER BY
 	    payments.payment_date DESC;
+    `;
+
+	try {
+		const result = await connection.query(selectResult);
+		return result.rows;
+	} catch (error) {
+		throw new Error('Failed to fetch payment');
+	}
+}
+
+async function fetchSalesProjectTotal() {
+	const selectResult = `
+    SELECT 
+        sales_project.*,
+        client."client_firstName" || ' ' || client."client_lastName" AS name, 
+        "client_profilePicture",
+		project_name,
+		"project_projectPicture",
+		"project_contractPrice"
+         
+    FROM 
+        sales_project
+	LEFT JOIN 
+        project ON sales_project.project_id = project.id
+    LEFT JOIN 
+        client ON sales_project.client_id = client.id
+   
+	ORDER BY
+	    sales_project.date DESC;
+    `;
+
+	try {
+		const result = await connection.query(selectResult);
+		return result.rows;
+	} catch (error) {
+		throw new Error('Failed to fetch payment');
+	}
+}
+
+async function fetchPayableTransaction() {
+	const selectResult = `
+     SELECT 
+        payables_transaction.*,
+		vendor.vendor_name AS name,
+        vendor.vendor_services,
+		vendor.vendor_picture
+    FROM 
+        payables_transaction
+    LEFT JOIN 
+        vendor ON payables_transaction.vendor_id = vendor.id
+   
+	ORDER BY
+	    payables_transaction.payment_date DESC;
     `;
 
 	try {
@@ -400,6 +454,63 @@ LEFT JOIN
     project ON client.id = project.client_id
 WHERE 
     payments.id = $1;
+    `;
+
+	try {
+		const result = await connection.query(selectResult, [id]);
+		return result.rows;
+	} catch (error) {
+		throw new Error('Failed to fetch invoice from sales: ' + error.message);
+	}
+}
+
+async function fetchPayablesData() {
+	const selectResult = `
+     SELECT 
+        payable.*,
+		project.project_name, 
+		project."project_projectPicture",
+        vendor.vendor_name, 
+        vendor.vendor_picture,
+        vendor.vendor_services,
+        vendor.vendor_address	
+    FROM 
+        payable
+    LEFT JOIN 
+        vendor ON payable.vendor_id = vendor.id
+	LEFT JOIN 
+        project ON payable.project_id = project.id
+	ORDER BY
+	    payable.due_date DESC;
+    `;
+
+	try {
+		const result = await connection.query(selectResult);
+		return result.rows;
+	} catch (error) {
+		throw new Error('Failed to fetch payables');
+	}
+}
+
+async function fetchPayablesDataId(id) {
+	const selectResult = `
+    SELECT 
+        payable.*,
+		project.project_name, 
+		project."project_projectPicture",
+        vendor.vendor_name, 
+        vendor.vendor_picture,
+        vendor.vendor_services,
+        vendor.vendor_address	
+    FROM 
+        payable
+    LEFT JOIN 
+        vendor ON payable.vendor_id = vendor.id
+	LEFT JOIN 
+        project ON payable.project_id = project.id
+    WHERE payable.id = $1
+	ORDER BY
+	    payable.due_date DESC;
     `;
 
 	try {
@@ -485,7 +596,7 @@ LEFT JOIN
 LEFT JOIN
     AggregatedTotals AS totals ON expense.project_id = totals.project_id
 ORDER BY 
-    expense.purchase_date ASC;
+    expense.purchase_date DESC;
 
     `;
 
@@ -667,61 +778,87 @@ FROM accounts ORDER BY ID ASC;
 }
 
 async function fetchDashboardData() {
-	const activeResult = `SELECT COUNT(*) from project where status = 'ACTIVE';`;
-
 	const selectResult = `
-      
-SELECT 
-  (SELECT SUM(total_sales) FROM accounts) AS revenue, 
-        (SELECT SUM(total_expense) FROM accounts) AS expenses, 
-        (SELECT SUM(total_sales) - SUM(total_expense) FROM accounts) AS income,
+   
+  SELECT 
+    -- Total revenue from billed amounts and balances in sales
+    COALESCE((SELECT SUM(paid_amount) FROM sales), 0) AS revenue,
+
+    -- Total income calculation: revenue - accounts payable - total expenses
+    COALESCE(
+
+        (SELECT SUM(paid_amount) FROM sales) - 
+        (SELECT SUM(purchase_amount) FROM expense), 
+        0
+    ) AS net_profit,
+
+    -- Total sales from billed amounts
+    COALESCE((SELECT SUM(paid_amount) FROM sales), 0) AS sales,
+
+    -- Total expenses from purchase amounts
+    COALESCE((SELECT SUM(purchase_amount) FROM expense), 0) AS expenses,
+
     -- Total revenue for the current month (from payments)
-    (SELECT COALESCE(SUM(payment_amount), 0) 
-     FROM payments 
-     WHERE DATE_TRUNC('month', NOW()) = DATE_TRUNC('month', payment_date)) AS current_month_revenue,
+    COALESCE(
+        (SELECT SUM(payment_amount) 
+         FROM payments 
+         WHERE DATE_TRUNC('month', NOW()) = DATE_TRUNC('month', payment_date)), 
+        0
+    ) AS current_month_revenue,
+
+	  -- Total revenue for the last month (from payments)
+    COALESCE(
+        (SELECT SUM(payment_amount) 
+         FROM payments 
+         WHERE DATE_TRUNC('month', NOW() - INTERVAL '1 month') = DATE_TRUNC('month', payment_date)), 
+        0
+    ) AS last_month_revenue,
 
     -- Total expenses for the current month (from expense)
-    (SELECT COALESCE(SUM(purchase_amount), 0) 
-     FROM expense 
-     WHERE DATE_TRUNC('month', NOW()) = DATE_TRUNC('month', purchase_date)) AS current_month_expenses,
+    COALESCE(
+        (SELECT SUM(purchase_amount) 
+         FROM expense 
+         WHERE DATE_TRUNC('month', NOW()) = DATE_TRUNC('month', purchase_date)), 
+        0
+    ) AS current_month_expenses,
 
     -- Income for the current month (revenue - expenses)
-    (
-      (SELECT COALESCE(SUM(payment_amount), 0) 
-       FROM payments 
-       WHERE DATE_TRUNC('month', NOW()) = DATE_TRUNC('month', payment_date))
-      -
-      (SELECT COALESCE(SUM(purchase_amount), 0) 
-       FROM expense 
-       WHERE DATE_TRUNC('month', NOW()) = DATE_TRUNC('month', purchase_date))
+    COALESCE(
+        (SELECT SUM(payment_amount) 
+         FROM payments 
+         WHERE DATE_TRUNC('month', NOW()) = DATE_TRUNC('month', payment_date)) - 
+        (SELECT SUM(purchase_amount) 
+         FROM expense 
+         WHERE DATE_TRUNC('month', NOW()) = DATE_TRUNC('month', purchase_date)), 
+        0
     ) AS current_month_income,
 
-    -- Total revenue for the last month (from payments)
-    (SELECT COALESCE(SUM(payment_amount), 0) 
-     FROM payments 
-     WHERE DATE_TRUNC('month', NOW() - INTERVAL '1 month') = DATE_TRUNC('month', payment_date)) AS last_month_revenue,
+  
 
     -- Total expenses for the last month (from expense)
-    (SELECT COALESCE(SUM(purchase_amount), 0) 
-     FROM expense 
-     WHERE DATE_TRUNC('month', NOW() - INTERVAL '1 month') = DATE_TRUNC('month', purchase_date)) AS last_month_expenses,
+    COALESCE(
+        (SELECT SUM(purchase_amount) 
+         FROM expense 
+         WHERE DATE_TRUNC('month', NOW() - INTERVAL '1 month') = DATE_TRUNC('month', purchase_date)), 
+        0
+    ) AS last_month_expenses,
 
     -- Income for the last month (revenue - expenses)
-    (
-      (SELECT COALESCE(SUM(payment_amount), 0) 
-       FROM payments 
-       WHERE DATE_TRUNC('month', NOW() - INTERVAL '1 month') = DATE_TRUNC('month', payment_date))
-      -
-      (SELECT COALESCE(SUM(purchase_amount), 0) 
-       FROM expense 
-       WHERE DATE_TRUNC('month', NOW() - INTERVAL '1 month') = DATE_TRUNC('month', purchase_date))
+    COALESCE(
+        (SELECT SUM(payment_amount) 
+         FROM payments 
+         WHERE DATE_TRUNC('month', NOW() - INTERVAL '1 month') = DATE_TRUNC('month', payment_date)) - 
+        (SELECT SUM(purchase_amount) 
+         FROM expense 
+         WHERE DATE_TRUNC('month', NOW() - INTERVAL '1 month') = DATE_TRUNC('month', purchase_date)), 
+        0
     ) AS last_month_income,
 
     -- Total projects
-    (SELECT COUNT(*) FROM project) AS total_projects,
+    COALESCE((SELECT COUNT(*) FROM project), 0) AS total_projects,
 
-    (SELECT COUNT(*) FROM project WHERE status = 'ACTIVE') AS total_active_project;
-    ;
+    -- Total active projects
+    COALESCE((SELECT COUNT(*) FROM project WHERE status = 'ACTIVE'), 0) AS total_active_projects;
     `;
 
 	const selectChartResultSales = `
@@ -771,13 +908,11 @@ SELECT
     `;
 
 	try {
-		const activeCountResult = await connection.query(activeResult);
 		const result = await connection.query(selectResult);
 		const resultChartSales = await connection.query(selectChartResultSales);
 		const resultChartExpense = await connection.query(selectChartResultExpense);
 
 		return {
-			activeProjectCount: activeCountResult[0],
 			dashboard: result.rows[0],
 			chartData: {
 				sales: resultChartSales.rows,
@@ -837,8 +972,8 @@ async function fetchNotifications() {
 async function fetchAlltransaction() {
 	try {
 		const transactionQuery = `
-          SELECT
-    p.id as id,
+SELECT
+    p.id AS id,
     c."client_profilePicture" AS profile_picture,
     c."client_lastName" || ' ' || c."client_firstName" AS name,
     p.invoice_id AS invoice_id,
@@ -859,7 +994,7 @@ JOIN
 UNION ALL
 
 SELECT
-    e.id as id,
+    e.id AS id,
     v.vendor_picture AS profile_picture,
     v.vendor_name AS name,
     e."invoiceNo" AS invoice_id,
@@ -868,18 +1003,38 @@ SELECT
     e.purchase_date AS transaction_date,
     e.payment_type AS type,
     'EXPENSE' AS transaction_type,
-    e.purchase_amount AS debit,  -- Expenses are debits
+    e.purchase_amount AS debit, 
     NULL AS credit
 FROM 
     expense e
 JOIN 
-    project pr ON e.project_id = pr.id
+    project pr ON e.project_id = pr.id  -- Corrected JOIN position
 LEFT JOIN
     vendor v ON v.id = e.vendor_id
+WHERE 
+    e.is_payable = false 
 
-	ORDER BY
+UNION ALL
+
+SELECT
+    p.id AS id,
+    v.vendor_picture AS profile_picture,
+    v.vendor_name AS name,
+    p.invoice_id AS invoice_id,
+   	'Payment for' || ' ' || p.payment_description AS description ,
+    p.payment_amount AS amount,
+    p.payment_date AS transaction_date,
+    p.payment_type AS type,
+    'EXPENSE' AS transaction_type,
+    p.payment_amount AS debit, 
+    NULL AS credit
+FROM 
+    payables_transaction p
+JOIN
+    vendor v ON v.id = p.vendor_id
+
+ORDER BY
     transaction_date ASC;
-        
         `;
 
 		const transactionResult = await connection.query(transactionQuery);
@@ -925,6 +1080,149 @@ GROUP BY
 		throw new Error('Failed to fetch project name: ' + error.message);
 	}
 }
+/**
+async function fetchReport() {
+	//const { formattedMonth, selectedYear } = reportBody;
+
+	const reportsQuery = `
+   SELECT COUNT(*) 
+    FROM project 
+    WHERE "project_startDate" >= DATE_TRUNC('month', DATE '$1-$2-01') 
+        AND "project_startDate" < DATE_TRUNC('month', DATE '$1-$2-01') + INTERVAL '1 month';
+`;
+
+	const reportsQuery = `
+SELECT COUNT(*) 
+FROM project 
+WHERE "project_startDate" >= DATE_TRUNC('month', DATE '2024-10-01') 
+      AND "project_startDate" < DATE_TRUNC('month', DATE '2024-10-01') + INTERVAL '1 month';
+`;
+
+	try {
+		const reportsResult = await connection.query(reportsQuery);
+		return reportsResult.rows;
+	} catch (error) {
+		throw new Error('Failed to fetch project count: ' + error.message);
+	}
+}*/
+
+async function fetchReport(reportBody) {
+	const { timeFrame, quarters, formattedMonth, selectedYear } = reportBody;
+
+	const firstQuarter = [
+		`${selectedYear}-01-01`, // January 1, 2024
+		`${selectedYear}-03-31`, // March 31, 2024
+	];
+
+	const secondQuarter = [
+		`${selectedYear}-04-01`, // April 1, 2024
+		`${selectedYear}-06-30`, // June 30, 2024
+	];
+
+	const thirdQuarter = [
+		`${selectedYear}-07-01`, // July 1, 2024
+		`${selectedYear}-09-30`, // // September 30, 2024
+	];
+
+	const fourthQuarter = [
+		`${selectedYear}-10-01`, // October 1, 2024
+		`${selectedYear}-12-31`, // December 31, 2024
+	];
+
+	let date = [];
+
+	switch (timeFrame) {
+		case 'monthly':
+			if (formattedMonth) {
+				const startDate = `${selectedYear}-${formattedMonth}-01`;
+				const endDate = new Date(selectedYear, formattedMonth, 0).toISOString().split('T')[0];
+				date = [startDate, endDate];
+			}
+			break;
+
+		case 'quarterly':
+			switch (quarters) {
+				case 'Q1':
+					date = firstQuarter;
+					break;
+				case 'Q2':
+					date = secondQuarter;
+					break;
+				case 'Q3':
+					date = thirdQuarter;
+					break;
+				case 'Q4':
+					date = fourthQuarter;
+					break;
+				default:
+					date = ['No value found'];
+			}
+			break;
+		case 'annually':
+			date = [`${selectedYear}-01-01`, `${selectedYear}-12-31`];
+			break;
+		default:
+			date = ['No value found'];
+	}
+
+	if (!date[0] || !date[1]) {
+		throw new Error('Invalid date range');
+	}
+
+	// SQL Query using the selected date range
+	const selectResult = `
+            WITH 
+            project_count AS (
+                SELECT COUNT(*) AS project_acquired
+                FROM project
+                WHERE "project_startDate" >= $1
+                AND "project_startDate" <= $2
+            ),
+            revenue AS (
+                SELECT COALESCE(SUM(payment_amount), 0) AS revenue
+                FROM payments
+                WHERE payment_date >= $1
+                AND payment_date <= $2
+            ),
+            net_income AS (
+                SELECT 
+                    COALESCE(SUM(payments.payment_amount), 0) - COALESCE(SUM(expenses.purchase_amount), 0) AS net_income
+                FROM 
+                    (SELECT SUM(payment_amount) AS payment_amount
+                    FROM payments 
+                    WHERE payment_date >= $1 
+                    AND payment_date <= $2) AS payments,
+                    (SELECT SUM(purchase_amount) AS purchase_amount
+                    FROM expense 
+                    WHERE purchase_date >= $1 
+                    AND purchase_date <= $2) AS expenses
+            ),
+            expenses AS (
+                SELECT COALESCE(SUM(purchase_amount), 0) AS expenses
+                FROM expense
+                WHERE purchase_date >= $1 
+                AND purchase_date <= $2
+            )
+        SELECT 
+            pc.project_acquired,
+            r.revenue,
+            ni.net_income,
+            e.expenses
+        FROM 
+            project_count pc,
+            revenue r,
+            net_income ni,
+            expenses e;
+        `;
+
+	try {
+		//const result = await connection.query(selectResult, [selectedYear, formattedMonth]);
+		const result = await connection.query(selectResult, [date[0], date[1]]);
+		return result.rows;
+	} catch (error) {
+		throw new Error('Failed to fetch Reports');
+	}
+}
 
 module.exports = {
 	fetchClients,
@@ -937,7 +1235,11 @@ module.exports = {
 	fetchSalesProject,
 	fetchInvoiceData,
 	fetchPayment,
+	fetchSalesProjectTotal,
+	fetchPayableTransaction,
 	fetchPaymentData,
+	fetchPayablesData,
+	fetchPayablesDataId,
 	fetchTransactionClient,
 	fetchProjectSelect,
 	fetchExpenses,
@@ -955,4 +1257,5 @@ module.exports = {
 	fetchAlltransaction,
 	fetchProjectName,
 	fetchTopVendor,
+	fetchReport,
 };

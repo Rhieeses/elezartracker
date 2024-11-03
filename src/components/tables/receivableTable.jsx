@@ -273,10 +273,9 @@ export default function ReceivablesTable({
 				<div className='flex justify-center items-center space-x-1'>
 					<Pagination
 						isCompact
-						variant='solid'
 						showControls
 						showShadow
-						color='default'
+						classNames={{ cursor: 'bg-slate-900 text-white' }}
 						page={page}
 						total={pages}
 						onChange={setPage}
@@ -315,7 +314,10 @@ export default function ReceivablesTable({
 				<Tabs
 					aria-label='navbar'
 					className='text-black flex justify-center'
-					classNames={{ panel: 'pointer-events-none' }}
+					classNames={{
+						panel: 'pointer-events-none',
+						tabList: 'w-full bg-slate-900 rounded-none',
+					}}
 					selectedKeys={statusFilter}
 					variant='solid'
 					selectionMode='multiple'
@@ -335,7 +337,7 @@ export default function ReceivablesTable({
 								</span>
 								<span className='p-5 border-1 w-full'>
 									<span className='flex gap-2'>
-										<span class='material-symbols-outlined'>payments</span>
+										<span className='material-symbols-outlined'>payments</span>
 										<p>Receivables</p>
 									</span>
 									<em className='text-right'>{formatNumberDecimal(totalBalance)}</em>
@@ -360,7 +362,7 @@ export default function ReceivablesTable({
 								</span>
 								<span className='p-5 border-1 w-full'>
 									<span className='flex gap-2'>
-										<span class='material-symbols-outlined'>payments</span>
+										<span className='material-symbols-outlined'>payments</span>
 										<p>
 											Receivables - <strong>PAID</strong>
 										</p>
@@ -387,7 +389,7 @@ export default function ReceivablesTable({
 								</span>
 								<span className='p-5 border-1 w-full'>
 									<span className='flex gap-2'>
-										<span class='material-symbols-outlined'>payments</span>
+										<span className='material-symbols-outlined'>payments</span>
 										<p>
 											Receivables - <strong>PARTIALLY</strong>
 										</p>
@@ -414,7 +416,7 @@ export default function ReceivablesTable({
 								</span>
 								<span className='p-5 border-1 w-full'>
 									<span className='flex gap-2'>
-										<span class='material-symbols-outlined'>payments</span>
+										<span className='material-symbols-outlined'>payments</span>
 										<p>
 											Receivables - <strong>UNPAID</strong>
 										</p>
@@ -437,8 +439,12 @@ export default function ReceivablesTable({
 					topContentPlacement='outside'
 					onSelectionChange={setSelectedKeys}
 					onSortChange={setSortDescriptor}
-					classNames={{ th: 'bg-slate-900 text-white', td: 'border-b-1' }}
-					className='p-2 w-full rounded-none'>
+					radius='none'
+					classNames={{
+						th: 'bg-slate-900 text-white',
+						td: 'border-b-1',
+					}}
+					className='w-full rounded-none'>
 					<TableHeader columns={headerColumns}>
 						{(column) => (
 							<TableColumn

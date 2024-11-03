@@ -4,9 +4,12 @@ import Pagelayout from '../pagelayout';
 import { Input, Spinner, Textarea, Button, useDisclosure } from '@nextui-org/react';
 import { ClientDataId } from '@/backend/data/dataHooks';
 import ConfirmModal from '@/components/ui/confirmModal';
+import { useRouter } from 'next/navigation';
+import axios from 'axios';
 
 export default function EditClient({ params }) {
 	const clientId = params.clientId;
+	const router = useRouter();
 	const { client, project, loading, error, refetch } = ClientDataId({ clientId });
 	const { isOpen, onOpen, onOpenChange } = useDisclosure();
 
@@ -25,17 +28,16 @@ export default function EditClient({ params }) {
 
 	useEffect(() => {
 		if (client) {
-			console.log(client);
 			setFormData({
 				clientId: clientId,
-				clientPicture: client.client_profilePicture,
-				clientAddress: client.client_address,
-				clientDescription: client.client_description,
-				clientEmail: client.client_email,
-				clientNumber: client.client_contactNo,
-				clientFirstName: client.client_firstName,
-				clientMiddleName: client.client_middleName,
-				clientLastName: client.client_lastName,
+				clientPicture: client[0]?.client_profilePicture,
+				clientAddress: client[0]?.client_address,
+				clientDescription: client[0]?.client_description,
+				clientEmail: client[0]?.client_email,
+				clientNumber: client[0]?.client_contactNo,
+				clientFirstName: client[0]?.client_firstName,
+				clientMiddleName: client[0]?.client_middleName,
+				clientLastName: client[0]?.client_lastName,
 				imageFile: null,
 			});
 		}
@@ -60,15 +62,20 @@ export default function EditClient({ params }) {
 		const submitData = new FormData();
 		for (const key in formData) {
 			if (key === 'imageFile' && !formData[key]) {
-				// Skip if imageFile is null
 				continue;
 			}
 			submitData.append(key, formData[key]);
 		}
 
 		try {
-			const response = await axios.post('/api/update-project', submitData);
-			router.push(`/projects/${clientId}`);
+			console.log(formData);
+
+			for (const pair of submitData.entries()) {
+				console.log(pair[0], pair[1]);
+			}
+
+			await axios.put('/api/update-client', submitData);
+			router.push(`/clients/${clientId}`);
 		} catch (error) {
 			console.error('Failed to update project:', error);
 		}
@@ -114,7 +121,7 @@ export default function EditClient({ params }) {
 									isOpen={isOpen}
 									onOpen={onOpen}
 									onOpenChange={onOpenChange}
-									projectId={clientId}
+									clientId={clientId}
 								/>
 							</span>
 							<div className='flex flex-col-2'>
