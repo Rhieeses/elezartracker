@@ -578,14 +578,7 @@ router.patch('/payable-archive/:id', async (req, res) => {
 
 //get
 router.get('/client-details', async (req, res) => {
-	const token = req.cookies.token;
-
-	if (!token) {
-		return res.status(401).json({ message: 'Unauthorized, token missing' });
-	}
-
 	try {
-		await verifyToken(token, ['Admin', 'Bookkeeper']);
 		const clients = await dbSelect.fetchClients();
 		res.json(clients);
 	} catch (error) {
@@ -594,14 +587,7 @@ router.get('/client-details', async (req, res) => {
 });
 
 router.get('/all-accounts', async (req, res) => {
-	const token = req.cookies.token;
-
-	if (!token) {
-		return res.status(401).json({ message: 'Unauthorized, token missing' });
-	}
-
 	try {
-		await verifyToken(token, ['Admin', 'Bookkeeper']);
 		const accounts = await dbSelect.fetchAllAccounts();
 		res.json(accounts);
 	} catch (error) {
@@ -610,14 +596,7 @@ router.get('/all-accounts', async (req, res) => {
 });
 
 router.get('/accounts-transactions', async (req, res) => {
-	const token = req.cookies.token;
-
-	if (!token) {
-		return res.status(401).json({ message: 'Unauthorized, token missing' });
-	}
-
 	try {
-		await verifyToken(token, ['Admin', 'Bookkeeper']);
 		const accountTransaction = await dbSelect.fetchAccountsTransaction();
 		res.json(accountTransaction);
 	} catch (error) {
@@ -626,14 +605,7 @@ router.get('/accounts-transactions', async (req, res) => {
 });
 
 router.get('/accounts-transactions/:id', async (req, res) => {
-	const token = req.cookies.token;
-
-	if (!token) {
-		return res.status(401).json({ message: 'Unauthorized, token missing' });
-	}
-
 	try {
-		await verifyToken(token, ['Admin', 'Bookkeeper']);
 		const { id } = req.params;
 		const accountTransaction = await dbSelect.fetchAccountsTransactionId(id);
 		res.json(accountTransaction);
@@ -643,14 +615,7 @@ router.get('/accounts-transactions/:id', async (req, res) => {
 });
 
 router.get('/client-details/:id', async (req, res) => {
-	const token = req.cookies.token;
-
-	if (!token) {
-		return res.status(401).json({ message: 'Unauthorized, token missing' });
-	}
-
 	try {
-		await verifyToken(token, ['Admin', 'Bookkeeper']);
 		const { id } = req.params;
 		const client = await dbSelect.fetchClientView(id);
 		res.json(client);
@@ -660,14 +625,7 @@ router.get('/client-details/:id', async (req, res) => {
 });
 
 router.get('/client-select', async (req, res) => {
-	const token = req.cookies.token;
-
-	if (!token) {
-		return res.status(401).json({ message: 'Unauthorized, token missing' });
-	}
-
 	try {
-		await verifyToken(token, ['Admin', 'Bookkeeper']);
 		const clientSelect = await dbSelect.fetchClientSelect();
 		res.json(clientSelect);
 	} catch (error) {
@@ -677,14 +635,7 @@ router.get('/client-select', async (req, res) => {
 });
 
 router.get('/project-details', async (req, res) => {
-	const token = req.cookies.token;
-
-	if (!token) {
-		return res.status(401).json({ message: 'Unauthorized, token missing' });
-	}
-
 	try {
-		await verifyToken(token, ['Admin', 'Bookkeeper']);
 		const project = await dbSelect.fetchProject();
 		res.json(project);
 	} catch (error) {
@@ -693,14 +644,7 @@ router.get('/project-details', async (req, res) => {
 });
 
 router.get('/project-details/:id', async (req, res) => {
-	const token = req.cookies.token;
-
-	if (!token) {
-		return res.status(401).json({ message: 'Unauthorized, token missing' });
-	}
-
 	try {
-		await verifyToken(token, ['Admin', 'Bookkeeper']);
 		const { id } = req.params;
 		const project = await dbSelect.fetchProjectView(id);
 		res.json(project);
@@ -710,14 +654,7 @@ router.get('/project-details/:id', async (req, res) => {
 });
 
 router.get('/allclient-project/:id', async (req, res) => {
-	const token = req.cookies.token;
-
-	if (!token) {
-		return res.status(401).json({ message: 'Unauthorized, token missing' });
-	}
-
 	try {
-		await verifyToken(token, ['Admin', 'Bookkeeper']);
 		const { id } = req.params;
 		const clientProject = await dbSelect.fetchAllClientProject(id);
 		res.json(clientProject);
@@ -727,14 +664,7 @@ router.get('/allclient-project/:id', async (req, res) => {
 });
 
 router.get('/sales-details', async (req, res) => {
-	const token = req.cookies.token;
-
-	if (!token) {
-		return res.status(401).json({ message: 'Unauthorized, token missing' });
-	}
-
 	try {
-		await verifyToken(token, ['Admin', 'Bookkeeper']);
 		const sales = await dbSelect.fetchSales();
 		res.json(sales);
 	} catch (error) {
@@ -743,14 +673,7 @@ router.get('/sales-details', async (req, res) => {
 });
 
 router.get('/salesProject-details', async (req, res) => {
-	const token = req.cookies.token;
-
-	if (!token) {
-		return res.status(401).json({ message: 'Unauthorized, token missing' });
-	}
-
 	try {
-		await verifyToken(token, ['Admin', 'Bookkeeper']);
 		const sales = await dbSelect.fetchSalesProjectTotal();
 		res.json(sales);
 	} catch (error) {
@@ -759,14 +682,7 @@ router.get('/salesProject-details', async (req, res) => {
 });
 
 router.get('/sales-details/:id', async (req, res) => {
-	const token = req.cookies.token;
-
-	if (!token) {
-		return res.status(401).json({ message: 'Unauthorized, token missing' });
-	}
-
 	try {
-		await verifyToken(token, ['Admin', 'Bookkeeper']);
 		const { id } = req.params;
 		const sales = await dbSelect.fetchSalesProject(id);
 		res.json(sales);
@@ -776,14 +692,7 @@ router.get('/sales-details/:id', async (req, res) => {
 });
 
 router.get('/invoice-details/:invoice', async (req, res) => {
-	const token = req.cookies.token;
-
-	if (!token) {
-		return res.status(401).json({ message: 'Unauthorized, token missing' });
-	}
-
 	try {
-		await verifyToken(token, ['Admin', 'Bookkeeper']);
 		const { invoice } = req.params;
 		const invoiceData = await dbSelect.fetchInvoiceData(invoice);
 		res.json(invoiceData);
@@ -793,14 +702,7 @@ router.get('/invoice-details/:invoice', async (req, res) => {
 });
 
 router.get('/payment-details', async (req, res) => {
-	const token = req.cookies.token;
-
-	if (!token) {
-		return res.status(401).json({ message: 'Unauthorized, token missing' });
-	}
-
 	try {
-		await verifyToken(token, ['Admin', 'Bookkeeper']);
 		const payment = await dbSelect.fetchPayment();
 		res.json(payment);
 	} catch (error) {
@@ -809,14 +711,7 @@ router.get('/payment-details', async (req, res) => {
 });
 
 router.get('/payabletransaction-details', async (req, res) => {
-	const token = req.cookies.token;
-
-	if (!token) {
-		return res.status(401).json({ message: 'Unauthorized, token missing' });
-	}
-
 	try {
-		await verifyToken(token, ['Admin', 'Bookkeeper']);
 		const payables = await dbSelect.fetchPayableTransaction();
 		res.json(payables);
 	} catch (error) {
@@ -825,14 +720,7 @@ router.get('/payabletransaction-details', async (req, res) => {
 });
 
 router.get('/payabletransaction-details/:id', async (req, res) => {
-	const token = req.cookies.token;
-
-	if (!token) {
-		return res.status(401).json({ message: 'Unauthorized, token missing' });
-	}
-
 	try {
-		await verifyToken(token, ['Admin', 'Bookkeeper']);
 		const { id } = req.params;
 		const payables = await dbSelect.fetchPayableTransactionId(id);
 		res.json(payables);
@@ -842,14 +730,7 @@ router.get('/payabletransaction-details/:id', async (req, res) => {
 });
 
 router.get('/payment-details/:id', async (req, res) => {
-	const token = req.cookies.token;
-
-	if (!token) {
-		return res.status(401).json({ message: 'Unauthorized, token missing' });
-	}
-
 	try {
-		await verifyToken(token, ['Admin', 'Bookkeeper']);
 		const { id } = req.params;
 		const invoiceData = await dbSelect.fetchPaymentData(id);
 		res.json(invoiceData);
@@ -859,14 +740,7 @@ router.get('/payment-details/:id', async (req, res) => {
 });
 
 router.get('/payables-details', async (req, res) => {
-	const token = req.cookies.token;
-
-	if (!token) {
-		return res.status(401).json({ message: 'Unauthorized, token missing' });
-	}
-
 	try {
-		await verifyToken(token, ['Admin', 'Bookkeeper']);
 		const payables = await dbSelect.fetchPayablesData();
 		res.json(payables);
 	} catch (error) {
@@ -875,14 +749,7 @@ router.get('/payables-details', async (req, res) => {
 });
 
 router.get('/payables-details/:id', async (req, res) => {
-	const token = req.cookies.token;
-
-	if (!token) {
-		return res.status(401).json({ message: 'Unauthorized, token missing' });
-	}
-
 	try {
-		await verifyToken(token, ['Admin', 'Bookkeeper']);
 		const { id } = req.params;
 		const payables = await dbSelect.fetchPayablesDataId(id);
 		res.json(payables);
@@ -892,14 +759,7 @@ router.get('/payables-details/:id', async (req, res) => {
 });
 
 router.get('/transaction-client/:id', async (req, res) => {
-	const token = req.cookies.token;
-
-	if (!token) {
-		return res.status(401).json({ message: 'Unauthorized, token missing' });
-	}
-
 	try {
-		await verifyToken(token, ['Admin', 'Bookkeeper']);
 		const { id } = req.params;
 		const transactionClient = await dbSelect.fetchTransactionClient(id);
 		res.json(transactionClient);
@@ -909,14 +769,7 @@ router.get('/transaction-client/:id', async (req, res) => {
 });
 
 router.get('/project-select', async (req, res) => {
-	const token = req.cookies.token;
-
-	if (!token) {
-		return res.status(401).json({ message: 'Unauthorized, token missing' });
-	}
-
 	try {
-		await verifyToken(token, ['Admin', 'Bookkeeper']);
 		const projectSelect = await dbSelect.fetchProjectSelect();
 		res.json(projectSelect);
 	} catch (error) {
@@ -926,14 +779,7 @@ router.get('/project-select', async (req, res) => {
 });
 
 router.get('/expenses-details', async (req, res) => {
-	const token = req.cookies.token;
-
-	if (!token) {
-		return res.status(401).json({ message: 'Unauthorized, token missing' });
-	}
-
 	try {
-		await verifyToken(token, ['Admin', 'Bookkeeper']);
 		const expenses = await dbSelect.fetchExpenses();
 		res.json(expenses);
 	} catch (error) {
@@ -942,14 +788,7 @@ router.get('/expenses-details', async (req, res) => {
 });
 
 router.get('/expenses-details/:id', async (req, res) => {
-	const token = req.cookies.token;
-
-	if (!token) {
-		return res.status(401).json({ message: 'Unauthorized, token missing' });
-	}
-
 	try {
-		await verifyToken(token, ['Admin', 'Bookkeeper']);
 		const { id } = req.params;
 		const expenses = await dbSelect.fetchExpensesProject(id);
 		res.json(expenses);
@@ -959,14 +798,7 @@ router.get('/expenses-details/:id', async (req, res) => {
 });
 
 router.get('/expensesInvoice-details/:id', async (req, res) => {
-	const token = req.cookies.token;
-
-	if (!token) {
-		return res.status(401).json({ message: 'Unauthorized, token missing' });
-	}
-
 	try {
-		await verifyToken(token, ['Admin', 'Bookkeeper']);
 		const { id } = req.params;
 		const invoiceExpensesData = await dbSelect.fetchInvoiceExpensesData(id);
 		res.json(invoiceExpensesData);
@@ -976,14 +808,7 @@ router.get('/expensesInvoice-details/:id', async (req, res) => {
 });
 
 router.get('/vendor-select', async (req, res) => {
-	const token = req.cookies.token;
-
-	if (!token) {
-		return res.status(401).json({ message: 'Unauthorized, token missing' });
-	}
-
 	try {
-		await verifyToken(token, ['Admin', 'Bookkeeper']);
 		const vendorSelect = await dbSelect.fetchVendorSelect();
 		res.json(vendorSelect);
 	} catch (error) {
@@ -993,14 +818,7 @@ router.get('/vendor-select', async (req, res) => {
 });
 
 router.get('/transaction-details/:id', async (req, res) => {
-	const token = req.cookies.token;
-
-	if (!token) {
-		return res.status(401).json({ message: 'Unauthorized, token missing' });
-	}
-
 	try {
-		await verifyToken(token, ['Admin', 'Bookkeeper']);
 		const { id } = req.params;
 		const transacData = await dbSelect.fetchTransactionDetails(id);
 		res.json(transacData);
@@ -1010,14 +828,7 @@ router.get('/transaction-details/:id', async (req, res) => {
 });
 
 router.get('/accounts-details', async (req, res) => {
-	const token = req.cookies.token;
-
-	if (!token) {
-		return res.status(401).json({ message: 'Unauthorized, token missing' });
-	}
-
 	try {
-		await verifyToken(token, ['Admin', 'Bookkeeper']);
 		const accountsSelect = await dbSelect.fetchAccounts();
 		res.json(accountsSelect);
 	} catch (error) {
@@ -1027,14 +838,7 @@ router.get('/accounts-details', async (req, res) => {
 });
 
 router.get('/dashboard-data', async (req, res) => {
-	const token = req.cookies.token;
-
-	if (!token) {
-		return res.status(401).json({ message: 'Unauthorized, token missing' });
-	}
-
 	try {
-		await verifyToken(token, ['Admin', 'Bookkeeper']);
 		const dashboardData = await dbSelect.fetchDashboardData();
 		res.json(dashboardData);
 	} catch (error) {
@@ -1043,14 +847,7 @@ router.get('/dashboard-data', async (req, res) => {
 });
 
 router.get('/vendor-details', async (req, res) => {
-	const token = req.cookies.token;
-
-	if (!token) {
-		return res.status(401).json({ message: 'Unauthorized, token missing' });
-	}
-
 	try {
-		await verifyToken(token, ['Admin', 'Bookkeeper']);
 		const vendor = await dbSelect.fetchVendor();
 		res.json(vendor);
 	} catch (error) {
@@ -1059,14 +856,7 @@ router.get('/vendor-details', async (req, res) => {
 });
 
 router.get('/vendor-details/:id', async (req, res) => {
-	const token = req.cookies.token;
-
-	if (!token) {
-		return res.status(401).json({ message: 'Unauthorized, token missing' });
-	}
-
 	try {
-		await verifyToken(token, ['Admin', 'Bookkeeper']);
 		const { id } = req.params;
 		const vendor = await dbSelect.fetchVendorId(id);
 		res.json(vendor);
@@ -1086,14 +876,7 @@ router.get('/project-name/:id', async (req, res) => {
 });
 
 router.get('/notifications', async (req, res) => {
-	const token = req.cookies.token;
-
-	if (!token) {
-		return res.status(401).json({ message: 'Unauthorized, token missing' });
-	}
-
 	try {
-		await verifyToken(token, ['Admin', 'Bookkeeper']);
 		const notifications = await dbSelect.fetchNotifications();
 		res.json(notifications);
 	} catch (error) {
@@ -1102,14 +885,7 @@ router.get('/notifications', async (req, res) => {
 });
 
 router.get('/all-transactions', async (req, res) => {
-	const token = req.cookies.token;
-
-	if (!token) {
-		return res.status(401).json({ message: 'Unauthorized, token missing' });
-	}
-
 	try {
-		await verifyToken(token, ['Admin', 'Bookkeeper']);
 		const transactions = await dbSelect.fetchAlltransaction();
 		res.json(transactions);
 	} catch (error) {
@@ -1118,14 +894,7 @@ router.get('/all-transactions', async (req, res) => {
 });
 
 router.get('/top-vendor/:id', async (req, res) => {
-	const token = req.cookies.token;
-
-	if (!token) {
-		return res.status(401).json({ message: 'Unauthorized, token missing' });
-	}
-
 	try {
-		await verifyToken(token, ['Admin', 'Bookkeeper']);
 		const { id } = req.params;
 		const topVendor = await dbSelect.fetchTopVendor(id);
 		res.json(topVendor);
@@ -1136,14 +905,7 @@ router.get('/top-vendor/:id', async (req, res) => {
 
 //
 router.get('/all-transactions', async (req, res) => {
-	const token = req.cookies.token;
-
-	if (!token) {
-		return res.status(401).json({ message: 'Unauthorized, token missing' });
-	}
-
 	try {
-		await verifyToken(token, ['Admin', 'Bookkeeper']);
 		const transactions = await dbSelect.fetchAlltransaction();
 		res.json(transactions);
 	} catch (error) {
