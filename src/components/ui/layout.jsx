@@ -19,6 +19,7 @@ import { useState, useEffect } from 'react';
 
 export default function Layout({ children }) {
 	const [user, setUser] = useState(null);
+	const [error, setError] = useState(null);
 
 	useEffect(() => {
 		const fetchUser = async () => {

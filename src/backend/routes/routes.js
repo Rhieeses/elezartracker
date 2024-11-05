@@ -1076,14 +1076,7 @@ router.get('/vendor-details/:id', async (req, res) => {
 });
 
 router.get('/project-name/:id', async (req, res) => {
-	const token = req.cookies.token;
-
-	if (!token) {
-		return res.status(401).json({ message: 'Unauthorized, token missing' });
-	}
-
 	try {
-		await verifyToken(token, ['Admin', 'Bookkeeper']);
 		const { id } = req.params;
 		const projectName = await dbSelect.fetchProjectName(id);
 		res.json(projectName);

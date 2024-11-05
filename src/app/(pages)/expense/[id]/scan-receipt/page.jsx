@@ -160,12 +160,20 @@ export default function ScanReceipt({ params }) {
 
 	//extracting details functions
 	const extractDetails = (text, file) => {
+		/** 
 		const invoiceNumberRegex = /RECEIPT\s*#\s*([\w-]+)/i;
 		const vendorNameRegex = /RECEIPT\s*EXAMPLE\s*([^0-9]+)/i;
 		const descriptionRegex = /DESCRIPTION\s*([\s\S]*?)\s*UNIT\s*PRICE/i;
 		const dateRegex = /RECEIPT DATE\s*(\d{2}\/\d{2}\/\d{4})/i;
 		const paymentTypeRegex = /PAYMENT\s*TYPE\s*[:\s]*([\w\s]+)/i;
-		const amountRegex = /TOTAL\s*\$([\d.,]+)/i;
+		const amountRegex = /TOTAL\s*\$([\d.,]+)/i;*/
+
+		const invoiceNumberRegex = /RECEIPT\s*#\s*([\w-]+)/i;
+		const vendorNameRegex = /RECEIPT(?:.*?\b(?:INC|Incorporated|Hardware|Depot)\b.*?)/i;
+		const descriptionRegex = /DESCRIPTION\s*:\s*([\s\S]*?)\s*UNIT\s*PRICE/i;
+		const dateRegex = /RECEIPT DATE\s*:\s*(\d{2}\/\d{2}\/\d{4})/i;
+		const paymentTypeRegex = /PAYMENT\s*TYPE\s*:\s*([\w\s]+)/i;
+		const amountRegex = /TOTAL\s*[:\s]*[\$₱]*([\d,]+(?:\.\d{2})?)/i;
 
 		// Extract matches
 		const invoiceNumberMatch = text.match(invoiceNumberRegex);
