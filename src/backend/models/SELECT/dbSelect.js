@@ -1,5 +1,16 @@
 const connection = require('../../config/db');
 
+async function fetchAllAccounts() {
+	const selectResult = `SELECT * FROM users`;
+
+	try {
+		const result = await connection.query(selectResult);
+		return result.rows; // Return the result to be handled by the calling function
+	} catch (error) {
+		throw new Error('Failed to fetch clients');
+	}
+}
+
 async function fetchClients() {
 	const selectResult = `SELECT * FROM client`;
 
@@ -1402,6 +1413,7 @@ async function fetchReport(reportBody) {
 }
 
 module.exports = {
+	fetchAllAccounts,
 	fetchClients,
 	fetchProject,
 	fetchClientSelect,

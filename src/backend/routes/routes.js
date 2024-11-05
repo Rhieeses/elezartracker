@@ -593,6 +593,22 @@ router.get('/client-details', async (req, res) => {
 	}
 });
 
+router.get('/all-accounts', async (req, res) => {
+	const token = req.cookies.token;
+
+	if (!token) {
+		return res.status(401).json({ message: 'Unauthorized, token missing' });
+	}
+
+	try {
+		await verifyToken(token, ['Admin', 'Bookkeeper']);
+		const accounts = await dbSelect.fetchAllAccounts();
+		res.json(accounts);
+	} catch (error) {
+		res.status(500).json({ error: 'Failed to fetch accounts' });
+	}
+});
+
 router.get('/accounts-transactions', async (req, res) => {
 	const token = req.cookies.token;
 
