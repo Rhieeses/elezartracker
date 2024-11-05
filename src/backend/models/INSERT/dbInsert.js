@@ -321,7 +321,7 @@ async function expenseInsert(expenseFormData) {
 			RETURNING id
 		),
 		selected_vendor AS (
-			SELECT id FROM vendor WHERE vendor_name = $2
+			SELECT id FROM vendor WHERE vendor_name ~ $2
 			UNION ALL
 			SELECT id FROM vendor_insert
 		)
@@ -338,13 +338,6 @@ async function expenseInsert(expenseFormData) {
 		VALUES ($1, $2, $3, $4, $5, $6, $7, (SELECT id FROM selected_vendor LIMIT 1))
 		RETURNING *;
 	`;
-
-	/**const queryExpenseInsert = `
-		INSERT INTO expense
-		("project_id", "vendor_id", "purchase_date", "expense_description", "purchase_amount", "payment_type", "invoiceNo", "vendor_name")
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-		RETURNING *;
-	`;**/
 
 	const accountsExpenseSql = `
 		UPDATE accounts_project
@@ -374,17 +367,6 @@ async function expenseInsert(expenseFormData) {
 			invoiceNo,
 		]);
 
-		/** 
-		await connection.query(queryExpenseInsertss, [
-			projectId,
-			vendor,
-			purchaseDate,
-			description,
-			purchaseAmount,
-			paymentType,
-			invoiceNo,
-			vendorName,
-		]);*/
 		console.log('Expense inserted!');
 	} catch (error) {
 		console.error(`Error processing expense data: ${error.message}`);
@@ -392,8 +374,56 @@ async function expenseInsert(expenseFormData) {
 	}
 }
 
+async function expenseInsertIndirect(expenseFormData) {
+	const { vendorName, invoiceDate, description, amount, paymentType, invoiceNo } = expenseFormData;
+
+	const queryExpenseInsert = `
+		WITH vendor_insert AS (
+			INSERT INTO vendor (vendor_name)
+			VALUES ($1) 
+			ON CONFLICT (vendor_name) DO NOTHING
+			RETURNING id
+		),
+		selected_vendor AS (
+			SELECT id FROM vendor WHERE vendor_name ~ $1
+			UNION ALL
+			SELECT id FROM vendor_insert
+		)
+		INSERT INTO expense (
+			"vendor_name", 
+			"purchase_date", 
+			"expense_description", 
+			"purchase_amount", 
+			"payment_type", 
+			"invoiceNo",
+			"vendor_id",
+			direct_expense
+		) 
+		VALUES ($1, $2, $3, $4, $5, $6, (SELECT id FROM selected_vendor LIMIT 1) ,$7)
+		RETURNING *;
+	`;
+
+	try {
+		// Insert the expense
+		await connection.query(queryExpenseInsert, [
+			vendorName,
+			invoiceDate,
+			description,
+			amount,
+			paymentType,
+			invoiceNo,
+			false,
+		]);
+
+		console.log('Expense indirect inserted!');
+	} catch (error) {
+		console.error(`Error processing expense indirect data: ${error.message}`);
+		throw new Error(`Error processing expense indirect data: ${error.message}`);
+	}
+}
+
 async function expenseScanInsert(expenseFormData) {
-	const { projectId, vendorName, date, description, amount, paymentType, invoiceNumber } =
+	const { projectId, vendorName, date, description, amount, paymentType, invoiceNumber, fileUrl } =
 		expenseFormData;
 
 	const queryExpenseInsert = `
@@ -404,7 +434,7 @@ async function expenseScanInsert(expenseFormData) {
 			RETURNING id
 		),
 		selected_vendor AS (
-			SELECT id FROM vendor WHERE vendor_name = $2
+			SELECT id FROM vendor WHERE vendor_name ~ $2
 			UNION ALL
 			SELECT id FROM vendor_insert
 		)
@@ -416,9 +446,10 @@ async function expenseScanInsert(expenseFormData) {
 			"purchase_amount", 
 			"payment_type", 
 			"invoiceNo",
-			"vendor_id"
+			"vendor_id",
+			"ref_receipt"
 		) 
-		VALUES ($1, $2, $3, $4, $5, $6, $7, (SELECT id FROM selected_vendor LIMIT 1))
+		VALUES ($1, $2, $3, $4, $5, $6, $7, (SELECT id FROM selected_vendor LIMIT 1) ,$8)
 		RETURNING *;
 	`;
 
@@ -427,19 +458,15 @@ async function expenseScanInsert(expenseFormData) {
 		SET total_expenses = total_expenses + $1
 		WHERE project_id = $2
 		RETURNING *;
-					`;
+	`;
 
 	try {
-		await connection.query(accountsExpenseSql, [purchaseAmount, projectId]);
-		console.log('Expenses inserted in accounts!');
-	} catch (error) {
-		console.error(`Error processing expense data: ${error.message}`);
-		console.error(`Error processing accounts expense data: ${error.message}`);
-	}
+		// Update accounts for expenses
+		await connection.query(accountsExpenseSql, [amount, projectId]);
+		console.log('Expenses updated in accounts!');
 
-	try {
 		// Insert the expense
-		await connection.query(queryExpenseInsert, [
+		const result = await connection.query(queryExpenseInsert, [
 			projectId,
 			vendorName,
 			date,
@@ -447,8 +474,10 @@ async function expenseScanInsert(expenseFormData) {
 			amount,
 			paymentType,
 			invoiceNumber,
+			fileUrl,
 		]);
-		console.log('Expense inserted!');
+
+		console.log('Expense inserted!', result.rows[0]);
 	} catch (error) {
 		console.error(`Error processing expense data: ${error.message}`);
 		throw new Error(`Error processing expense data: ${error.message}`);
@@ -491,23 +520,10 @@ async function payablePaymentInsert(expenseFormData) {
 		RETURNING *;
 	`;
 
-	const checkInvoiceExist = `
-		SELECT COUNT(*) AS count
-		FROM expense
-		WHERE "invoiceNo" = $1;
-	`;
-
 	const transactionSql = `
 		INSERT INTO payables_transaction
 		("vendor_id", "invoice_id", "payment_description", "payment_amount", "payment_date", "payment_type", "project_id")
 		VALUES ($1, $2, $3, $4, $5, $6, $7);
-	`;
-
-	const queryExpensensert = `
-	INSERT INTO expense
-		("project_id", "vendor_id", "purchase_date", "expense_description", "purchase_amount", "payment_type", "invoiceNo", "vendor_name", "direct_expense","status", "is_payable","balance")
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11 , $12)
-		RETURNING *;
 	`;
 
 	try {
@@ -524,37 +540,11 @@ async function payablePaymentInsert(expenseFormData) {
 		console.log('Transaction inserted!');
 
 		// Update payable amount and retrieve updated balance and amount_paid
-		const { rows: payableRows } = await connection.query(queryUpdatePayable, [
-			purchaseAmount,
-			invoiceId,
-		]);
-		const { balance, amount_paid, amount, status, is_direct } = payableRows[0];
+		let result = await connection.query(queryUpdatePayable, [purchaseAmount, invoiceId]);
+		const { balance, amount_paid, amount, status, is_direct } = result.rows[0];
 
-		// Check if the invoice already exists
-		const { rows: invoiceRows } = await connection.query(checkInvoiceExist, [invoiceNo]);
-		const invoiceExists = parseInt(invoiceRows[0].count, 10) > 0;
-
-		if (!invoiceExists) {
-			await connection.query(queryExpensensert, [
-				projectId,
-				vendor,
-				purchaseDate,
-				description,
-				amount,
-				paymentType,
-				invoiceNo,
-				vendorName,
-				is_direct,
-				status,
-				true,
-				balance,
-			]);
-			console.log('Payable inserted in expense!');
-		} else {
-			// Update existing expense if invoice exists
-			await connection.query(queryUpdateExpense, [balance, invoiceId, status]);
-			console.log('Expense updated!');
-		}
+		await connection.query(queryUpdateExpense, [balance, invoiceNo, status]);
+		console.log('Expense updated!');
 
 		// Update accounts project expenses
 		await connection.query(accountsExpenseSql, [purchaseAmount, projectId]);
@@ -600,7 +590,7 @@ async function payableInsert(payableFormData) {
 			RETURNING id
 		),
 		selected_vendor AS (
-			SELECT id FROM vendor WHERE vendor_name = $2
+			SELECT id FROM vendor WHERE vendor_name ~ $2
 			UNION ALL
 			SELECT id FROM vendor_insert
 		)
@@ -806,6 +796,7 @@ module.exports = {
 	salesPaymentInsert,
 	vendorInsertData,
 	expenseInsert,
+	expenseInsertIndirect,
 	expenseScanInsert,
 	salesInsert,
 	payableInsert,

@@ -20,15 +20,35 @@ import {
 	Select,
 	SelectItem,
 	Avatar,
+	Chip,
+	Image,
 } from '@nextui-org/react';
 import axios from 'axios';
 
 import Layout from '@/components/ui/layout';
-import { formatDate, formatNumber, capitalizeOnlyFirstLetter } from '@/utils/inputFormatter';
+import {
+	formatDate,
+	formatNumber,
+	capitalizeOnlyFirstLetter,
+	formatNumberDecimal,
+	removeFormatting,
+	allCapitalize,
+} from '@/utils/inputFormatter';
 import { IconTextBox } from '@/components/ui/uiComponent';
 import ExpenseTable from '@/components/tables/expenseTable';
-import { ExpenseData, ExpenseDataInvoice, ProjectData } from '@/backend/data/dataHooks';
+import {
+	ExpenseData,
+	ExpenseDataInvoice,
+	ProjectData,
+	statusColorMap,
+} from '@/backend/data/dataHooks';
 import ConfirmDelete from '@/components/ui/confirmDelete';
+
+let categoryOptions = [
+	{ label: 'CASH', value: 'CASH' },
+	{ label: 'BANK TRANSFER', value: 'BANK TRANSFER' },
+	{ label: 'GCASH', value: 'GCASH' },
+];
 
 export default function ExpenseContent() {
 	const [viewIdExpense, setViewIdExpense] = useState(null);
@@ -39,6 +59,7 @@ export default function ExpenseContent() {
 	const [filterValue, setFilterValue] = useState('');
 	const [expenseDelete, seteExpenseDelete] = useState(null);
 	const [selected, setSelected] = useState('direct');
+	const [isEditNo, setIsEdit] = useState(null);
 
 	const filteredProjects = project.filter(
 		(projectItem) =>
@@ -56,6 +77,8 @@ export default function ExpenseContent() {
 	}, []);
 
 	const { isOpen, onOpen, onOpenChange } = useDisclosure();
+	const { isOpen: isEdit, onOpen: openEdit, onOpenChange: changeEdit } = useDisclosure();
+
 	const {
 		isOpen: isOpenCreate,
 		onOpen: onOpenCreate,
@@ -63,6 +86,12 @@ export default function ExpenseContent() {
 	} = useDisclosure();
 
 	const { isOpen: isConfirm, onOpen: openConfirm, onOpenChange: closeConfirm } = useDisclosure();
+
+	const {
+		isOpen: isOpenPreview,
+		onOpen: onOpenPreview,
+		onOpenChange: onOpenChangePreview,
+	} = useDisclosure();
 
 	const onClose = () => {
 		onOpenChange(false);
@@ -72,6 +101,12 @@ export default function ExpenseContent() {
 	const modalPayment = (id) => {
 		setViewIdExpense(id);
 		onOpen();
+	};
+
+	const modalEdit = (id) => {
+		setViewIdExpense(id);
+		setIsEdit(id);
+		openEdit();
 	};
 
 	const handleArchive = async (id) => {
@@ -111,7 +146,9 @@ export default function ExpenseContent() {
 		const fetchVendor = async () => {
 			//setLoading(true);
 			try {
-				const response = await axios.get('/api/vendor-select');
+				const response = await axios.get('/api/vendor-select', {
+					withCredentials: true,
+				});
 				setVendor(response.data);
 			} catch (error) {
 				console.error('Error fetching vendor data:', error);
@@ -169,8 +206,8 @@ export default function ExpenseContent() {
 		};
 
 		try {
-			console.log(formData);
-			//await axios.post('/api/add-payables', cleanedData);
+			//console.log(formData);
+			await axios.post('/api/add-expenseindirect', cleanedData);
 			/**setMessage({
 				success: 'Expense added successfully!',
 				error: '',
@@ -183,9 +220,85 @@ export default function ExpenseContent() {
 			});*/
 			console.error('Error:', error);
 		} finally {
-			changeAdditionals();
+			onOpenChangeCreate();
 			refetch();
 			setLoadingSubmit(false);
+		}
+	};
+
+	//edit
+
+	const [editForm, setEditForm] = useState({
+		vendor: '',
+		amount: '',
+		projectId: null,
+		invoiceDate: '',
+		description: '',
+		invoiceNo: '',
+		isDirect: false,
+		vendorName: '',
+		projectName: '',
+	});
+
+	const removeTimeFromDate = (date) => {
+		if (!date) return null; // Handle null or undefined date
+		const newDate = new Date(date);
+		newDate.setHours(0, 0, 0, 0); // Set hours, minutes, seconds, and milliseconds to zero
+		return newDate.toISOString().split('T')[0]; // Return in YYYY-MM-DD format
+	};
+
+	useEffect(() => {
+		if (invoiceExpense && invoiceExpense.length > 0) {
+			setEditForm({
+				vendor: invoiceExpense[0].vendor_id,
+				amount: invoiceExpense[0].purchase_amount,
+				projectId: invoiceExpense[0].project_id,
+				invoiceDate: removeTimeFromDate(invoiceExpense[0].purchase_date),
+				description: invoiceExpense[0].expense_description,
+				invoiceNo: invoiceExpense[0].invoiceNo,
+				isDirect: invoiceExpense[0].direct_expense,
+				vendorName: invoiceExpense[0].vendor_name,
+				projectName: invoiceExpense[0].project_name,
+			});
+		}
+	}, [invoiceExpense]);
+
+	const handleInputEdit = (field) => (event) => {
+		const { value } = event.target;
+
+		setEditForm((prev) => ({
+			...prev,
+			[field]:
+				field === 'amount'
+					? formatNumber(value.replace(/[^0-9.]/g, ''))
+					: field === 'invoiceNo'
+					? allCapitalize(value.startsWith('#') ? value : '#' + value)
+					: capitalizeOnlyFirstLetter(value),
+		}));
+
+		if (field === 'vendor') {
+			setIsOthers(value === 'others');
+		}
+	};
+
+	const handleEdit = async (event) => {
+		event.preventDefault();
+		const cleanedData = {
+			...editForm,
+			amount: removeFormatting(editForm.amount),
+			invoiceNo: removeFormatting(editForm.invoiceNo),
+		};
+
+		try {
+			//console.log(cleanedData);
+			await axios.put(`/api/edit-expense/${isEditNo}`, cleanedData);
+
+			setFormData(initialFormData);
+		} catch (error) {
+			console.error('Error:', error);
+		} finally {
+			changeEdit();
+			refetch();
 		}
 	};
 
@@ -197,6 +310,7 @@ export default function ExpenseContent() {
 					onSearchChange={onSearchChange}
 					onRowSelect={modalPayment}
 					onRowDelete={handleDelete}
+					onRowEdit={modalEdit}
 					expense={expense}
 					onOpenCreate={onOpenCreate}
 					onRowArchive={handleArchive}
@@ -218,17 +332,43 @@ export default function ExpenseContent() {
 						<ModalContent key={invoiceItem.id}>
 							{(onClose) => (
 								<>
-									<ModalHeader className='flex gap-1'>
-										<span className='material-symbols-outlined text-red-400'>
-											Receipt
-										</span>
-										Expenses Invoice
+									<ModalHeader className='flex items-center gap-1'>
+										<div className='flex gap-1 items-center'>
+											<span className='material-symbols-outlined text-red-400'>
+												Receipt
+											</span>
+											Expenses Invoice
+										</div>
+										<Chip
+											color={statusColorMap[invoiceItem.status]}
+											size='sm'
+											variant='flat'>
+											{invoiceItem.status}
+										</Chip>
+
+										<Chip
+											color='primary'
+											size='sm'
+											variant='flat'>
+											{invoiceItem.direct_expense ? 'DIRECT' : 'INDIRECT'}
+										</Chip>
 									</ModalHeader>
 									<ModalBody>
 										{loading ? (
 											<Spinner />
 										) : (
 											<div className='grid grid-cols-2 gap-5 w-full'>
+												{invoiceItem.ref_receipt ? (
+													<div className='col-span-2'>
+														<p className='text-default-500 text-sm'>Receipt ref. :</p>
+														<p
+															className='text-blue-500'
+															onClick={onOpenPreview}>
+															{invoiceItem.ref_receipt}
+														</p>
+													</div>
+												) : null}
+
 												<div className='flex border-[1px] col-span-3 p-5 rounded-md justify-between items-center'>
 													<User
 														name={invoiceItem.vendor_name}
@@ -256,13 +396,30 @@ export default function ExpenseContent() {
 													<IconTextBox
 														iconText='paid'
 														labelText='PAYMENT TYPE'
-														contentText={invoiceItem.payment_type}
+														contentText={
+															invoiceItem.payment_type
+																? invoiceItem.payment_type
+																: 'N/A'
+														}
 													/>
 
 													<IconTextBox
 														iconText='event'
 														labelText='PURCHASE DATE'
 														contentText={formatDate(invoiceItem.purchase_date)}
+													/>
+
+													<IconTextBox
+														iconText='paid'
+														labelText='PURCHASE AMOUNT'
+														contentText={formatNumberDecimal(
+															invoiceItem.purchase_amount,
+														)}
+													/>
+													<IconTextBox
+														iconText='balance'
+														labelText='BALANCE'
+														contentText={formatNumberDecimal(invoiceItem.balance)}
 													/>
 												</div>
 
@@ -284,14 +441,25 @@ export default function ExpenseContent() {
 													/>
 												</div>
 
-												<div className='col-span-2 flex flex-col items-end'>
-													<label className='block text-sm font-medium text-gray-700'>
-														Total amount
-													</label>
-													<span className='mt-1 text-xl font-bold'>
-														{formatNumber(invoiceItem.purchase_amount)}
-													</span>
-												</div>
+												<Modal
+													isOpen={isOpenPreview}
+													size='4xl'
+													radius='sm'
+													onOpenChange={onOpenChangePreview}>
+													<ModalContent>
+														<>
+															<ModalBody>
+																<Image
+																	src={invoiceItem.ref_receipt}
+																	alt='Preview'
+																	width={'100%'}
+																	height={'100%'}
+																	className='object-cover rounded-lg'
+																/>
+															</ModalBody>
+														</>
+													</ModalContent>
+												</Modal>
 											</div>
 										)}
 									</ModalBody>
@@ -344,7 +512,9 @@ export default function ExpenseContent() {
 				}}>
 				<ModalContent>
 					{(onOpenChangeCreate) => (
-						<>
+						<form
+							onSubmit={handleSubmitForm}
+							className='space-y-5'>
 							<ModalHeader className='flex flex-col gap-1 items-center'>
 								<span
 									className='material-symbols-outlined text-blue-400'
@@ -418,116 +588,114 @@ export default function ExpenseContent() {
 									<Tab
 										key='indirect'
 										title='Indirect'>
-										<div className='space-y-5'>
-											<Select
-												items={vendorWithOthers}
-												value={formData.vendor}
-												onChange={handleInputForm('vendor')}
-												label='Select vendor'
-												variant='bordered'
-												labelPlacement='outside'
-												className='col-start-1 col-end-3'
-												renderValue={(items) => {
-													return items.map((item) => (
-														<div
-															key={item.key}
-															className='flex gap-2 items-center'>
-															<Avatar
-																alt={item.data.vendor_name}
-																className='flex-shrink-0'
-																size='sm'
-																src={item.data.vendor_picture}
-															/>
-															<div className='flex flex-col'>
-																<span>{item.data.vendor_name}</span>
-																<span className='text-default-500 text-tiny'>
-																	{item.data.vendor_services}
-																</span>
-															</div>
+										<Select
+											items={vendorWithOthers}
+											value={formData.vendor}
+											onChange={handleInputForm('vendor')}
+											label='Select vendor'
+											variant='bordered'
+											labelPlacement='outside'
+											className='col-start-1 col-end-3'
+											renderValue={(items) => {
+												return items.map((item) => (
+													<div
+														key={item.key}
+														className='flex gap-2 items-center'>
+														<Avatar
+															alt={item.data.vendor_name}
+															className='flex-shrink-0'
+															size='sm'
+															src={item.data.vendor_picture}
+														/>
+														<div className='flex flex-col'>
+															<span>{item.data.vendor_name}</span>
+															<span className='text-default-500 text-tiny'>
+																{item.data.vendor_services}
+															</span>
 														</div>
-													));
-												}}>
-												{(vendor) => (
-													<SelectItem
-														key={vendor.id}
-														value={vendor.id}
-														textValue={vendor.vendor_name}>
-														<div className='flex gap-2 items-center'>
-															<Avatar
-																alt={vendor.vendor_name}
-																className='flex-shrink-0'
-																size='sm'
-																src={vendor.vendor_picture}
-															/>
-															<div className='flex flex-col'>
-																<span className='text-small'>
-																	{vendor.vendor_name}
-																</span>
-																<span className='text-tiny text-default-400'>
-																	{vendor.vendor_services}
-																</span>
-															</div>
+													</div>
+												));
+											}}>
+											{(vendor) => (
+												<SelectItem
+													key={vendor.id}
+													value={vendor.id}
+													textValue={vendor.vendor_name}>
+													<div className='flex gap-2 items-center'>
+														<Avatar
+															alt={vendor.vendor_name}
+															className='flex-shrink-0'
+															size='sm'
+															src={vendor.vendor_picture}
+														/>
+														<div className='flex flex-col'>
+															<span className='text-small'>
+																{vendor.vendor_name}
+															</span>
+															<span className='text-tiny text-default-400'>
+																{vendor.vendor_services}
+															</span>
 														</div>
-													</SelectItem>
-												)}
-											</Select>
+													</div>
+												</SelectItem>
+											)}
+										</Select>
 
-											<Input
-												type='text'
-												label='Vendor Name'
-												labelPlacement='outside'
-												variant='bordered'
-												name='vendorName'
-												className={`${isOther ? 'col-span-2' : 'hidden'}`}
-												value={formData.vendorName}
-												onChange={handleInputForm('vendorName')}
-											/>
+										<Input
+											type='text'
+											label='Vendor Name'
+											labelPlacement='outside'
+											variant='bordered'
+											name='vendorName'
+											className={`${isOther ? 'col-span-2' : 'hidden'}`}
+											value={formData.vendorName}
+											onChange={handleInputForm('vendorName')}
+										/>
 
-											<Input
-												type='text'
-												label='Invoice No'
-												labelPlacement='outside'
-												variant='bordered'
-												name='invoiceNo'
-												className='col-span-2'
-												value={formData.invoiceNo}
-												onChange={handleInputForm('invoiceNo')}
-											/>
+										<Input
+											type='text'
+											label='Invoice No'
+											labelPlacement='outside'
+											variant='bordered'
+											name='invoiceNo'
+											className='col-span-2'
+											value={formData.invoiceNo}
+											onChange={handleInputForm('invoiceNo')}
+										/>
 
-											<Input
-												type='text'
-												label='Amount'
-												labelPlacement='inside'
-												variant='bordered'
-												name='amount'
-												className='col-span-2'
-												isRequired
-												value={formData.amount}
-												onChange={handleInputForm('amount')}
-											/>
+										<Input
+											type='text'
+											label='Amount'
+											labelPlacement='inside'
+											variant='bordered'
+											name='amount'
+											className='col-span-2'
+											isRequired
+											value={formData.amount}
+											onChange={handleInputForm('amount')}
+										/>
 
-											<Input
-												type='date'
-												label='Invoice Date'
-												name='invoiceDate'
-												variant='bordered'
-												className='col-span-2'
-												isRequired
-												value={formData.invoiceDate}
-												onChange={handleInputForm('invoiceDate')}
-											/>
+										<Input
+											type='date'
+											label='Invoice Date'
+											name='invoiceDate'
+											variant='bordered'
+											className='col-span-2'
+											isRequired
+											value={formData.invoiceDate}
+											onChange={handleInputForm('invoiceDate')}
+										/>
 
-											<Textarea
-												variant='bordered'
-												name='description'
-												label='Description'
-												labelPlacement='outside'
-												placeholder='Enter your description'
-												className='col-span-4'
-												value={formData.description}
-												onChange={handleInputForm('description')}
-											/>
-										</div>
+										<Textarea
+											variant='bordered'
+											name='description'
+											label='Description'
+											labelPlacement='outside'
+											placeholder='Enter your description'
+											className='col-span-4'
+											value={formData.description}
+											onChange={handleInputForm('description')}
+										/>
 									</Tab>
 								</Tabs>
 							</ModalBody>
@@ -541,6 +709,7 @@ export default function ExpenseContent() {
 								</Button>
 								{selected === 'indirect' ? (
 									<Button
+										type='submit'
 										className='bg-black text-white'
 										variant='bordered'
 										size='lg'>
@@ -548,9 +717,241 @@ export default function ExpenseContent() {
 									</Button>
 								) : null}
 							</ModalFooter>
-						</>
+						</form>
 					)}
 				</ModalContent>
+			</Modal>
+
+			<Modal
+				isOpen={isEdit}
+				size='lg'
+				hideCloseButton
+				aria-labelledby='sales details'
+				aria-modal='true'
+				role='dialog'
+				onOpenChange={openEdit}>
+				<form onSubmit={handleEdit}>
+					{invoiceExpense && invoiceExpense.length > 0
+						? invoiceExpense.map((invoiceItem) => (
+								<ModalContent key={invoiceItem.id}>
+									<>
+										<ModalHeader className='flex justify-between gap-1 mb-5'>
+											<div className='flex'>
+												<span className='material-symbols-outlined'>receipt</span>
+												<p>Edit expense - #{invoiceItem.invoiceNo} </p>
+											</div>
+											<Chip
+												color={statusColorMap[invoiceItem.status]}
+												size='sm'
+												variant='flat'>
+												{invoiceItem.status}
+											</Chip>
+										</ModalHeader>
+										<ModalBody>
+											{invoiceItem.status !== 'PAID' &&
+											invoiceItem.status !== 'FULLY PAID' ? (
+												<h1 className='text-default-500 text-lg'>
+													This is an on going payable edit it in the payable section.
+												</h1>
+											) : (
+												<div className='space-y-5'>
+													<Button
+														size='md'
+														color='default'
+														onPress={() =>
+															setEditForm((prev) => ({
+																...prev,
+																isDirect: !prev.isDirect,
+															}))
+														}
+														className={`col-span-2 ${
+															editForm.isDirect ? 'bg-black text-white' : 'font-bold'
+														}`}
+														disableRipple
+														disableAnimations
+														variant='bordered'
+														radius='sm'>
+														{editForm.isDirect
+															? 'Direct expense'
+															: 'Indirect expense'}
+													</Button>
+
+													{editForm.isDirect && editForm.projectId && (
+														<Select
+															items={project}
+															name='projectId'
+															aria-label='projectSelect'
+															description='Select a project for direct payables.'
+															variant='bordered'
+															labelPlacement='outside'
+															placeholder={editForm.projectName}
+															defaultValue={editForm.projectId}
+															onChange={handleInputEdit('projectId')}
+															className='w-full col-span-2'>
+															{(project) => (
+																<SelectItem
+																	key={project.id}
+																	value={project.id}
+																	textValue={project.project_name}>
+																	<div className='flex gap-2 items-center'>
+																		<Avatar
+																			alt={project.project_name}
+																			className='flex-shrink-0'
+																			size='sm'
+																			src={project.project_projectPicture}
+																		/>
+																		<div className='flex flex-col'>
+																			<span className='text-small'>
+																				{project.project_name}
+																			</span>
+																			<span className='text-tiny text-default-400'>
+																				{project.contract_price}
+																			</span>
+																		</div>
+																	</div>
+																</SelectItem>
+															)}
+														</Select>
+													)}
+													<Select
+														items={vendorWithOthers}
+														value={editForm.vendor}
+														defaultValue={editForm.vendor}
+														placeholder={editForm.vendorName}
+														onChange={handleInputEdit('vendor')}
+														label='Select vendor'
+														variant='bordered'
+														labelPlacement='inside'
+														className='col-start-1 col-end-3'
+														renderValue={(items) => {
+															return items.map((item) => (
+																<div
+																	key={item.key}
+																	className='flex gap-2 items-center'>
+																	<Avatar
+																		alt={item.data.vendor_name}
+																		className='flex-shrink-0'
+																		size='sm'
+																		src={item.data.vendor_picture}
+																	/>
+																	<div className='flex flex-col'>
+																		<span>{item.data.vendor_name}</span>
+																		<span className='text-default-500 text-tiny'>
+																			{item.data.vendor_services}
+																		</span>
+																	</div>
+																</div>
+															));
+														}}>
+														{(vendor) => (
+															<SelectItem
+																key={vendor.id}
+																value={vendor.id}
+																textValue={vendor.vendor_name}>
+																<div className='flex gap-2 items-center'>
+																	<Avatar
+																		alt={vendor.vendor_name}
+																		className='flex-shrink-0'
+																		size='sm'
+																		src={vendor.vendor_picture}
+																	/>
+																	<div className='flex flex-col'>
+																		<span className='text-small'>
+																			{vendor.vendor_name}
+																		</span>
+																		<span className='text-tiny text-default-400'>
+																			{vendor.vendor_services}
+																		</span>
+																	</div>
+																</div>
+															</SelectItem>
+														)}
+													</Select>
+
+													<Input
+														type='text'
+														label='Vendor Name'
+														labelPlacement='outside'
+														variant='bordered'
+														name='vendorName'
+														className={`${isOther ? 'col-span-2' : 'hidden'}`}
+														value={editForm.vendorName}
+														onChange={handleInputEdit('vendorName')}
+													/>
+
+													<Input
+														type='text'
+														label='Invoice No'
+														labelPlacement='inside'
+														variant='bordered'
+														name='invoiceNo'
+														className='col-span-2'
+														value={editForm.invoiceNo}
+														onChange={handleInputEdit('invoiceNo')}
+													/>
+
+													<Input
+														type='text'
+														label='Amount'
+														labelPlacement='inside'
+														variant='bordered'
+														name='amount'
+														className='col-span-2'
+														isRequired
+														value={editForm.amount}
+														onChange={handleInputEdit('amount')}
+													/>
+
+													<Input
+														type='date'
+														label='Invoice Date'
+														name='invoiceDate'
+														variant='bordered'
+														className='col-span-2'
+														isRequired
+														value={editForm.invoiceDate}
+														onChange={handleInputEdit('invoiceDate')}
+													/>
+
+													<Textarea
+														variant='bordered'
+														name='description'
+														label='Description'
+														labelPlacement='outside'
+														placeholder='Enter your description'
+														className='col-span-4'
+														value={editForm.description}
+														onChange={handleInputEdit('description')}
+													/>
+												</div>
+											)}
+										</ModalBody>
+
+										<ModalFooter>
+											<Button
+												color='none'
+												variant='bordered'
+												size='lg'
+												onClick={changeEdit}>
+												Cancel
+											</Button>
+											{invoiceItem.status !== 'PAID' ? null : (
+												<Button
+													className='bg-black text-white'
+													radius='sm'
+													size='lg'
+													type='submit'
+													loading={loading}
+													disabled={loading}>
+													Edit
+												</Button>
+											)}
+										</ModalFooter>
+									</>
+								</ModalContent>
+						  ))
+						: null}
+				</form>
 			</Modal>
 
 			<ConfirmDelete

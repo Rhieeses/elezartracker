@@ -17,8 +17,8 @@ export const columns = [
 export const columnsReceivables = [
 	{ name: 'No', uid: 'no' },
 	{ name: 'DESCRIPTION', uid: 'description' },
-	{ name: 'DUE DATE', uid: 'due_date', sortable: true },
 	{ name: 'CLIENT NAME', uid: 'name', sortable: true },
+	{ name: 'DUE DATE', uid: 'due_date', sortable: true },
 	{ name: 'PAID', uid: 'paid_amount', sortable: true },
 	{ name: 'BALANCE', uid: 'balance', sortable: true },
 	{ name: 'STATUS', uid: 'status', sortable: true },
@@ -131,8 +131,8 @@ export const salesProjectColumns = [
 export const payablestransactionColumns = [
 	{ name: 'No', uid: 'no' },
 	{ name: 'INVOICE NO.', uid: 'invoice_id', sortable: true },
-	{ name: 'DESCRIPTION', uid: 'payment_description', sortable: true },
 	{ name: 'VENDOR', uid: 'name' },
+	{ name: 'DESCRIPTION', uid: 'payment_description', sortable: true },
 	{ name: 'DATE', uid: 'payment_date', sortable: true },
 	{ name: 'AMOUNT', uid: 'payment_amount', sortable: true },
 	{ name: 'PAYMENT TYPE', uid: 'payment_type', sortable: true },
@@ -186,8 +186,8 @@ export const ProjectData = () => {
 		setLoading(true);
 		try {
 			const [projectsResponse, clientsResponse] = await Promise.all([
-				axios.get('/api/project-details'),
-				axios.get('/api/client-select'),
+				axios.get('/api/project-details', { withCredentials: true }),
+				axios.get('/api/client-select', { withCredentials: true }),
 			]);
 			setProject(projectsResponse.data);
 			setClients(clientsResponse.data);
@@ -211,7 +211,9 @@ export const ProjectName = ({ projectId }) => {
 
 	const fetchProjectName = async () => {
 		try {
-			const response = await axios.get(`/api/project-name/${projectId}`);
+			const response = await axios.get(`/api/project-name/${projectId}`, {
+				withCredentials: true,
+			});
 			setProjectName(response.data[0].project_name);
 		} catch (err) {
 			console.log(err);
@@ -235,11 +237,12 @@ export const ClientData = () => {
 	const fetchClientData = async () => {
 		setLoading(true);
 		try {
-			const clientsResponse = await axios.get(`/api/client-details`);
+			const clientsResponse = await axios.get('/api/client-details', { withCredentials: true });
+
 			setClient(clientsResponse.data);
 		} catch (err) {
-			console.error('Error fetching client  data:', err);
-			setError(err);
+			console.error('Error fetching client data:', err);
+			setError(err.response?.data?.error || 'An error occurred');
 		} finally {
 			setLoading(false);
 		}
@@ -260,7 +263,7 @@ export const VendorData = () => {
 	const fetchVendorData = async () => {
 		setLoadingVendor(true);
 		try {
-			const response = await axios.get('/api/vendor-details');
+			const response = await axios.get('/api/vendor-details', { withCredentials: true });
 			if (Array.isArray(response.data)) {
 				setVendor(response.data);
 			} else {
@@ -290,7 +293,9 @@ export const VendorDataID = ({ editVendorId }) => {
 	const fetchVendorDataId = async () => {
 		setLoadingVendor(true);
 		try {
-			const vendorsResponse = await axios.get(`/api/vendor-details/${editVendorId}`);
+			const vendorsResponse = await axios.get(`/api/vendor-details/${editVendorId}`, {
+				withCredentials: true,
+			});
 			setVendor(vendorsResponse.data);
 		} catch (err) {
 			console.error('Error fetching vendors data:', err);
@@ -317,7 +322,9 @@ export const AccountsData = () => {
 	const fetchAccountsData = async () => {
 		setLoading(true);
 		try {
-			const accountsResponse = await axios.get('/api/accounts-details');
+			const accountsResponse = await axios.get('/api/accounts-details', {
+				withCredentials: true,
+			});
 			setAccounts(accountsResponse.data);
 		} catch (err) {
 			console.error('Error fetching vendors data:', err);
@@ -334,6 +341,28 @@ export const AccountsData = () => {
 	return { accounts, loading, error, refetch: fetchAccountsData };
 };
 
+import useSWR from 'swr';
+
+const fetcher = (url) => axios.get(url, { withCredentials: true }).then((res) => res.data);
+
+export const useProjectId = ({ projectId }) => {
+	const {
+		data: project,
+		error: projectError,
+		isValidating: projectLoading,
+	} = useSWR(`/api/project-details/${projectId}`, fetcher);
+
+	const loading = projectLoading;
+	const error = projectError;
+
+	return {
+		project,
+
+		loading,
+		error,
+	};
+};
+
 export const ProjectDataId = ({ projectId }) => {
 	const [project, setProject] = useState([null]);
 	const [loading, setLoading] = useState(true);
@@ -342,7 +371,9 @@ export const ProjectDataId = ({ projectId }) => {
 	const fetchProjectData = useCallback(async () => {
 		setLoading(true);
 		try {
-			const projectsResponse = await axios.get(`/api/project-details/${projectId}`);
+			const projectsResponse = await axios.get(`/api/project-details/${projectId}`, {
+				withCredentials: true,
+			});
 
 			setProject(projectsResponse.data);
 		} catch (err) {
@@ -365,7 +396,7 @@ export const ReceivableData = () => {
 
 	const fetchReceivableData = async () => {
 		try {
-			const response = await axios.get('/api/sales-details');
+			const response = await axios.get('/api/sales-details', { withCredentials: true });
 			if (Array.isArray(response.data)) {
 				setReceivable(response.data);
 			} else {
@@ -388,7 +419,9 @@ export const ReceivableDataProject = ({ projectId }) => {
 
 	const fetchReceivableDataProject = useCallback(async () => {
 		try {
-			const response = await axios.get(`/api/sales-details/${projectId}`);
+			const response = await axios.get(`/api/sales-details/${projectId}`, {
+				withCredentials: true,
+			});
 			if (Array.isArray(response.data)) {
 				setReceivable(response.data);
 			} else {
@@ -411,7 +444,7 @@ export const ExpenseData = () => {
 
 	const fetchExpenseData = async () => {
 		try {
-			const response = await axios.get('/api/expenses-details');
+			const response = await axios.get('/api/expenses-details', { withCredentials: true });
 			if (Array.isArray(response.data)) {
 				setExpense(response.data);
 			} else {
@@ -437,7 +470,9 @@ export const ExpenseDataInvoice = ({ viewIdExpense }) => {
 		setLoading(true);
 
 		try {
-			const response = await axios.get(`/api/expensesInvoice-details/${viewIdExpense}`);
+			const response = await axios.get(`/api/expensesInvoice-details/${viewIdExpense}`, {
+				withCredentials: true,
+			});
 			if (Array.isArray(response.data)) {
 				setInvoiceExpense(response.data);
 			} else {
@@ -468,7 +503,9 @@ export const ExpenseProjectView = ({ projectId }) => {
 		setLoadingExpense(true);
 
 		try {
-			const response = await axios.get(`/api/expenses-details/${projectId}`);
+			const response = await axios.get(`/api/expenses-details/${projectId}`, {
+				withCredentials: true,
+			});
 			setExpenseProject(response.data);
 		} catch (error) {
 			console.error('Error fetching expense data:', error);
@@ -498,7 +535,9 @@ export const TransactionClientData = ({ clientId }) => {
 	const fetchClientTransaction = useCallback(async () => {
 		setLoading(true);
 		try {
-			const projectsResponse = await axios.get(`/api/transaction-client/${clientId}`);
+			const projectsResponse = await axios.get(`/api/transaction-client/${clientId}`, {
+				withCredentials: true,
+			});
 			setclientTransaction(projectsResponse.data);
 		} catch (err) {
 			console.error('Error fetching your transaction data:', err);
@@ -525,8 +564,8 @@ export const ClientDataId = ({ clientId }) => {
 		setLoading(true);
 		try {
 			const [clientsResponse, projectsResponse] = await Promise.all([
-				axios.get(`/api/client-details/${clientId}`),
-				axios.get(`/api/allclient-project/${clientId}`),
+				axios.get(`/api/client-details/${clientId}`, { withCredentials: true }),
+				axios.get(`/api/allclient-project/${clientId}`, { withCredentials: true }),
 			]);
 			setClient(clientsResponse.data);
 			setProject(projectsResponse.data);
@@ -552,7 +591,7 @@ export const PaymentData = () => {
 	const fetchPaymentData = async () => {
 		setLoading(true);
 		try {
-			const response = await axios.get('/api/payment-details');
+			const response = await axios.get('/api/payment-details', { withCredentials: true });
 			if (Array.isArray(response.data)) {
 				setPayment(response.data);
 			} else {
@@ -579,7 +618,7 @@ export const Sales = () => {
 	const fetchSalesData = async () => {
 		setLoading(true);
 		try {
-			const response = await axios.get('/api/salesProject-details');
+			const response = await axios.get('/api/salesProject-details', { withCredentials: true });
 			if (Array.isArray(response.data)) {
 				setSales(response.data);
 			} else {
@@ -606,7 +645,9 @@ export const PayablesTransaction = () => {
 	const fetchPayableData = async () => {
 		setLoading(true);
 		try {
-			const response = await axios.get('/api/payabletransaction-details');
+			const response = await axios.get('/api/payabletransaction-details', {
+				withCredentials: true,
+			});
 			if (Array.isArray(response.data)) {
 				setPayment(response.data);
 			} else {
@@ -633,7 +674,7 @@ export const PayablesData = () => {
 	const fetchPayableData = async () => {
 		setLoading(true);
 		try {
-			const response = await axios.get('/api/payables-details');
+			const response = await axios.get('/api/payables-details', { withCredentials: true });
 			if (Array.isArray(response.data)) {
 				setPayables(response.data);
 			} else {
@@ -660,7 +701,7 @@ export const DashboardData = () => {
 	const fetchDashboardData = async () => {
 		setLoading(true);
 		try {
-			const response = await axios.get('/api/dashboard-data');
+			const response = await axios.get('/api/dashboard-data', { withCredentials: true });
 			setDashboard(response.data);
 		} catch (error) {
 			console.error('Error fetching sales data:', error);
@@ -681,7 +722,7 @@ export const AccountsTransaction = () => {
 
 	const fetchAccountsTransaction = async () => {
 		try {
-			const response = await axios.get('/api/accounts-transactions');
+			const response = await axios.get('/api/accounts-transactions', { withCredentials: true });
 			if (Array.isArray(response.data)) {
 				setAccTransaction(response.data);
 			} else {
@@ -707,7 +748,9 @@ export const AccountsTransactionId = ({ viewId }) => {
 		setLoading(true);
 
 		try {
-			const response = await axios.get(`/api/accounts-transactions/${viewId}`);
+			const response = await axios.get(`/api/accounts-transactions/${viewId}`, {
+				withCredentials: true,
+			});
 			if (Array.isArray(response.data)) {
 				setAccounts(response.data);
 			} else {
@@ -734,7 +777,7 @@ export const Notification = () => {
 
 	const fetchNotifications = async () => {
 		try {
-			const response = await axios.get('/api/notifications');
+			const response = await axios.get('/api/notifications', { withCredentials: true });
 			if (Array.isArray(response.data)) {
 				setNotification(response.data);
 			} else {
@@ -759,7 +802,7 @@ export const AllTransactions = () => {
 	const fetchAllTransactions = async () => {
 		setLoading(true);
 		try {
-			const response = await axios.get('/api/all-transactions');
+			const response = await axios.get('/api/all-transactions', { withCredentials: true });
 			if (Array.isArray(response.data)) {
 				setTransactions(response.data);
 				setLoading(false);
@@ -786,7 +829,9 @@ export const TopVendorData = ({ projectId }) => {
 	const fetchTopVendorData = useCallback(async () => {
 		setLoading(true);
 		try {
-			const topVendorRes = await axios.get(`/api/top-vendor/${projectId}`);
+			const topVendorRes = await axios.get(`/api/top-vendor/${projectId}`, {
+				withCredentials: true,
+			});
 			setTopVendor(topVendorRes.data);
 		} catch (err) {
 			console.error('Error fetching your top vendor data:', err);

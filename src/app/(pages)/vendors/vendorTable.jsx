@@ -119,32 +119,27 @@ export default function VendorTable({
 			case 'actions':
 				return (
 					<div className='relative flex items-center gap-2 justify-center'>
-						<Tooltip
-							content='Edit user'
-							color='primary'>
-							<Button
-								isIconOnly
-								color='primary'
-								variant='flat'
-								onPress={() => handleRowEdit(user.id)}>
-								<span className='material-symbols-outlined text-lg text-blue-400 cursor-pointer active:opacity-50'>
-									edit
-								</span>
-							</Button>
-						</Tooltip>
-						<Tooltip
-							color='danger'
-							content='Delete user'>
-							<Button
-								isIconOnly
-								color='danger'
-								variant='flat'
-								onPress={() => handleRowDelete(user.id)}>
-								<span className='material-symbols-outlined text-lg cursor-pointer active:opacity-50'>
-									delete
-								</span>
-							</Button>
-						</Tooltip>
+						<Button
+							isIconOnly
+							radius='sm'
+							className='bg-black'
+							variant='flat'
+							onPress={() => handleRowEdit(user.id)}>
+							<span className='material-symbols-outlined text-lg text-white cursor-pointer active:opacity-50'>
+								edit
+							</span>
+						</Button>
+
+						<Button
+							isIconOnly
+							radius='sm'
+							className='bg-red-700'
+							variant='flat'
+							onPress={() => handleRowDelete(user.id)}>
+							<span className='material-symbols-outlined text-lg text-white cursor-pointer active:opacity-50'>
+								delete
+							</span>
+						</Button>
 					</div>
 				);
 			default:
@@ -341,7 +336,7 @@ export default function VendorTable({
 				topContentPlacement='outside'
 				onSelectionChange={setSelectedKeys}
 				onSortChange={setSortDescriptor}
-				classNames={{ th: 'bg-slate-900 text-white', td: 'border-b-1' }}
+				classNames={{ th: 'bg-black text-white', td: 'border-b-1' }}
 				className='p-2 w-full rounded-none'>
 				<TableHeader columns={headerColumns}>
 					{(column) => (

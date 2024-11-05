@@ -117,7 +117,9 @@ export default function PayTransaction() {
 		const fetchInvoiceData = async () => {
 			if (viewId) {
 				try {
-					const response = await axios.get(`/api/payment-details/${viewId}`);
+					const response = await axios.get(`/api/payabletransaction-details/${viewId}`, {
+						withCredentials: true,
+					});
 					setInvoice(response.data);
 				} catch (error) {
 					console.error('API Error:', error.response ? error.response.data : error.message);
@@ -144,6 +146,7 @@ export default function PayTransaction() {
 				isOpen={isOpen}
 				size='lg'
 				hideCloseButton
+				placement='top'
 				aria-labelledby='sales details'
 				aria-modal='true'
 				role='dialog'
@@ -155,27 +158,19 @@ export default function PayTransaction() {
 									<>
 										<ModalHeader className='flex gap-1 mb-5'>
 											<span className='material-symbols-outlined'>receipt</span>
-											<p>Sales Details</p>
+											<p>Sales Details - #{invoiceItem.invoice_id}</p>
 										</ModalHeader>
 										<ModalBody>
 											<div>
 												<div className='grid grid-cols-3 gap-5 w-full'>
-													<div className='col-span-3'>
-														<label className='block text-sm font-medium text-gray-700'>
-															Payment Amount
-														</label>
-														<h1 className='font-bold text-3xl'>
-															{formatNumber(invoiceItem.payment_amount)}
-														</h1>
-													</div>
 													<div className='flex border-[1px] col-span-3 p-5 rounded-md justify-between items-center'>
 														<User
 															name={invoiceItem.name}
-															description='Client'
+															description={invoiceItem.vendor_services}
 															isBordered
 															className='font-bold'
 															avatarProps={{
-																src: invoiceItem.client_profilePicture,
+																src: invoiceItem.vendor_picture,
 																style: {
 																	width: '70px',
 																	height: '70px',
@@ -183,21 +178,17 @@ export default function PayTransaction() {
 															}}
 														/>
 
-														<div className=''>
-															<p className='self-center font-semibold'>
-																{invoiceItem.project_name}
-															</p>
-															<h1 className='text-xs text-gray-400'>Project name</h1>
+														<div>
+															<label className='block text-sm font-medium text-gray-700'>
+																Payment Amount
+															</label>
+															<h1 className='font-bold text-2xl'>
+																{formatNumber(invoiceItem.payment_amount)}
+															</h1>
 														</div>
 													</div>
 
 													<div className='grid grid-cols-2 gap-5 col-span-3 border-b-[1px] pb-5'>
-														<IconTextBox
-															iconText='description'
-															labelText='DESCRIPTION'
-															contentText={invoiceItem.payment_description}
-														/>
-
 														<IconTextBox
 															iconText='event'
 															labelText='PAYMENT DATE'
@@ -209,24 +200,18 @@ export default function PayTransaction() {
 															labelText='PAYMENT TYPE'
 															contentText={invoiceItem.payment_type}
 														/>
+														<div className='col-span-2'>
+															<IconTextBox
+																iconText='description'
+																labelText='DESCRIPTION'
+																contentText={invoiceItem.payment_description}
+															/>
+														</div>
 													</div>
 												</div>
 											</div>
 										</ModalBody>
-										<ModalFooter className='flex justify-between'>
-											<div className='space-x-3'>
-												<Button
-													variant='flat'
-													size='md'
-													color='primary'
-													onClick={handleNavigate}
-													startContent={
-														<span className='material-symbols-outlined'>print</span>
-													}>
-													Acknowledgment receipt
-												</Button>
-											</div>
-
+										<ModalFooter className='flex justify-end'>
 											<Button
 												color='none'
 												variant='bordered'

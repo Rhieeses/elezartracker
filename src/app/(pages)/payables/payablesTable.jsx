@@ -29,6 +29,7 @@ export default function PayablesTable({
 	onRowSelect,
 	onRowDelete,
 	onRowArchive,
+	onRowEdit,
 	onOpen,
 }) {
 	function formatDescription(description) {
@@ -179,43 +180,66 @@ export default function PayablesTable({
 
 			case 'actions':
 				return isArchived ? (
-					<div className='relative flex justify-center items-center gap-2'>
+					<div className='flex items-center'>
+						<Button
+							radius='sm'
+							size='sm'
+							variant='solid'
+							className='bg-black border-r-2 border-white text-white rounded-r-none'>
+							View
+						</Button>
+
 						<Dropdown>
 							<DropdownTrigger>
 								<Button
+									startContent={
+										<span className='material-symbols-outlined text-white'>
+											arrow_drop_down
+										</span>
+									}
 									isIconOnly
-									size='sm'
-									variant='light'>
-									<span className='material-symbols-outlined text-lg cursor-pointer active:opacity-50'>
-										more_vert
-									</span>
-								</Button>
+									radius='sm'
+									size='md'
+									variant='solid'
+									className='bg-black border-r-2 border-white text-white rounded-l-none'
+								/>
 							</DropdownTrigger>
-							<DropdownMenu>
+							<DropdownMenu aria-label='Static Actions'>
 								<DropdownItem onPress={() => handleRowArchive(user.id)}>
-									Unarchive
+									Archive
 								</DropdownItem>
 								<DropdownItem onPress={() => handleRowDelete(user.id)}>Delete</DropdownItem>
 							</DropdownMenu>
 						</Dropdown>
 					</div>
 				) : (
-					<div className='relative flex justify-center items-center gap-2'>
+					<div className='flex items-center'>
+						<Button
+							onPress={() => handleRowChange(user.id)}
+							radius='sm'
+							size='md'
+							variant='solid'
+							className='bg-black border-r-2 border-white text-white rounded-r-none'>
+							Payment
+						</Button>
+
 						<Dropdown>
 							<DropdownTrigger>
 								<Button
+									startContent={
+										<span className='material-symbols-outlined text-white'>
+											arrow_drop_down
+										</span>
+									}
 									isIconOnly
-									size='sm'
-									variant='light'>
-									<span className='material-symbols-outlined text-lg cursor-pointer active:opacity-50'>
-										more_vert
-									</span>
-								</Button>
+									radius='sm'
+									size='md'
+									variant='solid'
+									className='bg-black border-r-2 border-white text-white rounded-l-none'
+								/>
 							</DropdownTrigger>
-							<DropdownMenu>
-								<DropdownItem onPress={() => handleRowChange(user.id)}>
-									Payment
-								</DropdownItem>
+							<DropdownMenu aria-label='Static Actions'>
+								<DropdownItem onPress={() => handleRowEdit(user.id)}>Edit</DropdownItem>
 								<DropdownItem onPress={() => handleRowArchive(user.id)}>
 									Archive
 								</DropdownItem>
@@ -240,6 +264,10 @@ export default function PayablesTable({
 
 	const handleRowArchive = (row) => {
 		onRowArchive(row);
+	};
+
+	const handleRowEdit = (row) => {
+		onRowEdit(row);
 	};
 
 	const onNextPage = useCallback(() => {
@@ -432,7 +460,7 @@ export default function PayablesTable({
 				topContentPlacement='outside'
 				onSelectionChange={setSelectedKeys}
 				onSortChange={setSortDescriptor}
-				classNames={{ th: 'bg-slate-900 text-white', td: 'border-b-1' }}
+				classNames={{ th: 'bg-black text-white', td: 'border-b-1' }}
 				className='p-2 w-full rounded-none'>
 				<TableHeader columns={headerColumns}>
 					{(column) => (

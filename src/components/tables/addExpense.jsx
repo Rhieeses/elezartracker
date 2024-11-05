@@ -75,7 +75,9 @@ export default function AddExpense({ projectId, refetchExpenseProject }) {
 		const fetchVendor = async () => {
 			//setLoading(true);
 			try {
-				const response = await axios.get('/api/vendor-select');
+				const response = await axios.get('/api/vendor-select', {
+					withCredentials: true,
+				});
 				setVendor(response.data);
 			} catch (error) {
 				console.error('Error fetching vendor data:', error);

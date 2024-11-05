@@ -83,11 +83,10 @@ export default function EditProject({ projectId }) {
 			submitData.append(key, formData[key]);
 		}
 
-		console.log(submitData);
 		try {
 			const response = await axios.put(`/api/update-project/${projectId}`, submitData);
-			console.log(response.data.message);
-			router.push(`/projects/${projectId}`);
+
+			router.refresh();
 		} catch (error) {
 			console.error('Failed to update project:', error);
 		}

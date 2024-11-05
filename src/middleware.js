@@ -29,6 +29,7 @@ export async function middleware(req) {
 		// Define allowed routes based on user position
 		const userRoutes = [
 			'/dashboard',
+			'/payables',
 			'/projects/:path*',
 			'/clients/:path*',
 			'/vendors/:path*',
@@ -82,11 +83,13 @@ export const config = {
 		'/clients/:path*',
 		'/vendors/:path*',
 		'/accounts/:path*',
+		'/payables',
 		'/receivables/:path*',
 		'/sales/:path*',
 		'/expense/:path*',
 		'/transactions',
 		'/reports',
+		'/api/:path*',
 		'/api/(.*)', // To match any API route
 		'/admin/:path*', // Admin routes matcher
 	],

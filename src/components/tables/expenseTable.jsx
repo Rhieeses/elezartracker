@@ -29,6 +29,7 @@ export default function ExpenseTable({
 	onRowSelect,
 	onRowArchive,
 	onRowDelete,
+	onRowEdit,
 	onOpenCreate,
 }) {
 	function formatDescription(description) {
@@ -138,30 +139,9 @@ export default function ExpenseTable({
 						<p className='ml-5 text-blue-500'>{formatDescription(cellValue)}</p>
 					</details>
 				);
-			/**
-			 * (
-					<details className='cursor-pointer '>
-						<summary className='flex text-blue-500'>
-							<span className='material-symbols-outlined'>receipt_long</span>
-							<p>Details</p>
-							<span className='material-symbols-outlined'>arrow_drop_down</span>
-						</summary>
-						<p className='ml-5'>{formatDescription(cellValue)}</p>
-					</details>
-				)
-
-				 * 	<div className='flex gap-2'>
-						<span className='material-symbols-outlined'>receipt_long</span>
-						{formatDescription(cellValue)}
-					</div>
-				 */
 
 			case 'project_name':
-				return cellValue ? (
-					cellValue
-				) : (
-					<em className='text-default-500 text-sm'>[project not found]</em>
-				);
+				return cellValue ? cellValue : <em className='text-default-500 text-sm'>N/A</em>;
 
 			case 'invoiceNo':
 				return '#' + cellValue;
@@ -214,20 +194,33 @@ export default function ExpenseTable({
 						</Dropdown>
 					</div>
 				) : (
-					<div className='relative flex justify-center items-center gap-2'>
+					<div className='relative flex justify-center items-center'>
+						<Button
+							onPress={() => handleRowChange(user.id)}
+							radius='sm'
+							size='md'
+							variant='solid'
+							className='bg-black border-r-2 border-white text-white rounded-r-none'>
+							View
+						</Button>
+
 						<Dropdown>
 							<DropdownTrigger>
 								<Button
+									startContent={
+										<span className='material-symbols-outlined text-white'>
+											arrow_drop_down
+										</span>
+									}
 									isIconOnly
-									size='sm'
-									variant='light'>
-									<span className='material-symbols-outlined text-lg cursor-pointer active:opacity-50'>
-										more_vert
-									</span>
-								</Button>
+									radius='sm'
+									size='md'
+									variant='solid'
+									className='bg-black border-r-2 border-white text-white rounded-l-none'
+								/>
 							</DropdownTrigger>
-							<DropdownMenu>
-								<DropdownItem onPress={() => handleRowChange(user.id)}>View</DropdownItem>
+							<DropdownMenu aria-label='Static Actions'>
+								<DropdownItem onPress={() => handleRowEdit(user.id)}>Edit</DropdownItem>
 								<DropdownItem onPress={() => handleRowArchive(user.id)}>
 									Archive
 								</DropdownItem>
@@ -258,6 +251,10 @@ export default function ExpenseTable({
 		},
 		[onRowDelete],
 	);
+
+	const handleRowEdit = (row) => {
+		onRowEdit(row);
+	};
 
 	const onNextPage = useCallback(() => {
 		if (page < pages) {
@@ -448,7 +445,7 @@ export default function ExpenseTable({
 				topContentPlacement='outside'
 				onSelectionChange={setSelectedKeys}
 				onSortChange={setSortDescriptor}
-				classNames={{ th: 'bg-slate-900 text-white', td: 'border-b-1' }}
+				classNames={{ th: 'bg-black text-white', td: 'border-b-1' }}
 				className='p-2 w-full rounded-none'>
 				<TableHeader columns={headerColumns}>
 					{(column) => (

@@ -13,6 +13,7 @@ import {
 	useDisclosure,
 	Textarea,
 	Spinner,
+	Image,
 } from '@nextui-org/react';
 
 import Layout from '@/components/ui/layout';
@@ -50,6 +51,12 @@ export default function ExpenseProject({ id }) {
 		isOpen: isScanModal,
 		onOpen: openScanModal,
 		onOpenChange: closeScanModal,
+	} = useDisclosure();
+
+	const {
+		isOpen: isOpenPreview,
+		onOpen: onOpenPreview,
+		onOpenChange: onOpenChangePreview,
 	} = useDisclosure();
 
 	const modalPayment = (id) => {
@@ -136,10 +143,17 @@ export default function ExpenseProject({ id }) {
 											<Spinner />
 										) : (
 											<div className='grid grid-cols-2 gap-5 w-full'>
-												<div className='col-span-2'>
-													<p className='text-default-500 text-sm'>Receipt ref. :</p>
-													<p className='text-blue-500'>receipt.jpg</p>
-												</div>
+												{invoiceItem.ref_receipt ? (
+													<div className='col-span-2'>
+														<p className='text-default-500 text-sm'>Receipt ref. :</p>
+														<p
+															className='text-blue-500'
+															onClick={onOpenPreview}>
+															{invoiceItem.ref_receipt}
+														</p>
+													</div>
+												) : null}
+
 												<div className='flex border-[1px] col-span-3 p-5 rounded-md justify-between items-center'>
 													<User
 														name={invoiceItem.vendor_name}
@@ -204,6 +218,25 @@ export default function ExpenseProject({ id }) {
 														{formatNumber(invoiceItem.purchase_amount)}
 													</span>
 												</div>
+												<Modal
+													isOpen={isOpenPreview}
+													size='4xl'
+													radius='sm'
+													onOpenChange={onOpenChangePreview}>
+													<ModalContent>
+														<>
+															<ModalBody>
+																<Image
+																	src={invoiceItem.ref_receipt}
+																	alt='Preview'
+																	width={'100%'}
+																	height={'100%'}
+																	className='object-cover rounded-lg'
+																/>
+															</ModalBody>
+														</>
+													</ModalContent>
+												</Modal>
 											</div>
 										)}
 									</ModalBody>

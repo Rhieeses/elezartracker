@@ -438,6 +438,31 @@ async function fetchPayableTransaction() {
 	}
 }
 
+async function fetchPayableTransactionId(id) {
+	const selectResult = `
+     SELECT 
+        payables_transaction.*,
+		vendor.vendor_name AS name,
+        vendor.vendor_services,
+		vendor.vendor_picture
+    FROM 
+        payables_transaction
+    LEFT JOIN 
+        vendor ON payables_transaction.vendor_id = vendor.id
+    WHERE payables_transaction.id = $1
+   
+	ORDER BY
+	    payables_transaction.payment_date DESC;
+    `;
+
+	try {
+		const result = await connection.query(selectResult, [id]);
+		return result.rows;
+	} catch (error) {
+		throw new Error('Failed to fetch payment');
+	}
+}
+
 async function fetchPaymentData(id) {
 	const selectResult = `
    SELECT 
@@ -1170,7 +1195,7 @@ async function fetchReport(reportBody) {
 	}
 
 	// SQL Query using the selected date range
-	const selectResult = `
+	const generatedValue = `
             WITH 
             project_count AS (
                 SELECT COUNT(*) AS project_acquired
@@ -1215,10 +1240,162 @@ async function fetchReport(reportBody) {
             expenses e;
         `;
 
+	const customerAccounts = `
+    SELECT 
+        client.id AS client_id,
+        client."client_firstName" || ' ' || client."client_middleName" || ' ' || client."client_lastName" AS client_name,
+        client."client_contactNo",
+        client."client_email",
+        client."client_address",
+        COALESCE(payments.payment_amount, 0) AS total_paid_amount
+    FROM 
+        client
+    LEFT JOIN 
+        payments ON payments.recipient_id = client.id 
+            AND payments.payment_date >= $1
+            AND payments.payment_date <= $2;
+
+    `;
+
+	const vendorAccounts = `
+    SELECT 
+        vendor.id,
+        vendor.vendor_name, 
+        vendor."vendor_contactNo", 
+        vendor.vendor_email, 
+        vendor.vendor_address, 
+        COALESCE(SUM(expense.purchase_amount), 0) AS total_expense_amount,
+        COUNT(expense.id) AS total_order 
+    FROM 
+        vendor
+    LEFT JOIN 
+        expense ON expense.vendor_id = vendor.id 
+    WHERE 
+        expense.purchase_date >= $1
+            AND expense.purchase_date <= $2
+    GROUP BY 
+        vendor.id, 
+        vendor.vendor_name;
+     `;
+
+	const salesAccounts = `
+    SELECT 
+        sales_project.id,
+        client."client_firstName" || ' ' || client."client_middleName" || ' ' || client."client_lastName" AS client_name,
+        date,
+        client_id,
+        payment_terms,
+        amount
+    FROM sales_project
+
+    LEFT JOIN 
+        client ON sales_project.client_id = client.id 
+    WHERE 
+        sales_project.date >= $1
+        AND sales_project.date <= $2;
+       `;
+
+	const expenseAccounts = `
+    SELECT 
+        purchase_date,
+        vendor_name,
+        payment_type,
+        purchase_amount
+    FROM 
+        expense
+    WHERE 
+        purchase_date >= $1
+        AND purchase_date <= $2;
+     `;
+
+	const cashFlow = `
+    SELECT
+        p.id AS id,
+        c."client_lastName" || ' ' || c."client_firstName" AS name,
+        p.invoice_id AS invoice_id,
+        p.payment_description AS description,
+        p.payment_amount AS amount,
+        p.payment_date AS transaction_date,
+        p.payment_type AS type,
+        'PAYMENT' AS transaction_type,
+        NULL AS debit,  -- Payments are usually credits
+        p.payment_amount AS credit
+    FROM 
+        payments p
+    JOIN 
+        project pr ON p.recipient_id = pr.client_id
+    JOIN
+        client c ON c.id = pr.client_id
+    WHERE 
+        p.payment_date >= $1
+        AND p.payment_date <= $2
+
+    UNION ALL
+
+    SELECT
+        e.id AS id,
+        v.vendor_name AS name,
+        e."invoiceNo" AS invoice_id,
+        e.expense_description AS description,
+        e.purchase_amount AS amount,
+        e.purchase_date AS transaction_date,
+        e.payment_type AS type,
+        'EXPENSE' AS transaction_type,
+        e.purchase_amount AS debit, 
+        NULL AS credit
+    FROM 
+        expense e
+    JOIN 
+        project pr ON e.project_id = pr.id  
+    LEFT JOIN
+        vendor v ON v.id = e.vendor_id
+    WHERE 
+        e.purchase_date >= $1
+        AND e.purchase_date <= $2
+        AND e.is_payable = false 
+
+    UNION ALL
+
+    SELECT
+        p.id AS id,
+        v.vendor_name AS name,
+        p.invoice_id AS invoice_id,
+        'Payment for ' || p.payment_description AS description,
+        p.payment_amount AS amount,
+        p.payment_date AS transaction_date,
+        p.payment_type AS type,
+        'EXPENSE' AS transaction_type,
+        p.payment_amount AS debit, 
+        NULL AS credit
+    FROM 
+        payables_transaction p
+    JOIN
+        vendor v ON v.id = p.vendor_id
+    WHERE 
+        p.payment_date >= $1
+        AND p.payment_date <= $2
+
+    ORDER BY
+        transaction_date ASC;
+     `;
+
 	try {
 		//const result = await connection.query(selectResult, [selectedYear, formattedMonth]);
-		const result = await connection.query(selectResult, [date[0], date[1]]);
-		return result.rows;
+		const generatedValueResult = await connection.query(generatedValue, [date[0], date[1]]);
+		const customerAccountsResult = await connection.query(customerAccounts, [date[0], date[1]]);
+		const vendorAccountsResult = await connection.query(vendorAccounts, [date[0], date[1]]);
+		const salesAccountsResult = await connection.query(salesAccounts, [date[0], date[1]]);
+		const expenseAccountsResult = await connection.query(expenseAccounts, [date[0], date[1]]);
+		const cashFlowResult = await connection.query(cashFlow, [date[0], date[1]]);
+
+		return {
+			generatedValue: generatedValueResult.rows,
+			customerAccounts: customerAccountsResult.rows,
+			vendorAccounts: vendorAccountsResult.rows,
+			salesAccounts: salesAccountsResult.rows,
+			expenseAccounts: expenseAccountsResult.rows,
+			cashFlow: cashFlowResult.rows,
+		};
 	} catch (error) {
 		throw new Error('Failed to fetch Reports');
 	}
@@ -1237,6 +1414,7 @@ module.exports = {
 	fetchPayment,
 	fetchSalesProjectTotal,
 	fetchPayableTransaction,
+	fetchPayableTransactionId,
 	fetchPaymentData,
 	fetchPayablesData,
 	fetchPayablesDataId,

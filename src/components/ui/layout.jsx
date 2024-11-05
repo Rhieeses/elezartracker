@@ -59,6 +59,8 @@ export default function Layout({ children }) {
 
 	const handleLogout = async () => {
 		try {
+			sessionStorage.clear();
+			localStorage.clear();
 			const response = await axios.post('/api/logout');
 
 			if (response.status === 200) {
@@ -289,6 +291,19 @@ export default function Layout({ children }) {
 							</DropdownMenu>
 						</Dropdown>
 
+						<Link
+							href='/sales'
+							prefetch={true}
+							className={`flex items-center p-1  ${
+								isActive('Sales')
+									? 'pointer-events-none border-b-2 border-black font-semibold'
+									: ''
+							}`}>
+							<li className='hover:bg-gray-200 p-2 rounded-lg'>
+								<p className=' md:inline'>Sales</p>
+							</li>
+						</Link>
+
 						<Dropdown radius='md'>
 							<DropdownTrigger>
 								<div
@@ -323,19 +338,6 @@ export default function Layout({ children }) {
 								</DropdownItem>
 							</DropdownMenu>
 						</Dropdown>
-
-						<Link
-							href='/sales'
-							prefetch={true}
-							className={`flex items-center p-1  ${
-								isActive('Sales')
-									? 'pointer-events-none border-b-2 border-black font-semibold'
-									: ''
-							}`}>
-							<li className='hover:bg-gray-200 p-2 rounded-lg'>
-								<p className=' md:inline'>Sales</p>
-							</li>
-						</Link>
 
 						<Link
 							href='/expense'

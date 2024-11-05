@@ -172,10 +172,12 @@ export default function ReceivablesTable({
 				return (
 					<div className='relative flex items-center gap-2 justify-center'>
 						<Button
-							variant='bordered'
-							className='font-bold hover:scale-105'
-							onPress={() => handleRowChange(user.invoice_no)}>
-							Payment
+							onPress={() => handleRowChange(user.invoice_no)}
+							radius='sm'
+							size='md'
+							variant='solid'
+							className='bg-black text-white'>
+							{user.status === 'FULLY PAID' ? 'View' : 'Payment'}
 						</Button>
 					</div>
 				);
@@ -441,7 +443,7 @@ export default function ReceivablesTable({
 					onSortChange={setSortDescriptor}
 					radius='none'
 					classNames={{
-						th: 'bg-slate-900 text-white',
+						th: 'bg-black text-white',
 						td: 'border-b-1',
 					}}
 					className='w-full rounded-none'>

@@ -87,30 +87,50 @@ async function deleteClient(id) {
 		throw new Error('Failed to delete Client');
 	}
 }
-
 async function deleteExpense(id) {
 	const deleteQuery = `
         DELETE FROM expense
-        WHERE id = $1;
+        WHERE id = $1
+        RETURNING purchase_amount, project_id;
+    `;
+
+	const updateAccountsQuery = `
+        UPDATE accounts_project
+        SET total_expenses = total_expenses - $1
+        WHERE project_id = $2;
     `;
 
 	try {
+		// Execute the delete query and retrieve the purchase_amount
 		const result = await connection.query(deleteQuery, [id]);
 
 		if (result.rowCount === 0) {
 			throw new Error('Expense not found or already deleted.');
 		}
 
+		const purchase_amount = result.rows[0].purchase_amount; // Get the returned purchase amount
+		const project_id = result.rows[0].project_id;
+
+		// Update the accounts_project table
+		await connection.query(updateAccountsQuery, [purchase_amount, project_id]);
+
 		return { success: true, message: 'Expense deleted successfully' };
 	} catch (error) {
-		throw new Error('Failed to delete Expense');
+		throw new Error(`Failed to delete Expense: ${error.message}`);
 	}
 }
 
 async function deleteSales(id) {
 	const deleteQuery = `
         DELETE FROM payments
-        WHERE id = $1;
+        WHERE id = $1
+		RETURNING payment_amount, project_id;
+    `;
+
+	const updateAccountsQuery = `
+        UPDATE accounts_project
+        SET total_paid = total_paid - $1
+        WHERE project_id = $2;
     `;
 
 	try {
@@ -119,6 +139,12 @@ async function deleteSales(id) {
 		if (result.rowCount === 0) {
 			throw new Error('Sales not found or already deleted.');
 		}
+
+		const purchase_amount = result.rows[0].purchase_amount; // Get the returned purchase amount
+		const project_id = result.rows[0].project_id; // Get the returned purchase amount
+
+		// Update the accounts_project table
+		await connection.query(updateAccountsQuery, [purchase_amount, project_id]);
 
 		return { success: true, message: 'Sales deleted successfully' };
 	} catch (error) {

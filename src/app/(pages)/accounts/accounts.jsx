@@ -246,7 +246,7 @@ export default function AccountsContent() {
 
 						<Table
 							aria-label='Transaction table'
-							classNames={{ th: 'bg-slate-900 ', td: 'border-b-1' }}
+							classNames={{ th: 'bg-black text-white ', td: 'border-b-1' }}
 							className='p-2 w-full rounded-none'
 							removeWrapper>
 							<TableHeader columns={columns}>

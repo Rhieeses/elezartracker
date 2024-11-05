@@ -43,7 +43,9 @@ export default function PayablesContent() {
 		const fetchVendor = async () => {
 			//setLoading(true);
 			try {
-				const response = await axios.get('/api/vendor-select');
+				const response = await axios.get('/api/vendor-select', {
+					withCredentials: true,
+				});
 				setVendor(response.data);
 			} catch (error) {
 				console.error('Error fetching vendor data:', error);
@@ -66,8 +68,12 @@ export default function PayablesContent() {
 		onOpenChange: changeAdditionals,
 	} = useDisclosure();
 
+	const { isOpen: isEdit, onOpen: openEdit, onOpenChange: changeEdit } = useDisclosure();
+
 	const [invoice, setInvoice] = useState([]);
 	const [viewId, setViewId] = useState(null);
+	const [isEditNo, setIsEdit] = useState(null);
+
 	const [salesDelete, setSalesDelete] = useState(null);
 	const [isDirect, setIsDirect] = useState(false);
 
@@ -124,8 +130,8 @@ export default function PayablesContent() {
 		};
 
 		try {
-			console.log(formData);
-			//await axios.post('/api/add-payables', cleanedData);
+			//console.log(formData);
+			await axios.post('/api/add-payables', cleanedData);
 			/**setMessage({
 				success: 'Expense added successfully!',
 				error: '',
@@ -155,6 +161,12 @@ export default function PayablesContent() {
 	const modalPayment = (id) => {
 		setViewId(id);
 		onOpen();
+	};
+
+	const modalEdit = (id) => {
+		setViewId(id);
+		setIsEdit(id);
+		openEdit();
 	};
 
 	const onClose = () => {
@@ -219,7 +231,9 @@ export default function PayablesContent() {
 		const fetchInvoiceData = async () => {
 			if (viewId) {
 				try {
-					const response = await axios.get(`/api/payables-details/${viewId}`);
+					const response = await axios.get(`/api/payables-details/${viewId}`, {
+						withCredentials: true,
+					});
 					setInvoice(response.data);
 					if (response.data.length > 0) {
 						const billedAmount = response.data[0].billed_amount;
@@ -227,6 +241,15 @@ export default function PayablesContent() {
 							billedAmount - parseFloat(paymentData.paymentAmount || 0);
 						setRemainingAmount(initialRemainingAmount);
 					}
+				} catch (error) {
+					console.error('API Error:', error.response ? error.response.data : error.message);
+				}
+			} else if (isEditNo) {
+				try {
+					const response = await axios.get(`/api/payables-details/${viewId}`, {
+						withCredentials: true,
+					});
+					setInvoice(response.data);
 				} catch (error) {
 					console.error('API Error:', error.response ? error.response.data : error.message);
 				}
@@ -289,7 +312,6 @@ export default function PayablesContent() {
 		};
 
 		try {
-			console.log(payload);
 			await axios.post('/api/payable-payment', payload);
 			//setLoading(true);
 		} catch (error) {
@@ -303,8 +325,85 @@ export default function PayablesContent() {
 			//setLoading(false);
 			refetch();
 			setPaymentData(initialPaymentData);
+			onOpenChange();
 			setViewId(null);
 		}
+	};
+
+	const [editForm, setEditForm] = useState({
+		vendor: '',
+		amount: '',
+		projectName: '',
+		projectId: '',
+		invoiceDate: '',
+		dueDate: '',
+		description: '',
+		invoiceNo: '',
+		isDirect: '',
+		vendorName: '',
+	});
+
+	useEffect(() => {
+		if (invoice && invoice.length > 0) {
+			setEditForm({
+				vendor: invoice[0].vendor_id,
+				vendorName: invoice[0].vendor_name,
+				amount: invoice[0].amount,
+				projectId: invoice[0].project_id,
+				projectName: invoice[0].project_name,
+				invoiceDate: removeTimeFromDate(invoice[0].invoice_date),
+				dueDate: removeTimeFromDate(invoice[0].due_date),
+				description: invoice[0].description,
+				invoiceNo: invoice[0].invoice_no,
+				isDirect: invoice[0].is_direct,
+			});
+		}
+	}, [invoice]);
+
+	const handleInputEdit = (field) => (event) => {
+		const { value } = event.target;
+
+		setEditForm((prev) => ({
+			...prev,
+			[field]:
+				field === 'amount'
+					? formatNumber(value.replace(/[^0-9.]/g, ''))
+					: field === 'invoiceNo'
+					? allCapitalize(value.startsWith('#') ? value : '#' + value)
+					: capitalizeOnlyFirstLetter(value),
+		}));
+
+		if (field === 'vendor') {
+			setIsOthers(value === 'others');
+		}
+	};
+
+	const handleEdit = async (event) => {
+		event.preventDefault();
+		const cleanedData = {
+			...editForm,
+			amount: removeFormatting(editForm.amount),
+			invoiceNo: removeFormatting(editForm.invoiceNo),
+		};
+
+		try {
+			//console.log(cleanedData);
+			await axios.put(`/api/edit-payables/${isEditNo}`, cleanedData);
+
+			setFormData(initialFormData);
+		} catch (error) {
+			console.error('Error:', error);
+		} finally {
+			changeEdit();
+			refetch();
+		}
+	};
+
+	const removeTimeFromDate = (date) => {
+		if (!date) return null; // Handle null or undefined date
+		const newDate = new Date(date);
+		newDate.setHours(0, 0, 0, 0); // Set hours, minutes, seconds, and milliseconds to zero
+		return newDate.toISOString().split('T')[0]; // Return in YYYY-MM-DD format
 	};
 
 	return (
@@ -317,6 +416,7 @@ export default function PayablesContent() {
 					onRowDelete={handleDelete}
 					onRowArchive={handleArchive}
 					payables={payables}
+					onRowEdit={modalEdit}
 					onOpen={openAdditionals}
 				/>
 			</div>
@@ -541,6 +641,238 @@ export default function PayablesContent() {
 													</Button>
 												</>
 											)}
+										</ModalFooter>
+									</>
+								</ModalContent>
+						  ))
+						: null}
+				</form>
+			</Modal>
+
+			<Modal
+				isOpen={isEdit}
+				size='lg'
+				hideCloseButton
+				aria-labelledby='sales details'
+				aria-modal='true'
+				role='dialog'
+				onOpenChange={openEdit}>
+				<form onSubmit={handleEdit}>
+					{invoice && invoice.length > 0
+						? invoice.map((invoiceItem) => (
+								<ModalContent key={invoiceItem.id}>
+									<>
+										<ModalHeader className='flex justify-between gap-1 mb-5'>
+											<div className='flex'>
+												<span className='material-symbols-outlined'>receipt</span>
+												<p>Edit payable - #{invoiceItem.invoice_no} </p>
+											</div>
+											<Chip
+												color={statusColorMap[invoiceItem.status]}
+												size='sm'
+												variant='flat'>
+												{invoiceItem.status}
+											</Chip>
+										</ModalHeader>
+										<ModalBody>
+											<div className='grid grid-cols-4 gap-5'>
+												<Button
+													size='md'
+													color='default'
+													onPress={() =>
+														setEditForm((prev) => ({
+															...prev,
+															isDirect: !prev.isDirect,
+														}))
+													}
+													className={`col-span-2 ${
+														editForm.isDirect ? 'bg-black text-white' : 'font-bold'
+													}`}
+													disableRipple
+													disableAnimations
+													variant='bordered'
+													radius='sm'>
+													{editForm.isDirect ? 'Direct payable' : 'Indirect payable'}
+												</Button>
+
+												{editForm.isDirect && editForm.projectId && (
+													<Select
+														items={project}
+														name='projectId'
+														aria-label='projectSelect'
+														description='Select a project for direct payables.'
+														variant='bordered'
+														labelPlacement='outside'
+														placeholder={editForm.projectName}
+														defaultValue={editForm.projectId}
+														onChange={handleInputEdit('projectId')}
+														className='w-full col-span-2'>
+														{(project) => (
+															<SelectItem
+																key={project.id}
+																value={project.id}
+																textValue={project.project_name}>
+																<div className='flex gap-2 items-center'>
+																	<Avatar
+																		alt={project.project_name}
+																		className='flex-shrink-0'
+																		size='sm'
+																		src={project.project_projectPicture}
+																	/>
+																	<div className='flex flex-col'>
+																		<span className='text-small'>
+																			{project.project_name}
+																		</span>
+																		<span className='text-tiny text-default-400'>
+																			{project.contract_price}
+																		</span>
+																	</div>
+																</div>
+															</SelectItem>
+														)}
+													</Select>
+												)}
+												<Select
+													aria-label='vendor'
+													items={vendorWithOthers}
+													value={editForm.vendor}
+													onChange={handleInputEdit('vendor')}
+													variant='bordered'
+													placeholder={editForm.vendorName}
+													defaultValue={editForm.vendor}
+													labelPlacement='outside'
+													className='col-start-1 col-end-3'
+													renderValue={(items) => {
+														return items.map((item) => (
+															<div
+																key={item.key}
+																className='flex gap-2 items-center'>
+																<Avatar
+																	alt={item.data.vendor_name}
+																	className='flex-shrink-0'
+																	size='sm'
+																	src={item.data.vendor_picture}
+																/>
+																<div className='flex flex-col'>
+																	<span>{item.data.vendor_name}</span>
+																	<span className='text-default-500 text-tiny'>
+																		{item.data.vendor_services}
+																	</span>
+																</div>
+															</div>
+														));
+													}}>
+													{(vendor) => (
+														<SelectItem
+															key={vendor.id}
+															value={vendor.id}
+															textValue={vendor.vendor_name}>
+															<div className='flex gap-2 items-center'>
+																<Avatar
+																	alt={vendor.vendor_name}
+																	className='flex-shrink-0'
+																	size='sm'
+																	src={vendor.vendor_picture}
+																/>
+																<div className='flex flex-col'>
+																	<span className='text-small'>
+																		{vendor.vendor_name}
+																	</span>
+																	<span className='text-tiny text-default-400'>
+																		{vendor.vendor_services}
+																	</span>
+																</div>
+															</div>
+														</SelectItem>
+													)}
+												</Select>
+
+												<Input
+													type='text'
+													label='Vendor Name'
+													labelPlacement='outside'
+													variant='bordered'
+													name='vendorName'
+													className={`${isOther ? 'col-span-2' : 'hidden'}`}
+													value={editForm.vendorName}
+													onChange={handleInputEdit('vendorName')}
+												/>
+
+												<Input
+													type='text'
+													label='Invoice No'
+													labelPlacement='outside'
+													variant='bordered'
+													name='invoiceNo'
+													className='col-span-2'
+													value={editForm.invoiceNo}
+													onChange={handleInputEdit('invoiceNo')}
+												/>
+
+												<Input
+													type='text'
+													label='Amount'
+													labelPlacement='inside'
+													variant='bordered'
+													name='amount'
+													className='col-span-2'
+													isRequired
+													value={editForm.amount}
+													onChange={handleInputEdit('amount')}
+												/>
+
+												<Input
+													type='date'
+													label='Invoice Date'
+													name='invoiceDate'
+													variant='bordered'
+													className='col-span-2'
+													isRequired
+													value={editForm.invoiceDate}
+													onChange={handleInputEdit('invoiceDate')}
+												/>
+
+												<Input
+													type='date'
+													label='Due Date'
+													name='dueDate'
+													variant='bordered'
+													className='col-span-2'
+													isRequired
+													value={editForm.dueDate}
+													onChange={handleInputEdit('dueDate')}
+												/>
+
+												<Textarea
+													variant='bordered'
+													name='description'
+													label='Description'
+													labelPlacement='outside'
+													placeholder='Enter your description'
+													className='col-span-4'
+													value={editForm.description}
+													onChange={handleInputEdit('description')}
+												/>
+											</div>
+										</ModalBody>
+
+										<ModalFooter>
+											<Button
+												color='none'
+												variant='bordered'
+												size='lg'
+												onClick={changeEdit}>
+												Cancel
+											</Button>
+											<Button
+												className='bg-black text-white'
+												radius='sm'
+												size='lg'
+												type='submit'
+												loading={loading}
+												disabled={loading}>
+												Edit
+											</Button>
 										</ModalFooter>
 									</>
 								</ModalContent>

@@ -145,7 +145,6 @@ export default function ExpenseProjectTable({
 						classNames={{
 							description: 'text-default-500',
 						}}
-						description='5/12 payments paid'
 						name={cellValue}></User>
 				) : (
 					<p className='text-sm text-default-500'>No applicable vendor</p>
@@ -170,6 +169,13 @@ export default function ExpenseProjectTable({
 					</details>
 				);
 
+			case 'payment_type':
+				return cellValue ? (
+					cellValue
+				) : (
+					<em className='text-default-500 text-sm'>[See payables section.]</em>
+				);
+
 			case 'invoiceNo':
 				return '#' + cellValue;
 			case 'purchase_date':
@@ -186,39 +192,25 @@ export default function ExpenseProjectTable({
 			case 'actions':
 				return (
 					<div className='relative flex items-center gap-2 justify-center'>
-						<Tooltip content='View'>
-							<Button
-								isIconOnly
-								color='primary'
-								variant='flat'
-								onPress={() => handleRowChange(user.id)}>
-								<span className='material-symbols-outlined text-lg cursor-pointer active:opacity-50'>
-									visibility
-								</span>
-							</Button>
-						</Tooltip>
-						<Tooltip content='Edit'>
-							<Button
-								isIconOnly
-								color='success'
-								variant='flat'
-								onPress={() => handleRowChange(user.id)}>
-								<span className='material-symbols-outlined text-lg cursor-pointer active:opacity-50'>
-									edit
-								</span>
-							</Button>
-						</Tooltip>
-						<Tooltip content='Delete'>
-							<Button
-								isIconOnly
-								color='danger'
-								variant='flat'
-								onPress={() => handleRowChangeDelete(user.id)}>
-								<span className='material-symbols-outlined text-lg cursor-pointer active:opacity-50'>
-									delete
-								</span>
-							</Button>
-						</Tooltip>
+						<Button
+							isIconOnly
+							color='primary'
+							variant='flat'
+							onPress={() => handleRowChange(user.id)}>
+							<span className='material-symbols-outlined text-lg cursor-pointer active:opacity-50'>
+								visibility
+							</span>
+						</Button>
+
+						<Button
+							isIconOnly
+							color='danger'
+							variant='flat'
+							onPress={() => handleRowChangeDelete(user.id)}>
+							<span className='material-symbols-outlined text-lg cursor-pointer active:opacity-50'>
+								delete
+							</span>
+						</Button>
 					</div>
 				);
 			default:
@@ -484,7 +476,9 @@ export default function ExpenseProjectTable({
 		const fetchVendor = async () => {
 			//setLoading(true);
 			try {
-				const response = await axios.get('/api/vendor-select');
+				const response = await axios.get('/api/vendor-select', {
+					withCredentials: true,
+				});
 				setVendor(response.data);
 			} catch (error) {
 				console.error('Error fetching vendor data:', error);
@@ -522,7 +516,7 @@ export default function ExpenseProjectTable({
 				topContentPlacement='outside'
 				onSelectionChange={setSelectedKeys}
 				onSortChange={setSortDescriptor}
-				classNames={{ th: 'bg-slate-900 text-white', td: 'border-b-1' }}
+				classNames={{ th: 'bg-black text-white', td: 'border-b-1' }}
 				className='p-2 w-full rounded-none'>
 				<TableHeader columns={headerColumns}>
 					{(column) => (

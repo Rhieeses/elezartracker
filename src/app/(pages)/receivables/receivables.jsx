@@ -94,7 +94,9 @@ export default function ReceivablesContent() {
 		const fetchInvoiceData = async () => {
 			if (viewIdSales) {
 				try {
-					const response = await axios.get(`/api/invoice-details/${viewIdSales}`);
+					const response = await axios.get(`/api/invoice-details/${viewIdSales}`, {
+						withCredentials: true,
+					});
 					setInvoice(response.data);
 					if (response.data.length > 0) {
 						const billedAmount = response.data[0].billed_amount;

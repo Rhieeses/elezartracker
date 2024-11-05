@@ -1,8 +1,8 @@
 'use client';
 import Layout from '@/components/ui/layout';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Select, SelectItem, Button } from '@nextui-org/react';
-import { formatNumberDecimal } from '@/utils/inputFormatter';
+import { formatNumberDecimal, formatDate, formatDateTime } from '@/utils/inputFormatter';
 import axios from 'axios';
 
 const months = [
@@ -32,7 +32,14 @@ export default function ReportsContent() {
 	const [month, setMonths] = useState('');
 	const [year, setYear] = useState('');
 	const [quarters, setQuarter] = useState('');
-	const [reports, setReport] = useState(0);
+	const [reports, setReport] = useState(null);
+
+	useEffect(() => {
+		if (reports) {
+			console.log(reports); // Log reports when it changes
+			console.log(reports.customerAccounts);
+		}
+	}, [reports]);
 
 	const currentYear = new Date().getFullYear();
 	const yearRange = [];
@@ -74,7 +81,6 @@ export default function ReportsContent() {
 					selectedYear,
 				},
 			});
-
 			setReport(results.data);
 		} catch (error) {
 			console.error('Error:', error);
@@ -291,17 +297,10 @@ export default function ReportsContent() {
 													style={{ fontSize: '42px' }}>
 													work
 												</span>
-												<p className='text-xl text-default-600'>Projects</p>
+												<p className='text-xl text-default-600'>Projects Acquired</p>
 											</span>
 
-											<h1>{reports[0]?.project_acquired}</h1>
-										</div>
-
-										<div className='max-w-xs'>
-											<p>
-												Total acquired project for 2024 is 5, a 20% increase compared to
-												2023
-											</p>
+											<h1>{reports.generatedValue[0].project_acquired}</h1>
 										</div>
 									</div>
 
@@ -316,14 +315,7 @@ export default function ReportsContent() {
 												<p className='text-xl text-default-600'>Revenue</p>
 											</span>
 
-											<h1>{formatNumberDecimal(reports[0]?.revenue)}</h1>
-										</div>
-
-										<div className='max-w-xs'>
-											<p>
-												Revenue for 2024 was PHP10 million, a 17.65% increase compared
-												to 2023.
-											</p>
+											<h1>{formatNumberDecimal(reports.generatedValue[0].revenue)}</h1>
 										</div>
 									</div>
 
@@ -337,14 +329,9 @@ export default function ReportsContent() {
 												</span>
 												<p className='text-xl text-default-600'>Net Income</p>
 											</span>
-											<h1>{formatNumberDecimal(reports[0]?.net_income)}</h1>
-										</div>
-
-										<div className='max-w-xs'>
-											<p>
-												Net Income for 2024 was PHP10 million, a 17.65% increase
-												compared to 2023.
-											</p>
+											<h1>
+												{formatNumberDecimal(reports.generatedValue[0].net_income)}
+											</h1>
 										</div>
 									</div>
 
@@ -358,14 +345,7 @@ export default function ReportsContent() {
 												</span>
 												<p className='text-xl text-default-600'>Expenses</p>
 											</span>
-											<h1>{formatNumberDecimal(reports[0]?.expenses)}</h1>
-										</div>
-
-										<div className='max-w-xs'>
-											<p>
-												Expenses for 2024 was PHP10 million, a 17.65% increase compared
-												to 2023.
-											</p>
+											<h1>{formatNumberDecimal(reports.generatedValue[0].expenses)}</h1>
 										</div>
 									</div>
 								</div>
@@ -373,13 +353,11 @@ export default function ReportsContent() {
 							<div>
 								<div className='border-b-2 border-slate-800 mb-5'>
 									<div className='p-2 text-white rounded-t-xl bg-slate-800 w-fit '>
-										<p className='text-xl'>Income statement</p>
+										<p className='text-xl'>Reports</p>
 									</div>
 								</div>
 
-								<p className='font-bold text-md'>
-									Summary Statement of Financial Position (as of September 31, 2024)
-								</p>
+								<p className='font-bold text-md'>1. Customer Accounts Report</p>
 
 								<div className='w-full flex items-center justify-center mt-5 mb-10'>
 									<div className='w-5/6 space-y-10'>
@@ -403,17 +381,25 @@ export default function ReportsContent() {
 												</tr>
 											</thead>
 											<tbody>
-												<tr>
-													<td>1</td>
-													<td>Harry Potter</td>
-													<td>harry@gmail.com</td>
-													<td>Marikina</td>
-													<td>PHP 300,000.00</td>
-												</tr>
+												{reports.customerAccounts.map((customerAccounts, index) => (
+													<tr key={index}>
+														<td>{index + 1}</td>
+														<td>{customerAccounts.client_name}</td>
+														<td>{customerAccounts.client_email}</td>
+														<td>{customerAccounts.client_address}</td>
+														<td>
+															{formatNumberDecimal(
+																customerAccounts.total_paid_amount,
+															)}
+														</td>
+													</tr>
+												))}
 											</tbody>
 										</table>
 									</div>
 								</div>
+
+								<p className='font-bold text-md'>2. Vendor Accounts Report</p>
 
 								<div className='w-full flex items-center justify-center mt-5 mb-10'>
 									<div className='w-5/6 space-y-10'>
@@ -430,28 +416,39 @@ export default function ReportsContent() {
 												</tr>
 												<tr>
 													<td>No</td>
-													<td>Vendor</td>
+													<td>Vendor name</td>
 													<td>Contact</td>
 													<td>Address</td>
+													<td>Total orders</td>
 													<td>Amount</td>
 												</tr>
 											</thead>
+
 											<tbody>
-												<tr>
-													<td>1</td>
-													<td>Wilcon</td>
-													<td>wilcon@gmail.com</td>
-													<td>Marikina</td>
-													<td>PHP 300,000.00</td>
-												</tr>
+												{reports.vendorAccounts.map((vendorAccounts, index) => (
+													<tr key={index}>
+														<td>{index + 1}</td>
+														<td>{vendorAccounts.vendor_name}</td>
+														<td>
+															{vendorAccounts.vendor_email
+																? vendorAccounts.vendor_email
+																: vendorAccounts.vendor_contactNo}
+														</td>
+														<td>{vendorAccounts.vendor_address}</td>
+														<td>{vendorAccounts.total_order}</td>
+														<td>
+															{formatNumberDecimal(
+																vendorAccounts.total_expense_amount,
+															)}
+														</td>
+													</tr>
+												))}
 											</tbody>
 										</table>
 									</div>
 								</div>
 
-								<p className='font-bold text-md'>
-									Summary Statement of Financial Position (for the month of October 2024)
-								</p>
+								<p className='font-bold text-md'>3. Sales Report</p>
 
 								<div className='w-full flex items-center justify-center mt-5 mb-10'>
 									<div className='w-5/6 space-y-10'>
@@ -475,17 +472,20 @@ export default function ReportsContent() {
 												</tr>
 											</thead>
 											<tbody>
-												<tr>
-													<td>1</td>
-													<td>October 13, 2024</td>
-													<td>Harry Potter</td>
-													<td>CASH</td>
-													<td>PHP 300,000.00</td>
-												</tr>
+												{reports.salesAccounts.map((salesAccounts, index) => (
+													<tr key={index}>
+														<td>{index + 1}</td>
+														<td>{formatDate(salesAccounts.date)}</td>
+														<td>{salesAccounts.client_name}</td>
+														<td>{salesAccounts.payment_terms}</td>
+														<td>{formatNumberDecimal(salesAccounts.amount)}</td>
+													</tr>
+												))}
 											</tbody>
 										</table>
 									</div>
 								</div>
+								<p className='font-bold text-md'>4. Expense Report</p>
 
 								<div className='w-full flex items-center justify-center mt-5 mb-10'>
 									<div className='w-5/6 space-y-10'>
@@ -509,24 +509,27 @@ export default function ReportsContent() {
 												</tr>
 											</thead>
 											<tbody>
-												<tr>
-													<td>1</td>
-													<td>October 13, 2024</td>
-													<td>Wilcon</td>
-													<td>CASH</td>
-													<td>PHP 300,000.00</td>
-												</tr>
+												{reports.expenseAccounts.map((expenseAccounts, index) => (
+													<tr key={index}>
+														<td>{index + 1}</td>
+
+														<td>{formatDate(expenseAccounts.purchase_date)}</td>
+														<td>{expenseAccounts.vendor_name}</td>
+														<td>{expenseAccounts.payment_type}</td>
+														<td>
+															{formatNumberDecimal(expenseAccounts.purchase_amount)}
+														</td>
+													</tr>
+												))}
 											</tbody>
 										</table>
 									</div>
 								</div>
 
-								<p className='font-bold text-md'>
-									Summary Statement of Financial Position (as of October 2024)
-								</p>
+								<p className='font-bold text-md w-full'>5. Cash Flow Report</p>
 
 								<div className='w-full flex items-center justify-center mt-5 mb-10'>
-									<div className='w-5/6 space-y-10'>
+									<div className='w-1/8 space-y-10'>
 										<table
 											className='w-full border-b-1 border-slate-300'
 											border='1'
@@ -541,17 +544,60 @@ export default function ReportsContent() {
 												<tr>
 													<td>No</td>
 													<td>Date</td>
+													<td>Client/Vendor</td>
 													<td>Description</td>
-													<td>Amount</td>
+													<td>Credit</td>
+													<td>Debit</td>
+													<td>Balance</td>
 												</tr>
 											</thead>
 											<tbody>
-												<tr>
-													<td>1</td>
-													<td>October 13, 2024</td>
-													<td>Payment to Harry(CASH BASIS)</td>
-													<td>PHP 300,000.00</td>
-												</tr>
+												{(() => {
+													let currentBalance = 0; // Initialize the balance
+
+													return reports.cashFlow.map((cashFlowAccounts, index) => {
+														currentBalance += cashFlowAccounts.credit; // Add credit to balance
+														currentBalance -= cashFlowAccounts.debit; // Subtract debit from balance
+
+														return (
+															<tr key={index}>
+																<td>{index + 1}</td>
+																<td>
+																	{formatDate(cashFlowAccounts.transaction_date)}
+																</td>
+																<td>{cashFlowAccounts.name}</td>
+																<td className='max-w-xs'>
+																	{cashFlowAccounts.description}
+																</td>
+																<td>
+																	{cashFlowAccounts.credit ? (
+																		<p className='text-green-600'>
+																			+
+																			{formatNumberDecimal(
+																				cashFlowAccounts.credit,
+																			)}
+																		</p>
+																	) : null}
+																</td>
+																<td>
+																	{cashFlowAccounts.debit ? (
+																		<p className='text-red-600'>
+																			-
+																			{formatNumberDecimal(
+																				cashFlowAccounts.debit,
+																			)}
+																		</p>
+																	) : null}
+																</td>
+																<td>
+																	<p className='text-blue-500'>
+																		{formatNumberDecimal(currentBalance)}
+																	</p>
+																</td>
+															</tr>
+														);
+													});
+												})()}
 											</tbody>
 										</table>
 									</div>

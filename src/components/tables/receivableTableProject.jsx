@@ -317,7 +317,7 @@ export default function ReceivablesTableProject({
 					topContentPlacement='outside'
 					onSelectionChange={setSelectedKeys}
 					onSortChange={setSortDescriptor}
-					classNames={{ th: 'bg-slate-900 text-white', td: 'border-b-1' }}
+					classNames={{ th: 'bg-black text-white', td: 'border-b-1' }}
 					className='p-2 w-full rounded-none'>
 					<TableHeader columns={headerColumns}>
 						{(column) => (

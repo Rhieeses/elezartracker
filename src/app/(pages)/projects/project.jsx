@@ -37,7 +37,8 @@ import {
 import { ProjectData } from '@/backend/data/dataHooks';
 
 export default function ProjectsContent() {
-	const { project, clients, loading, error, refetch } = ProjectData();
+	const { project, clients, loading, error } = ProjectData();
+
 	const { isOpen, onOpen, onOpenChange } = useDisclosure();
 	const initialFormData = {
 		selectClient: '',
@@ -66,7 +67,7 @@ export default function ProjectsContent() {
 
 	const [searchTerm, setSearchTerm] = useState('');
 
-	const filteredProjects = project.filter((projectItem) =>
+	const filteredProjects = project?.filter((projectItem) =>
 		projectItem.project_name.toLowerCase().includes(searchTerm.toLowerCase()),
 	);
 
@@ -136,7 +137,7 @@ export default function ProjectsContent() {
 			setMessage({ success: 'project added successfully!', error: '' });
 			onCloseModal();
 			setFormData(initialFormData);
-			refetch();
+			//refetch();
 		} catch (error) {
 			setMessage({ success: '', error: 'Failed to add project. Please try again.' });
 			console.error('Error:', error);

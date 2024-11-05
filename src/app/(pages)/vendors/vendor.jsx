@@ -492,13 +492,13 @@ export default function VendorsContent() {
 											variant='bordered'
 											size='lg'
 											radius='sm'
-											onClick={onCloseEdit}
-											className='bg-gray-300'>
+											onClick={onCloseEdit}>
 											Close
 										</Button>
 										<Button
-											color='primary'
+											radius='sm'
 											size='lg'
+											className='bg-black text-white'
 											startContent={
 												<span className='material-symbols-outlined'>edit</span>
 											}

@@ -117,7 +117,9 @@ export default function SalesContent() {
 		const fetchInvoiceData = async () => {
 			if (viewId) {
 				try {
-					const response = await axios.get(`/api/payment-details/${viewId}`);
+					const response = await axios.get(`/api/payment-details/${viewId}`, {
+						withCredentials: true,
+					});
 					setInvoice(response.data);
 				} catch (error) {
 					console.error('API Error:', error.response ? error.response.data : error.message);
