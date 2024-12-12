@@ -157,7 +157,8 @@ export default function HeaderProject({ children, projectName }) {
 									as='button'
 									className='text-sm p-2'
 									avatarProps={{
-										src: user?.profilepicture,
+										showFallback: true,
+										src: user?.profilepicture || 'default_image.png',
 									}}
 									name={user?.name}
 									description={user?.position}

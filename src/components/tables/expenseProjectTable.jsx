@@ -141,7 +141,13 @@ export default function ExpenseProjectTable({
 			case 'vendor_name':
 				return cellValue ? (
 					<User
-						avatarProps={{ radius: 'full', size: 'sm', src: user.vendor_picture }}
+						avatarProps={{
+							radius: 'full',
+							size: 'sm',
+
+							showFallback: true,
+							src: user.vendor_picture,
+						}}
 						classNames={{
 							description: 'text-default-500',
 						}}

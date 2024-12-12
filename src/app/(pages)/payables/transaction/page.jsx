@@ -170,7 +170,9 @@ export default function PayTransaction() {
 															isBordered
 															className='font-bold'
 															avatarProps={{
+																showFallback: true,
 																src: invoiceItem.vendor_picture,
+
 																style: {
 																	width: '70px',
 																	height: '70px',

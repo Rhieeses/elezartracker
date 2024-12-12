@@ -153,7 +153,12 @@ export default function PayablesTable({
 			case 'vendor_name':
 				return (
 					<User
-						avatarProps={{ radius: 'full', size: 'sm', src: user.vendor_picture }}
+						avatarProps={{
+							radius: 'full',
+							size: 'sm',
+							showFallback: true,
+							src: user.vendor_picture,
+						}}
 						classNames={{
 							description: 'text-default-500',
 						}}

@@ -121,7 +121,12 @@ export default function TransactionTable({
 			case 'name':
 				return cellValue ? (
 					<User
-						avatarProps={{ radius: 'full', size: 'sm', src: user.profile_picture }}
+						avatarProps={{
+							showFallback: true,
+							radius: 'full',
+							size: 'sm',
+							src: user.profile_picture,
+						}}
 						classNames={{
 							description: 'text-default-500',
 						}}

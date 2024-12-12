@@ -59,17 +59,24 @@ export default function Layout({ children }) {
 	};
 
 	const handleLogout = async () => {
-		try {
-			sessionStorage.clear();
-			localStorage.clear();
-			const response = await axios.post('/api/logout');
+		// Ensure we're only accessing storage on the client-side
+		if (typeof window !== 'undefined') {
+			try {
+				// Clear storage
+				sessionStorage.clear();
+				localStorage.clear();
 
-			if (response.status === 200) {
-				localStorage.removeItem('token');
-				router.push('/login');
+				const response = await axios.post('/api/logout');
+
+				if (response.status === 200) {
+					localStorage.removeItem('token');
+					router.push('/login');
+				}
+			} catch (error) {
+				console.error('Logout failed:', error);
 			}
-		} catch (error) {
-			console.error('Logout failed:', error);
+		} else {
+			console.error('Cannot access localStorage or sessionStorage on the server');
 		}
 	};
 
@@ -161,7 +168,7 @@ export default function Layout({ children }) {
 									as='button'
 									className='text-sm p-2'
 									avatarProps={{
-										src: user?.profilepicture,
+										src: user?.profilepicture || 'default_picture.png',
 									}}
 									name={user?.name}
 									description={user?.position}

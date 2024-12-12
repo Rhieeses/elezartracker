@@ -39,10 +39,6 @@ app.prepare().then(() => {
 	// Serve API routes from the routes file
 	server.use('/api', apiRoutes);
 
-	server.use('/uploads', express.static(path.join(__dirname, 'src/backend/public/uploads')));
-
-	server.use('/receipts', express.static(path.join(__dirname, 'src/backend/public/receipts')));
-
 	// For all other routes, use Next.js handling
 	server.all('*', (req, res) => {
 		return handle(req, res);

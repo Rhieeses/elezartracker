@@ -122,7 +122,11 @@ export default function PayableTableTransaction({
 			case 'name':
 				return cellValue ? (
 					<User
-						avatarProps={{ radius: 'full', size: 'sm', src: user.vendor_picture }}
+						avatarProps={{
+							radius: 'full',
+							size: 'sm',
+							src: user.vendor_picture || '/default_picture.png',
+						}}
 						classNames={{
 							description: 'text-default-500',
 						}}

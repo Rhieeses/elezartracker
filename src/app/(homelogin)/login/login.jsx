@@ -31,12 +31,13 @@ export default function LoginComponent() {
 
 	useEffect(() => {
 		router.prefetch('/dashboard');
-		const token = localStorage.getItem('token');
-
-		if (token) {
-			onClose();
-			router.push('/dashboard');
-			router.refresh();
+		if (typeof window !== 'undefined') {
+			const token = localStorage.getItem('token');
+			if (token) {
+				onClose();
+				router.push('/dashboard');
+				router.refresh();
+			}
 		}
 	}, [router, onClose]);
 
@@ -51,13 +52,13 @@ export default function LoginComponent() {
 
 			if (res.status === 200) {
 				const { token, user } = res.data; // Destructure token and user data
-
-				localStorage.setItem('token', token);
-				sessionStorage.setItem('user', JSON.stringify(user));
-				sessionStorage.setItem('token', token);
+				if (typeof window !== 'undefined') {
+					localStorage.setItem('token', token);
+					sessionStorage.setItem('user', JSON.stringify(user));
+					sessionStorage.setItem('token', token);
+				}
 
 				router.push('/dashboard');
-				onClose();
 			}
 		} catch (error) {
 			setErrorMessage('Login failed. Wrong username or password.');
@@ -92,9 +93,9 @@ export default function LoginComponent() {
 							Optimize Your Sales and Expense Management for Elezar Construction
 						</h1>
 						<p>
-							Designed specifically for Elezar Construction, our customized tracking tool
-							empowers your team to monitor sales, control expenses, and drive profitability
-							with precision—all within one seamless platform
+							Designed specifically for Elezar Construction, our customized tracking
+							tool empowers your team to monitor sales, control expenses, and drive
+							profitability with precision—all within one seamless platform
 						</p>
 					</div>
 				</div>
@@ -120,7 +121,9 @@ export default function LoginComponent() {
 									className='font-bold'
 									value={username}
 									onChange={(e) => setUsername(e.target.value)}
-									startContent={<span className='material-symbols-outlined'>person</span>}
+									startContent={
+										<span className='material-symbols-outlined'>person</span>
+									}
 									autoComplete='username'
 								/>
 
@@ -132,7 +135,9 @@ export default function LoginComponent() {
 									labelPlacement='outside'
 									value={password}
 									onChange={(e) => setPassword(e.target.value)}
-									startContent={<span className='material-symbols-outlined'>lock</span>}
+									startContent={
+										<span className='material-symbols-outlined'>lock</span>
+									}
 									autoComplete='current-password'
 									endContent={
 										<button
@@ -141,7 +146,9 @@ export default function LoginComponent() {
 											onClick={toggleVisibility}
 											aria-label='toggle password visibility'>
 											{isVisible ? (
-												<span className='material-symbols-outlined'>visibility</span>
+												<span className='material-symbols-outlined'>
+													visibility
+												</span>
 											) : (
 												<span className='material-symbols-outlined'>
 													visibility_off
@@ -177,7 +184,9 @@ export default function LoginComponent() {
 									</Button>
 
 									{errorMessage && (
-										<p className='text-red-500 text-center mt-4'>{errorMessage}</p>
+										<p className='text-red-500 text-center mt-4'>
+											{errorMessage}
+										</p>
 									)}
 									<p className='text-slate w-full text-center mt-5'>
 										Don't have an account? Contact admin
@@ -199,11 +208,6 @@ export default function LoginComponent() {
 					{(onClose) => (
 						<>
 							<ModalBody className='text-center'>
-								<span
-									className='material-symbols-outlined text-center'
-									style={{ fontSize: '64px' }}>
-									warning
-								</span>
 								<p>You are logging in. Please wait</p>
 								{errorMessage}
 								<Spinner />

@@ -61,9 +61,8 @@ export default function Header({ children }) {
 	const handleLogout = async () => {
 		try {
 			const response = await axios.post('/api/logout');
-
 			if (response.status === 200) {
-				localStorage.removeItem('token');
+				//localStorage.removeItem('token');
 				router.push('/login');
 			}
 		} catch (error) {
@@ -159,7 +158,8 @@ export default function Header({ children }) {
 									as='button'
 									className='text-sm p-2'
 									avatarProps={{
-										src: user?.profilepicture,
+										showFallback: true,
+										src: user?.profilepicture || 'default_picture.png',
 									}}
 									name={user?.name}
 									description={user?.position}

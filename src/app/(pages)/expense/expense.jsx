@@ -376,7 +376,9 @@ export default function ExpenseContent() {
 														isBordered
 														className='font-bold'
 														avatarProps={{
+															showFallback: true,
 															src: invoiceItem.vendor_picture,
+
 															style: {
 																width: '70px',
 																height: '70px',
@@ -569,7 +571,13 @@ export default function ExpenseContent() {
 																	description={`${projectItem.client_firstName} ${projectItem.client_lastName}`}
 																	className='flex justify-start w-full pl-1 pb-3 pt-3 text-lg hover:bg-default-200 cursor-pointer rounded-none'
 																	avatarProps={{
-																		src: projectItem.project_projectPicture,
+																		showFallback: true,
+																		src:
+																			projectItem.project_projectPicture &&
+																			projectItem.project_projectPicture !==
+																				'null'
+																				? projectItem.project_projectPicture
+																				: '/default_picture.png',
 																		size: 'lg',
 																	}}
 																/>

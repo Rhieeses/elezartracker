@@ -131,8 +131,9 @@ export default function VendorsContent() {
 		}
 
 		try {
-			const response = await axios.post(`/api/edit-vendor/${editVendorId}`, submitData);
-			//console.log(response.data.message);
+			//console.log(editForm);
+			await axios.put(`/api/edit-vendor/${editVendorId}`, submitData);
+			closeEdit();
 			refetch();
 		} catch (error) {
 			console.error('Failed to edit vendor:', error);
@@ -397,7 +398,12 @@ export default function VendorsContent() {
 													isBordered
 													className='font-bold'
 													avatarProps={{
-														src: vendorItem.vendor_picture,
+														src:
+															vendorItem.vendor_picture &&
+															vendorItem.vendor_picture !== 'null'
+																? vendorItem.vendor_picture
+																: '/house1.jpg',
+
 														style: {
 															width: '70px',
 															height: '70px',

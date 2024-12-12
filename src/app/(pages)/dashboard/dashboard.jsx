@@ -105,7 +105,11 @@ export default function DashboardContent() {
 									name={item.name}
 									description='Orchid Rose apartment'
 									avatarProps={{
-										src: item.client_profilePicture,
+										showFallback: true,
+										src:
+											item.client_profilePicture && item.client_profilePicture !== 'null'
+												? item.client_profilePicture
+												: '/default_picture.png',
 									}}
 								/>
 

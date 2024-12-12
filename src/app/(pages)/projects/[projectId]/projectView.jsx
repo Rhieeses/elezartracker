@@ -115,7 +115,10 @@ export default function ProjectView({ id }) {
 						setRemainingAmount(initialRemainingAmount);
 					}
 				} catch (error) {
-					console.error('API Error:', error.response ? error.response.data : error.message);
+					console.error(
+						'API Error:',
+						error.response ? error.response.data : error.message,
+					);
 				}
 			} else {
 				setInvoice([]);
@@ -235,7 +238,9 @@ export default function ProjectView({ id }) {
 									style={{ fontSize: '36px' }}>
 									equalizer
 								</span>
-								<h1 className='font-bold tracking-wide text-3xl text-center'>Overview</h1>
+								<h1 className='font-bold tracking-wide text-3xl text-center'>
+									Overview
+								</h1>
 							</div>
 							<ContentBox
 								iconText='payments'
@@ -251,13 +256,16 @@ export default function ProjectView({ id }) {
 										classNames={{
 											base: 'max-w-md',
 											track: 'drop-shadow-md border border-default',
-											indicator: 'bg-gradient-to-r from-yellow-500 to-green-500',
+											indicator:
+												'bg-gradient-to-r from-yellow-500 to-green-500',
 											label: 'tracking-wider font-medium text-default-600',
 											value: 'text-foreground/60 text-end',
 										}}
 										label={`${formatNumberDecimal(
 											project.projectAccounts.total_paid,
-										)} / ${formatNumberDecimal(project.projectAccounts.contract_price)}`}
+										)} / ${formatNumberDecimal(
+											project.projectAccounts.contract_price,
+										)}`}
 										value={Math.round(
 											project.projectAccounts.total_paid /
 												project.projectAccounts.contract_price,
@@ -281,7 +289,8 @@ export default function ProjectView({ id }) {
 										classNames={{
 											base: 'max-w-md',
 											track: 'drop-shadow-md border border-default',
-											indicator: 'bg-gradient-to-r from-yellow-500 to-green-500',
+											indicator:
+												'bg-gradient-to-r from-yellow-500 to-green-500',
 											label: 'tracking-wider font-medium text-default-600',
 											value: 'text-foreground/60 text-end',
 										}}
@@ -313,14 +322,17 @@ export default function ProjectView({ id }) {
 										classNames={{
 											base: 'max-w-md',
 											track: 'drop-shadow-md border border-default',
-											indicator: 'bg-gradient-to-r from-yellow-500 to-green-500',
+											indicator:
+												'bg-gradient-to-r from-yellow-500 to-green-500',
 											label: 'tracking-wider font-medium text-default-600',
 											value: 'text-foreground/60 text-end',
 										}}
 										label={`${formatNumberDecimal(
 											project.projectAccounts.contract_price -
 												project.projectAccounts.total_paid,
-										)} / ${formatNumberDecimal(project.projectAccounts.contract_price)}`}
+										)} / ${formatNumberDecimal(
+											project.projectAccounts.contract_price,
+										)}`}
 										value={Math.round(
 											project.projectAccounts.total_paid /
 												project.projectAccounts.contract_price,
@@ -333,7 +345,9 @@ export default function ProjectView({ id }) {
 							<ContentBox
 								iconText='payments'
 								labelText='Expenses'
-								strongText={formatNumberDecimal(project.projectAccounts.total_expenses)}
+								strongText={formatNumberDecimal(
+									project.projectAccounts.total_expenses,
+								)}
 								descriptionText={
 									<Progress
 										size='md'
@@ -341,7 +355,8 @@ export default function ProjectView({ id }) {
 										classNames={{
 											base: 'max-w-md',
 											track: 'drop-shadow-md border border-default',
-											indicator: 'bg-gradient-to-r from-yellow-500 to-green-500',
+											indicator:
+												'bg-gradient-to-r from-yellow-500 to-green-500',
 											label: 'tracking-wider font-medium text-default-600',
 											value: 'text-foreground/60 text-end',
 										}}
@@ -365,7 +380,11 @@ export default function ProjectView({ id }) {
 								<div className='space-x-5'>
 									<span>
 										<p className='font-bold text-xs'>CONTRACT PRICE</p>
-										<h1>{formatNumberDecimal(project.projectAccounts.contract_price)}</h1>
+										<h1>
+											{formatNumberDecimal(
+												project.projectAccounts.contract_price,
+											)}
+										</h1>
 									</span>
 									<span>
 										<p className='font-bold text-xs'>DOWNPAYMENT</p>
@@ -435,6 +454,8 @@ export default function ProjectView({ id }) {
 													<User
 														avatarProps={{
 															radius: 'lg',
+
+															showFallback: true,
 															src: vendorItem?.vendor_picture,
 														}}
 														name={vendorItem?.vendor_name}
@@ -443,7 +464,9 @@ export default function ProjectView({ id }) {
 												</TableCell>
 												<TableCell>{vendorItem?.total_expenses}</TableCell>
 												<TableCell>
-													{formatNumberDecimal(vendorItem?.total_purchase_amount)}
+													{formatNumberDecimal(
+														vendorItem?.total_purchase_amount,
+													)}
 												</TableCell>
 											</TableRow>
 										))}
@@ -497,11 +520,15 @@ export default function ProjectView({ id }) {
 										<>
 											<ModalHeader className='flex flex-col gap-1 mb-5'>
 												<div className='flex'>
-													<span className='material-symbols-outlined'>receipt</span>
+													<span className='material-symbols-outlined'>
+														receipt
+													</span>
 													<p>Bill Details - #{invoiceItem.invoice_no}</p>
 												</div>
 
-												<h1 className='text-center'>{invoiceItem.description}</h1>
+												<h1 className='text-center'>
+													{invoiceItem.description}
+												</h1>
 											</ModalHeader>
 											<ModalBody>
 												<div>
@@ -511,10 +538,16 @@ export default function ProjectView({ id }) {
 																Balance
 															</label>
 															<span className='mt-1 text-xl font-bold'>
-																{formatNumberDecimal(remainingAmount)}
+																{formatNumberDecimal(
+																	remainingAmount,
+																)}
 															</span>
 															<Chip
-																color={statusColorMap[invoiceItem.status]}
+																color={
+																	statusColorMap[
+																		invoiceItem.status
+																	]
+																}
 																size='sm'
 																variant='flat'>
 																{invoiceItem.status}
@@ -592,7 +625,8 @@ export default function ProjectView({ id }) {
 																			)}
 																		</p>
 																		<p className='ml-2 text-slate-500'>
-																			FORWARDED TO THE NEXT BILLING
+																			FORWARDED TO THE NEXT
+																			BILLING
 																		</p>
 																	</div>
 																</div>
@@ -605,7 +639,9 @@ export default function ProjectView({ id }) {
 																label='Payment amount'
 																name='paymentAmount'
 																value={paymentData.paymentAmount}
-																onChange={handleInputChange('paymentAmount')}
+																onChange={handleInputChange(
+																	'paymentAmount',
+																)}
 																required
 																isRequired
 																size='sm'
@@ -625,7 +661,9 @@ export default function ProjectView({ id }) {
 																label='Payment date'
 																name='paymentDate'
 																value={paymentData.paymentDate}
-																onChange={handleInputChange('paymentDate')}
+																onChange={handleInputChange(
+																	'paymentDate',
+																)}
 																required
 																isRequired
 																size='sm'
@@ -645,7 +683,9 @@ export default function ProjectView({ id }) {
 																	Remaining Balance
 																</label>
 																<p className='mt-1 text-xl font-bold text-red-600'>
-																	{formatNumberDecimal(invoiceItem.balance)}
+																	{formatNumberDecimal(
+																		invoiceItem.balance,
+																	)}
 																</p>
 															</div>
 
@@ -657,16 +697,22 @@ export default function ProjectView({ id }) {
 																	required
 																	size='sm'
 																	value={paymentData.paymentType}
-																	onChange={handleInputChange('paymentType')}
+																	onChange={handleInputChange(
+																		'paymentType',
+																	)}
 																	isRequired
 																	className='col-span-1'>
-																	{categoryOptions.map((option) => (
-																		<SelectItem
-																			key={option.value}
-																			value={option.value}>
-																			{option.label}
-																		</SelectItem>
-																	))}
+																	{categoryOptions.map(
+																		(option) => (
+																			<SelectItem
+																				key={option.value}
+																				value={
+																					option.value
+																				}>
+																				{option.label}
+																			</SelectItem>
+																		),
+																	)}
 																</Select>
 															</div>
 														</div>

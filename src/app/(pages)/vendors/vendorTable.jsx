@@ -99,7 +99,14 @@ export default function VendorTable({
 			case 'vendor_name':
 				return (
 					<User
-						avatarProps={{ radius: 'lg', src: user.vendor_picture }}
+						avatarProps={{
+							showFallback: true,
+							src:
+								user.vendor_picture && user.vendor_picture !== 'null'
+									? user.vendor_picture
+									: '/default_picture.png',
+							radius: 'lg',
+						}}
 						description={user.vendor_name}
 						name={cellValue}
 					/>

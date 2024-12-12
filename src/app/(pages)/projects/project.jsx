@@ -231,7 +231,9 @@ export default function ProjectsContent() {
 												isZoomed
 												alt='Card background'
 												className='object-cover h-[20rem] w-[100rem] z-0'
-												src={projectItem.project_projectPicture}
+												src={
+													projectItem.project_projectPicture || 'default_picture.png'
+												}
 											/>
 											<div className='absolute z-10 rounded-xl inset-x-0 bottom-[-1px] h-1/3 bg-gradient-to-b from-transparent via-black to-slate-900 opacity-50'></div>
 											<h4 className='font-bold text-2xl absolute z-10 inset-0 flex items-end m-5 justify-start text-white opacity-100'>
