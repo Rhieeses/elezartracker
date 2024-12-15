@@ -240,14 +240,14 @@ export default function ScanReceipt({ params }) {
 
 				// Now add the scanned details to the database
 				const details = {
-					projectId: projectId,
+					projectId: parseInt(projectId, 10),
 					fileUrl: uploadResponse.data.filePath,
 					invoiceNumber: result.invoiceNumber,
 					vendorName: result.vendorName,
 					description: result.description,
 					date: result.date,
 					paymentType: result.paymentType,
-					amount: result.amount,
+					amount: parseFloat(result.amount),
 				};
 				console.log(details);
 
