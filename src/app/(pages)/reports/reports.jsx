@@ -34,13 +34,6 @@ export default function ReportsContent() {
 	const [quarters, setQuarter] = useState('');
 	const [reports, setReport] = useState(null);
 
-	useEffect(() => {
-		if (reports) {
-			console.log(reports); // Log reports when it changes
-			console.log(reports.customerAccounts);
-		}
-	}, [reports]);
-
 	const currentYear = new Date().getFullYear();
 	const yearRange = [];
 
@@ -597,9 +590,9 @@ export default function ReportsContent() {
 
 													return reports.cashFlow.map(
 														(cashFlowAccounts, index) => {
-															currentBalance +=
-																cashFlowAccounts.credit; // Add credit to balance
 															currentBalance -=
+																cashFlowAccounts.credit; // Add credit to balance
+															currentBalance +=
 																cashFlowAccounts.debit; // Subtract debit from balance
 
 															return (
