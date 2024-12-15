@@ -590,10 +590,10 @@ export default function ReportsContent() {
 
 													return reports.cashFlow.map(
 														(cashFlowAccounts, index) => {
-															currentBalance -=
-																cashFlowAccounts.credit; // Add credit to balance
 															currentBalance +=
-																cashFlowAccounts.debit; // Subtract debit from balance
+																cashFlowAccounts.debit; // Add credit to balance
+															currentBalance -=
+																cashFlowAccounts.credit; // Subtract debit from balance
 
 															return (
 																<tr key={index}>
