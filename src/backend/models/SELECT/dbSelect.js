@@ -1371,8 +1371,8 @@ async function fetchReport(reportBody) {
         p.payment_date AS transaction_date,
         p.payment_type AS type,
         'PAYMENT' AS transaction_type,
-        NULL AS credit,  -- Payments are usually credits
-        p.payment_amount AS debit
+        NULL AS debit,  -- Payments are usually credits
+        p.payment_amount AS credit
     FROM 
         payments p
     JOIN 
@@ -1394,8 +1394,8 @@ async function fetchReport(reportBody) {
         e.purchase_date AS transaction_date,
         e.payment_type AS type,
         'EXPENSE' AS transaction_type,
-        e.purchase_amount AS credit, 
-        NULL AS debit
+        e.purchase_amount AS debit, 
+        NULL AS credit
     FROM 
         expense e
     JOIN 
@@ -1418,8 +1418,8 @@ async function fetchReport(reportBody) {
         p.payment_date AS transaction_date,
         p.payment_type AS type,
         'EXPENSE' AS transaction_type,
-        p.payment_amount AS credit, 
-        NULL AS debit
+        p.payment_amount AS debit, 
+        NULL AS credit
     FROM 
         payables_transaction p
     JOIN
