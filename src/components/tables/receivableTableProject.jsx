@@ -56,7 +56,9 @@ export default function ReceivablesTableProject({
 	const filteredItems = useMemo(() => {
 		let filteredUsers = [...receivable];
 
-		//filteredUsers = filteredUsers.filter((user) => user && user.status === 'UNPAID');
+		filteredUsers = filteredUsers.filter(
+			(user) => user && (user.status === 'UNPAID' || user.status === 'PARTIALLY'),
+		);
 
 		if (hasSearchFilter) {
 			filteredUsers = filteredUsers.filter(
@@ -97,7 +99,11 @@ export default function ReceivablesTableProject({
 			case 'name':
 				return (
 					<User
-						avatarProps={{ radius: 'full', size: 'sm', src: user.client_profilePicture }}
+						avatarProps={{
+							radius: 'full',
+							size: 'sm',
+							src: user.client_profilePicture,
+						}}
 						classNames={{
 							description: 'text-default-500',
 						}}
@@ -183,7 +189,9 @@ export default function ReceivablesTableProject({
 							<DropdownTrigger className='hidden sm:flex'>
 								<Button
 									endContent={
-										<span className='material-symbols-outlined'>keyboard_arrow_down</span>
+										<span className='material-symbols-outlined'>
+											keyboard_arrow_down
+										</span>
 									}
 									size='md'
 									color='default'
@@ -217,7 +225,9 @@ export default function ReceivablesTableProject({
 							<DropdownTrigger className='hidden sm:flex'>
 								<Button
 									endContent={
-										<span className='material-symbols-outlined'>keyboard_arrow_down</span>
+										<span className='material-symbols-outlined'>
+											keyboard_arrow_down
+										</span>
 									}
 									size='md'
 									color='default'
@@ -330,11 +340,13 @@ export default function ReceivablesTableProject({
 						)}
 					</TableHeader>
 					<TableBody
-						emptyContent={'No receivable found'}
+						emptyContent={'No outstanding payments'}
 						items={sortedItems}>
 						{(item) => (
 							<TableRow key={item.id}>
-								{(columnKey) => <TableCell>{renderCell(item, columnKey)}</TableCell>}
+								{(columnKey) => (
+									<TableCell>{renderCell(item, columnKey)}</TableCell>
+								)}
 							</TableRow>
 						)}
 					</TableBody>

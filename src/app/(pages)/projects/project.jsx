@@ -137,7 +137,7 @@ export default function ProjectsContent() {
 			setMessage({ success: 'project added successfully!', error: '' });
 			onCloseModal();
 			setFormData(initialFormData);
-			//refetch();
+			refetch();
 		} catch (error) {
 			setMessage({ success: '', error: 'Failed to add project. Please try again.' });
 			console.error('Error:', error);
@@ -193,7 +193,9 @@ export default function ProjectsContent() {
 									placeholder='Type to search...'
 									value={searchTerm}
 									onChange={(e) => setSearchTerm(e.target.value)}
-									startContent={<span className='material-symbols-outlined'>search</span>}
+									startContent={
+										<span className='material-symbols-outlined'>search</span>
+									}
 								/>
 							</div>
 						</div>
@@ -232,7 +234,8 @@ export default function ProjectsContent() {
 												alt='Card background'
 												className='object-cover h-[20rem] w-[100rem] z-0'
 												src={
-													projectItem.project_projectPicture || 'default_picture.png'
+													projectItem.project_projectPicture ||
+													'default_picture.png'
 												}
 											/>
 											<div className='absolute z-10 rounded-xl inset-x-0 bottom-[-1px] h-1/3 bg-gradient-to-b from-transparent via-black to-slate-900 opacity-50'></div>
@@ -247,7 +250,9 @@ export default function ProjectsContent() {
 											<User
 												name={`${projectItem.client_firstName} ${projectItem.client_lastName}`}
 												description={
-													<span className='text-xs'>{projectItem.client_email}</span>
+													<span className='text-xs'>
+														{projectItem.client_email}
+													</span>
 												}
 												avatarProps={{
 													src: `${projectItem.client_profilePicture}`,

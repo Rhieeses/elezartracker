@@ -205,7 +205,9 @@ export default function ReportsContent() {
 										labelPlacement='outside'
 										className='max-w-md w-[20rem]'>
 										{quarter.map((quarter) => (
-											<SelectItem key={quarter.key}>{quarter.label}</SelectItem>
+											<SelectItem key={quarter.key}>
+												{quarter.label}
+											</SelectItem>
 										))}
 									</Select>
 
@@ -275,7 +277,9 @@ export default function ReportsContent() {
 					</div>
 					<div className='flex items-center justify-center w-full p-10'>
 						<div className='w-4/6'>
-							<h1 className='font-bold text-slate-900 text-4xl p-10 pl-0'>{reportTitle}</h1>
+							<h1 className='font-bold text-slate-900 text-4xl p-10 pl-0'>
+								{reportTitle}
+							</h1>
 
 							<div className='mb-[10rem]'>
 								<span className='flex items-center gap-2 p-2'>
@@ -297,7 +301,9 @@ export default function ReportsContent() {
 													style={{ fontSize: '42px' }}>
 													work
 												</span>
-												<p className='text-xl text-default-600'>Projects Acquired</p>
+												<p className='text-xl text-default-600'>
+													Projects Acquired
+												</p>
 											</span>
 
 											<h1>{reports.generatedValue[0].project_acquired}</h1>
@@ -315,7 +321,11 @@ export default function ReportsContent() {
 												<p className='text-xl text-default-600'>Revenue</p>
 											</span>
 
-											<h1>{formatNumberDecimal(reports.generatedValue[0].revenue)}</h1>
+											<h1>
+												{formatNumberDecimal(
+													reports.generatedValue[0].revenue,
+												)}
+											</h1>
 										</div>
 									</div>
 
@@ -327,10 +337,14 @@ export default function ReportsContent() {
 													style={{ fontSize: '42px' }}>
 													attach_money
 												</span>
-												<p className='text-xl text-default-600'>Net Income</p>
+												<p className='text-xl text-default-600'>
+													Net Income
+												</p>
 											</span>
 											<h1>
-												{formatNumberDecimal(reports.generatedValue[0].net_income)}
+												{formatNumberDecimal(
+													reports.generatedValue[0].net_income,
+												)}
 											</h1>
 										</div>
 									</div>
@@ -345,7 +359,11 @@ export default function ReportsContent() {
 												</span>
 												<p className='text-xl text-default-600'>Expenses</p>
 											</span>
-											<h1>{formatNumberDecimal(reports.generatedValue[0].expenses)}</h1>
+											<h1>
+												{formatNumberDecimal(
+													reports.generatedValue[0].expenses,
+												)}
+											</h1>
 										</div>
 									</div>
 								</div>
@@ -381,19 +399,23 @@ export default function ReportsContent() {
 												</tr>
 											</thead>
 											<tbody>
-												{reports.customerAccounts.map((customerAccounts, index) => (
-													<tr key={index}>
-														<td>{index + 1}</td>
-														<td>{customerAccounts.client_name}</td>
-														<td>{customerAccounts.client_email}</td>
-														<td>{customerAccounts.client_address}</td>
-														<td>
-															{formatNumberDecimal(
-																customerAccounts.total_paid_amount,
-															)}
-														</td>
-													</tr>
-												))}
+												{reports.customerAccounts.map(
+													(customerAccounts, index) => (
+														<tr key={index}>
+															<td>{index + 1}</td>
+															<td>{customerAccounts.client_name}</td>
+															<td>{customerAccounts.client_email}</td>
+															<td>
+																{customerAccounts.client_address}
+															</td>
+															<td>
+																{formatNumberDecimal(
+																	customerAccounts.total_paid_amount,
+																)}
+															</td>
+														</tr>
+													),
+												)}
 											</tbody>
 										</table>
 									</div>
@@ -425,24 +447,26 @@ export default function ReportsContent() {
 											</thead>
 
 											<tbody>
-												{reports.vendorAccounts.map((vendorAccounts, index) => (
-													<tr key={index}>
-														<td>{index + 1}</td>
-														<td>{vendorAccounts.vendor_name}</td>
-														<td>
-															{vendorAccounts.vendor_email
-																? vendorAccounts.vendor_email
-																: vendorAccounts.vendor_contactNo}
-														</td>
-														<td>{vendorAccounts.vendor_address}</td>
-														<td>{vendorAccounts.total_order}</td>
-														<td>
-															{formatNumberDecimal(
-																vendorAccounts.total_expense_amount,
-															)}
-														</td>
-													</tr>
-												))}
+												{reports.vendorAccounts.map(
+													(vendorAccounts, index) => (
+														<tr key={index}>
+															<td>{index + 1}</td>
+															<td>{vendorAccounts.vendor_name}</td>
+															<td>
+																{vendorAccounts.vendor_email
+																	? vendorAccounts.vendor_email
+																	: vendorAccounts.vendor_contactNo}
+															</td>
+															<td>{vendorAccounts.vendor_address}</td>
+															<td>{vendorAccounts.total_order}</td>
+															<td>
+																{formatNumberDecimal(
+																	vendorAccounts.total_expense_amount,
+																)}
+															</td>
+														</tr>
+													),
+												)}
 											</tbody>
 										</table>
 									</div>
@@ -472,15 +496,23 @@ export default function ReportsContent() {
 												</tr>
 											</thead>
 											<tbody>
-												{reports.salesAccounts.map((salesAccounts, index) => (
-													<tr key={index}>
-														<td>{index + 1}</td>
-														<td>{formatDate(salesAccounts.date)}</td>
-														<td>{salesAccounts.client_name}</td>
-														<td>{salesAccounts.payment_terms}</td>
-														<td>{formatNumberDecimal(salesAccounts.amount)}</td>
-													</tr>
-												))}
+												{reports.salesAccounts.map(
+													(salesAccounts, index) => (
+														<tr key={index}>
+															<td>{index + 1}</td>
+															<td>
+																{formatDate(salesAccounts.date)}
+															</td>
+															<td>{salesAccounts.client_name}</td>
+															<td>{salesAccounts.payment_terms}</td>
+															<td>
+																{formatNumberDecimal(
+																	salesAccounts.amount,
+																)}
+															</td>
+														</tr>
+													),
+												)}
 											</tbody>
 										</table>
 									</div>
@@ -509,18 +541,26 @@ export default function ReportsContent() {
 												</tr>
 											</thead>
 											<tbody>
-												{reports.expenseAccounts.map((expenseAccounts, index) => (
-													<tr key={index}>
-														<td>{index + 1}</td>
+												{reports.expenseAccounts.map(
+													(expenseAccounts, index) => (
+														<tr key={index}>
+															<td>{index + 1}</td>
 
-														<td>{formatDate(expenseAccounts.purchase_date)}</td>
-														<td>{expenseAccounts.vendor_name}</td>
-														<td>{expenseAccounts.payment_type}</td>
-														<td>
-															{formatNumberDecimal(expenseAccounts.purchase_amount)}
-														</td>
-													</tr>
-												))}
+															<td>
+																{formatDate(
+																	expenseAccounts.purchase_date,
+																)}
+															</td>
+															<td>{expenseAccounts.vendor_name}</td>
+															<td>{expenseAccounts.payment_type}</td>
+															<td>
+																{formatNumberDecimal(
+																	expenseAccounts.purchase_amount,
+																)}
+															</td>
+														</tr>
+													),
+												)}
 											</tbody>
 										</table>
 									</div>
@@ -546,8 +586,8 @@ export default function ReportsContent() {
 													<td>Date</td>
 													<td>Client/Vendor</td>
 													<td>Description</td>
-													<td>Credit</td>
 													<td>Debit</td>
+													<td>Credit</td>
 													<td>Balance</td>
 												</tr>
 											</thead>
@@ -555,48 +595,58 @@ export default function ReportsContent() {
 												{(() => {
 													let currentBalance = 0; // Initialize the balance
 
-													return reports.cashFlow.map((cashFlowAccounts, index) => {
-														currentBalance += cashFlowAccounts.credit; // Add credit to balance
-														currentBalance -= cashFlowAccounts.debit; // Subtract debit from balance
+													return reports.cashFlow.map(
+														(cashFlowAccounts, index) => {
+															currentBalance +=
+																cashFlowAccounts.credit; // Add credit to balance
+															currentBalance -=
+																cashFlowAccounts.debit; // Subtract debit from balance
 
-														return (
-															<tr key={index}>
-																<td>{index + 1}</td>
-																<td>
-																	{formatDate(cashFlowAccounts.transaction_date)}
-																</td>
-																<td>{cashFlowAccounts.name}</td>
-																<td className='max-w-xs'>
-																	{cashFlowAccounts.description}
-																</td>
-																<td>
-																	{cashFlowAccounts.credit ? (
-																		<p className='text-green-600'>
-																			+
+															return (
+																<tr key={index}>
+																	<td>{index + 1}</td>
+																	<td>
+																		{formatDate(
+																			cashFlowAccounts.transaction_date,
+																		)}
+																	</td>
+																	<td>{cashFlowAccounts.name}</td>
+																	<td className='max-w-xs'>
+																		{
+																			cashFlowAccounts.description
+																		}
+																	</td>
+																	<td>
+																		{cashFlowAccounts.credit ? (
+																			<p className='text-red-600'>
+																				-
+																				{formatNumberDecimal(
+																					cashFlowAccounts.credit,
+																				)}
+																			</p>
+																		) : null}
+																	</td>
+																	<td>
+																		{cashFlowAccounts.debit ? (
+																			<p className='text-green-600'>
+																				+
+																				{formatNumberDecimal(
+																					cashFlowAccounts.debit,
+																				)}
+																			</p>
+																		) : null}
+																	</td>
+																	<td>
+																		<p className='text-blue-500'>
 																			{formatNumberDecimal(
-																				cashFlowAccounts.credit,
+																				currentBalance,
 																			)}
 																		</p>
-																	) : null}
-																</td>
-																<td>
-																	{cashFlowAccounts.debit ? (
-																		<p className='text-red-600'>
-																			-
-																			{formatNumberDecimal(
-																				cashFlowAccounts.debit,
-																			)}
-																		</p>
-																	) : null}
-																</td>
-																<td>
-																	<p className='text-blue-500'>
-																		{formatNumberDecimal(currentBalance)}
-																	</p>
-																</td>
-															</tr>
-														);
-													});
+																	</td>
+																</tr>
+															);
+														},
+													);
 												})()}
 											</tbody>
 										</table>

@@ -130,17 +130,24 @@ export default function Layout({ children }) {
 										{notifications.length > 0 ? (
 											notifications.map((notif, index) => {
 												let color =
-													notif.isseen === false ? 'bg-red-100 font-bold' : 'bg-white';
+													notif.isseen === false
+														? 'bg-red-100 font-bold'
+														: 'bg-white';
 
 												return (
 													<DropdownItem
 														key={index}
 														textValue={notif.title}
 														href={`/projects/${notif.project_id}`}
-														onPress={() => NotificationSeen(notif.id, notif.isseen)}
+														onPress={() =>
+															NotificationSeen(notif.id, notif.isseen)
+														}
 														className='p-0 flex gap-5'>
-														<div className={`text-sm flex flex-col ${color} p-2 `}>
-															<div className='text-red-400'>{notif.title}</div>
+														<div
+															className={`text-sm flex flex-col ${color} p-2 `}>
+															<div className='text-red-400'>
+																{notif.title}
+															</div>
 															<div className='text-default-500 text-sm font-semibold'>
 																{notif.description}
 															</div>
@@ -179,21 +186,27 @@ export default function Layout({ children }) {
 									key='accountSettings'
 									href='/account-settings'
 									startContent={
-										<span className='material-symbols-outlined'>account_circle</span>
+										<span className='material-symbols-outlined'>
+											account_circle
+										</span>
 									}>
 									Account Settings
 								</DropdownItem>
 
 								<DropdownItem
 									key='help'
-									startContent={<span className='material-symbols-outlined'>help</span>}>
+									startContent={
+										<span className='material-symbols-outlined'>help</span>
+									}>
 									Help
 								</DropdownItem>
 								<DropdownItem
 									color='danger'
 									key='logout'
 									onClick={handleLogout}
-									startContent={<span className='material-symbols-outlined'>logout</span>}>
+									startContent={
+										<span className='material-symbols-outlined'>logout</span>
+									}>
 									Log out
 								</DropdownItem>
 							</DropdownMenu>
@@ -268,11 +281,15 @@ export default function Layout({ children }) {
 							<DropdownTrigger>
 								<div
 									className={`flex items-center p-1  cursor-pointer ${
-										isActive('Receivables') ? 'border-b-2 border-black font-semibold' : ''
+										isActive('Receivables')
+											? 'border-b-2 border-black font-semibold'
+											: ''
 									}`}>
 									<li className='flex items-center hover:bg-gray-200 p-2 rounded-lg'>
 										<p className=' md:inline'>Receivables</p>
-										<span className='material-symbols-outlined'>arrow_drop_down</span>
+										<span className='material-symbols-outlined'>
+											arrow_drop_down
+										</span>
 									</li>
 								</div>
 							</DropdownTrigger>
@@ -292,7 +309,9 @@ export default function Layout({ children }) {
 									href='/receivables/payments'
 									prefetch={true}
 									startContent={
-										<span className='material-symbols-outlined'>receipt_long</span>
+										<span className='material-symbols-outlined'>
+											receipt_long
+										</span>
 									}>
 									Receivables payments
 								</DropdownItem>
@@ -300,15 +319,15 @@ export default function Layout({ children }) {
 						</Dropdown>
 
 						<Link
-							href='/sales'
+							href='/revenue'
 							prefetch={true}
 							className={`flex items-center p-1  ${
-								isActive('Sales')
+								isActive('Revenue')
 									? 'pointer-events-none border-b-2 border-black font-semibold'
 									: ''
 							}`}>
 							<li className='hover:bg-gray-200 p-2 rounded-lg'>
-								<p className=' md:inline'>Sales</p>
+								<p className=' md:inline'>Revenue</p>
 							</li>
 						</Link>
 
@@ -316,11 +335,15 @@ export default function Layout({ children }) {
 							<DropdownTrigger>
 								<div
 									className={`flex items-center p-1  cursor-pointer ${
-										isActive('Payables') ? 'border-b-2 border-black font-semibold' : ''
+										isActive('Payables')
+											? 'border-b-2 border-black font-semibold'
+											: ''
 									}`}>
 									<li className='flex items-center hover:bg-gray-200 p-2 rounded-lg'>
 										<p className=' md:inline'>Payables</p>
-										<span className='material-symbols-outlined'>arrow_drop_down</span>
+										<span className='material-symbols-outlined'>
+											arrow_drop_down
+										</span>
 									</li>
 								</div>
 							</DropdownTrigger>
@@ -330,7 +353,9 @@ export default function Layout({ children }) {
 									href='/payables'
 									prefetch={true}
 									startContent={
-										<span className='material-symbols-outlined'>shopping_cart</span>
+										<span className='material-symbols-outlined'>
+											shopping_cart
+										</span>
 									}>
 									Payables
 								</DropdownItem>
@@ -340,7 +365,9 @@ export default function Layout({ children }) {
 									href='/payables/transaction'
 									prefetch={true}
 									startContent={
-										<span className='material-symbols-outlined'>receipt_long</span>
+										<span className='material-symbols-outlined'>
+											receipt_long
+										</span>
 									}>
 									Payables payments
 								</DropdownItem>

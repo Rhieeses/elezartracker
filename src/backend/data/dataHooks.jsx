@@ -237,7 +237,9 @@ export const ClientData = () => {
 	const fetchClientData = async () => {
 		setLoading(true);
 		try {
-			const clientsResponse = await axios.get('/api/client-details', { withCredentials: true });
+			const clientsResponse = await axios.get('/api/client-details', {
+				withCredentials: true,
+			});
 
 			setClient(clientsResponse.data);
 		} catch (err) {
@@ -618,7 +620,9 @@ export const Sales = () => {
 	const fetchSalesData = async () => {
 		setLoading(true);
 		try {
-			const response = await axios.get('/api/salesProject-details', { withCredentials: true });
+			const response = await axios.get('/api/salesProject-details', {
+				withCredentials: true,
+			});
 			if (Array.isArray(response.data)) {
 				setSales(response.data);
 			} else {
@@ -722,7 +726,9 @@ export const AccountsTransaction = () => {
 
 	const fetchAccountsTransaction = async () => {
 		try {
-			const response = await axios.get('/api/accounts-transactions', { withCredentials: true });
+			const response = await axios.get('/api/accounts-transactions', {
+				withCredentials: true,
+			});
 			if (Array.isArray(response.data)) {
 				setAccTransaction(response.data);
 			} else {
@@ -822,7 +828,7 @@ export const AllTransactions = () => {
 };
 
 export const TopVendorData = ({ projectId }) => {
-	const [topVendor, setTopVendor] = useState([null]);
+	const [topVendor, setTopVendor] = useState(null);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState(null);
 
@@ -846,5 +852,35 @@ export const TopVendorData = ({ projectId }) => {
 			fetchTopVendorData();
 		}
 	}, [fetchTopVendorData, projectId]);
+
 	return { topVendor, loading, error };
+};
+
+export const Additionals = ({ projectId }) => {
+	const [additionals, setAdditionals] = useState(null);
+	const [loading, setLoading] = useState(true);
+	const [error, setError] = useState(null);
+
+	const fetchTopAdditionalsData = useCallback(async () => {
+		setLoading(true);
+		try {
+			const additionalsRes = await axios.get(`/api/additionals/${projectId}`, {
+				withCredentials: true,
+			});
+			setAdditionals(additionalsRes.data);
+		} catch (err) {
+			console.error('Error fetching your additionals data:', err);
+			setError(err);
+		} finally {
+			setLoading(false);
+		}
+	}, [projectId]);
+
+	useEffect(() => {
+		if (projectId) {
+			fetchTopAdditionalsData();
+		}
+	}, [fetchTopAdditionalsData, projectId]);
+
+	return { additionals, loading, error };
 };

@@ -77,7 +77,9 @@ export default function SalesTable({
 			);
 		}
 		if (statusFilter !== 'all' && statusFilter.length !== paymentType.length) {
-			filteredUsers = filteredUsers.filter((user) => statusFilter.includes(user.payment_type));
+			filteredUsers = filteredUsers.filter((user) =>
+				statusFilter.includes(user.payment_type),
+			);
 		}
 
 		return filteredUsers;
@@ -113,7 +115,11 @@ export default function SalesTable({
 			case 'name':
 				return cellValue ? (
 					<User
-						avatarProps={{ radius: 'full', size: 'sm', src: user.client_profilePicture }}
+						avatarProps={{
+							radius: 'full',
+							size: 'sm',
+							src: user.client_profilePicture,
+						}}
 						classNames={{
 							description: 'text-default-500',
 						}}
@@ -127,7 +133,9 @@ export default function SalesTable({
 			case 'date':
 				return (
 					<div className='flex items-center gap-1'>
-						<span className='material-symbols-outlined text-slate-500'>calendar_today</span>
+						<span className='material-symbols-outlined text-slate-500'>
+							calendar_today
+						</span>
 						{formatDate(cellValue)}
 					</div>
 				);
@@ -142,11 +150,6 @@ export default function SalesTable({
 			case 'description':
 				return (
 					<div className='flex items-center justify-start max-w-[15rem] gap-2'>
-						<span
-							className='material-symbols-sharp text-slate-700'
-							style={{ fontSize: '35px' }}>
-							house
-						</span>
 						<div className='text-pretty'>
 							<p className='font-semibold'> {user.project_name}</p>
 							<div className='flex w-full justify-between'>
@@ -190,7 +193,9 @@ export default function SalesTable({
 								<DropdownItem onPress={() => handleRowArchive(user.id)}>
 									Unarchive
 								</DropdownItem>
-								<DropdownItem onPress={() => handleRowDelete(user.id)}>Delete</DropdownItem>
+								<DropdownItem onPress={() => handleRowDelete(user.id)}>
+									Delete
+								</DropdownItem>
 							</DropdownMenu>
 						</Dropdown>
 					</div>
@@ -208,11 +213,15 @@ export default function SalesTable({
 								</Button>
 							</DropdownTrigger>
 							<DropdownMenu>
-								<DropdownItem onPress={() => handleRowChange(user.id)}>View</DropdownItem>
+								<DropdownItem onPress={() => handleRowChange(user.id)}>
+									View
+								</DropdownItem>
 								<DropdownItem onPress={() => handleRowArchive(user.id)}>
 									Archive
 								</DropdownItem>
-								<DropdownItem onPress={() => handleRowDelete(user.id)}>Delete</DropdownItem>
+								<DropdownItem onPress={() => handleRowDelete(user.id)}>
+									Delete
+								</DropdownItem>
 							</DropdownMenu>
 						</Dropdown>
 					</div>
@@ -276,7 +285,9 @@ export default function SalesTable({
 							<DropdownTrigger className='hidden sm:flex'>
 								<Button
 									endContent={
-										<span className='material-symbols-outlined'>keyboard_arrow_down</span>
+										<span className='material-symbols-outlined'>
+											keyboard_arrow_down
+										</span>
 									}
 									size='md'
 									color='default'
@@ -310,7 +321,9 @@ export default function SalesTable({
 							<DropdownTrigger className='hidden sm:flex'>
 								<Button
 									endContent={
-										<span className='material-symbols-outlined'>keyboard_arrow_down</span>
+										<span className='material-symbols-outlined'>
+											keyboard_arrow_down
+										</span>
 									}
 									size='md'
 									color='default'
@@ -401,7 +414,7 @@ export default function SalesTable({
 					</span>
 
 					<h1 className='font-semibold tracking-wide text-3xl text-left'>
-						{isArchived ? 'Archived' : 'Sales'}
+						{isArchived ? 'Archived' : 'Revenue'}
 					</h1>
 				</div>
 				{topContent}
@@ -435,7 +448,9 @@ export default function SalesTable({
 								item ? (
 									<TableRow key={item.id}>
 										{(columnKey) => (
-											<TableCell>{renderCell(item, columnKey, index)}</TableCell>
+											<TableCell>
+												{renderCell(item, columnKey, index)}
+											</TableCell>
 										)}
 									</TableRow>
 								) : null,

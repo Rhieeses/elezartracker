@@ -26,6 +26,7 @@ import {
 	formatNumber,
 	formatNumberDecimal,
 	capitalizeOnlyFirstLetter,
+	removeFormatting,
 } from '@/utils/inputFormatter';
 import { IconTextBox } from '@/components/ui/uiComponent';
 import ReceivablesTable from '@/components/tables/receivableTable';
@@ -52,8 +53,9 @@ export default function ReceivablesContent() {
 	}, []);
 
 	let categoryOptions = [
-		{ label: 'BANK', value: 'BANK' },
 		{ label: 'CASH', value: 'CASH' },
+		{ label: 'BANK', value: 'BANK' },
+		{ label: 'GCASH', value: 'GCASH' },
 	];
 
 	const [loading, setLoading] = useState(false);
@@ -105,7 +107,10 @@ export default function ReceivablesContent() {
 						setRemainingAmount(initialRemainingAmount);
 					}
 				} catch (error) {
-					console.error('API Error:', error.response ? error.response.data : error.message);
+					console.error(
+						'API Error:',
+						error.response ? error.response.data : error.message,
+					);
 				}
 			} else {
 				setInvoice([]);
@@ -249,6 +254,7 @@ export default function ReceivablesContent() {
 			});
 			console.error('Error:', error);
 		} finally {
+			onOpenChange();
 			refetch();
 			setLoading(false);
 		}
@@ -280,11 +286,15 @@ export default function ReceivablesContent() {
 										<>
 											<ModalHeader className='flex flex-col gap-1 mb-5'>
 												<div className='flex'>
-													<span className='material-symbols-outlined'>receipt</span>
+													<span className='material-symbols-outlined'>
+														receipt
+													</span>
 													<p>Bill Details - #{invoiceItem.invoice_no}</p>
 												</div>
 
-												<h1 className='text-center'>{invoiceItem.description}</h1>
+												<h1 className='text-center'>
+													{invoiceItem.description}
+												</h1>
 											</ModalHeader>
 											<ModalBody>
 												<div>
@@ -294,10 +304,16 @@ export default function ReceivablesContent() {
 																Balance
 															</label>
 															<span className='mt-1 text-xl font-bold'>
-																{formatNumberDecimal(remainingAmount)}
+																{formatNumberDecimal(
+																	remainingAmount,
+																)}
 															</span>
 															<Chip
-																color={statusColorMap[invoiceItem.status]}
+																color={
+																	statusColorMap[
+																		invoiceItem.status
+																	]
+																}
 																size='sm'
 																variant='flat'>
 																{invoiceItem.status}
@@ -341,7 +357,9 @@ export default function ReceivablesContent() {
 															<IconTextBox
 																iconText='paid'
 																labelText='PAID AMOUNT'
-																contentText={formatNumber(invoiceItem.paid_amount)}
+																contentText={formatNumber(
+																	invoiceItem.paid_amount,
+																)}
 															/>
 															<IconTextBox
 																iconText='account_balance_wallet'
@@ -373,7 +391,8 @@ export default function ReceivablesContent() {
 																			)}
 																		</p>
 																		<p className='ml-2 text-slate-500'>
-																			FORWARDED TO THE NEXT BILLING
+																			FORWARDED TO THE NEXT
+																			BILLING
 																		</p>
 																	</div>
 																</div>
@@ -386,7 +405,9 @@ export default function ReceivablesContent() {
 																label='Payment amount'
 																name='paymentAmount'
 																value={paymentData.paymentAmount}
-																onChange={handleInputChange('paymentAmount')}
+																onChange={handleInputChange(
+																	'paymentAmount',
+																)}
 																required
 																placeholder='0.00'
 																isRequired
@@ -406,7 +427,9 @@ export default function ReceivablesContent() {
 																label='Payment date'
 																name='paymentDate'
 																value={paymentData.paymentDate}
-																onChange={handleInputChange('paymentDate')}
+																onChange={handleInputChange(
+																	'paymentDate',
+																)}
 																required
 																isRequired
 																size='sm'
@@ -426,7 +449,9 @@ export default function ReceivablesContent() {
 																	Remaining Balance
 																</label>
 																<p className='mt-1 text-xl font-bold text-red-600'>
-																	{formatNumberDecimal(invoiceItem.balance)}
+																	{formatNumberDecimal(
+																		invoiceItem.balance,
+																	)}
 																</p>
 															</div>
 
@@ -438,16 +463,22 @@ export default function ReceivablesContent() {
 																	required
 																	size='sm'
 																	value={paymentData.paymentType}
-																	onChange={handleInputChange('paymentType')}
+																	onChange={handleInputChange(
+																		'paymentType',
+																	)}
 																	isRequired
 																	className='col-span-1'>
-																	{categoryOptions.map((option) => (
-																		<SelectItem
-																			key={option.value}
-																			value={option.value}>
-																			{option.label}
-																		</SelectItem>
-																	))}
+																	{categoryOptions.map(
+																		(option) => (
+																			<SelectItem
+																				key={option.value}
+																				value={
+																					option.value
+																				}>
+																				{option.label}
+																			</SelectItem>
+																		),
+																	)}
 																</Select>
 															</div>
 														</div>

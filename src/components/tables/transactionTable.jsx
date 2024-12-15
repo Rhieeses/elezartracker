@@ -147,16 +147,22 @@ export default function TransactionTable({
 			case 'transaction_date':
 				return (
 					<div className='flex items-center gap-1'>
-						<span className='material-symbols-outlined text-slate-500'>calendar_today</span>
+						<span className='material-symbols-outlined text-slate-500'>
+							calendar_today
+						</span>
 						{formatDate(cellValue)}
 					</div>
 				);
 
 			case 'debit':
-				return cellValue ? <p className='text-red-500'>- {formatNumber(cellValue)}</p> : null;
+				return cellValue ? (
+					<p className='text-green-500'>+ {formatNumber(cellValue)}</p>
+				) : null;
 
 			case 'credit':
-				return cellValue ? <p className='text-green-700'>+ {formatNumber(cellValue)}</p> : null;
+				return cellValue ? (
+					<p className='text-red-700'>- {formatNumber(cellValue)}</p>
+				) : null;
 
 			default:
 				return cellValue;
@@ -193,7 +199,9 @@ export default function TransactionTable({
 							<DropdownTrigger className='hidden sm:flex'>
 								<Button
 									endContent={
-										<span className='material-symbols-outlined'>keyboard_arrow_down</span>
+										<span className='material-symbols-outlined'>
+											keyboard_arrow_down
+										</span>
 									}
 									size='md'
 									color='default'
@@ -227,7 +235,9 @@ export default function TransactionTable({
 							<DropdownTrigger className='hidden sm:flex'>
 								<Button
 									endContent={
-										<span className='material-symbols-outlined'>keyboard_arrow_down</span>
+										<span className='material-symbols-outlined'>
+											keyboard_arrow_down
+										</span>
 									}
 									size='md'
 									color='default'
@@ -334,7 +344,9 @@ export default function TransactionTable({
 								item ? (
 									<TableRow key={item.id}>
 										{(columnKey) => (
-											<TableCell>{renderCell(item, columnKey, index)}</TableCell>
+											<TableCell>
+												{renderCell(item, columnKey, index)}
+											</TableCell>
 										)}
 									</TableRow>
 								) : null,
@@ -349,7 +361,9 @@ export default function TransactionTable({
 						<TableCell colSpan={1}>
 							<span>
 								<p className=''>Debit</p>
-								<strong className='text-red-500'>{formatNumberDecimal(totalDebit)}</strong>
+								<strong className='text-red-500'>
+									{formatNumberDecimal(totalDebit)}
+								</strong>
 							</span>
 						</TableCell>
 						<TableCell colSpan={2}>

@@ -141,6 +141,17 @@ const generateRandomInvoiceNumber = () => {
 	return invoiceNum;
 };
 
+const generateAdditionalsNumber = () => {
+	const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+	const length = 5;
+	let invoiceNum = '';
+	for (let i = 0; i < length; i++) {
+		const randomIndex = Math.floor(Math.random() * characters.length);
+		invoiceNum += characters.charAt(randomIndex);
+	}
+	return `ADS-${invoiceNum}`;
+};
+
 const calculateProgressPayment = (contractPrice, downpayment, startDate, completionDate) => {
 	const downpaymentAmount = (contractPrice * downpayment) / 100;
 	const start = new Date(startDate);
@@ -232,6 +243,7 @@ module.exports = {
 	formatDate,
 	formatDateTime,
 	generateRandomInvoiceNumber,
+	generateAdditionalsNumber,
 	calculateProgressPayment,
 	formatStatusEx,
 	checkStatus,

@@ -96,7 +96,9 @@ export default function ExpenseProjectTable({
 			);
 		}
 		if (statusFilter !== 'all' && statusFilter.length !== paymentOptions.length) {
-			filteredUsers = filteredUsers.filter((user) => statusFilter.includes(user.payment_type));
+			filteredUsers = filteredUsers.filter((user) =>
+				statusFilter.includes(user.payment_type),
+			);
 		}
 
 		return filteredUsers;
@@ -187,7 +189,9 @@ export default function ExpenseProjectTable({
 			case 'purchase_date':
 				return (
 					<div className='flex items-center gap-2'>
-						<span className='material-symbols-outlined text-slate-500'>calendar_today</span>
+						<span className='material-symbols-outlined text-slate-500'>
+							calendar_today
+						</span>
 						{formatDate(cellValue)}
 					</div>
 				);
@@ -276,7 +280,9 @@ export default function ExpenseProjectTable({
 							<DropdownTrigger className='hidden sm:flex'>
 								<Button
 									endContent={
-										<span className='material-symbols-outlined'>keyboard_arrow_down</span>
+										<span className='material-symbols-outlined'>
+											keyboard_arrow_down
+										</span>
 									}
 									size='md'
 									color='default'
@@ -310,7 +316,9 @@ export default function ExpenseProjectTable({
 							<DropdownTrigger className='hidden sm:flex'>
 								<Button
 									endContent={
-										<span className='material-symbols-outlined'>keyboard_arrow_down</span>
+										<span className='material-symbols-outlined'>
+											keyboard_arrow_down
+										</span>
 									}
 									size='md'
 									color='default'
@@ -427,7 +435,9 @@ export default function ExpenseProjectTable({
 					? formatNumber(value.replace(/[^0-9.]/g, ''))
 					: field === 'invoiceNo'
 					? allCapitalize(
-							typeof value === 'string' && value.startsWith('#') ? value : '#' + value,
+							typeof value === 'string' && value.startsWith('#')
+								? value
+								: '#' + value,
 					  )
 					: capitalizeOnlyFirstLetter(value);
 
@@ -464,7 +474,18 @@ export default function ExpenseProjectTable({
 				success: 'Expense added successfully!',
 				error: '',
 			});
-			setFormData(initialFormData);
+			setFormData({
+				invoiceNo: '',
+				vendor: null,
+				other: '',
+				vendorName: '',
+				purchaseDate: '',
+				description: '',
+				purchaseAmount: '',
+				paymentType: '',
+				projectId: projectId,
+			});
+			setIsOthers(false);
 			refetchExpenseProject();
 		} catch (error) {
 			setMessage({
@@ -473,7 +494,18 @@ export default function ExpenseProjectTable({
 			});
 			console.error('Error:', error);
 		} finally {
-			setFormData(initialFormData);
+			setFormData({
+				invoiceNo: '',
+				vendor: null,
+				other: '',
+				vendorName: '',
+				purchaseDate: '',
+				description: '',
+				purchaseAmount: '',
+				paymentType: '',
+				projectId: projectId,
+			});
+			setIsOthers(false);
 			setLoading(false);
 		}
 	};
@@ -508,7 +540,9 @@ export default function ExpenseProjectTable({
 						arrow_back_ios_new
 					</span>
 
-					<p className='text-4xl font-bold text-blue-800'>{projectName || 'Loading...'}</p>
+					<p className='text-4xl font-bold text-blue-800'>
+						{projectName || 'Loading...'}
+					</p>
 				</div>
 				{topContent}
 			</div>
@@ -591,7 +625,9 @@ export default function ExpenseProjectTable({
 														src={vendor.vendor_picture}
 													/>
 													<div className='flex flex-col'>
-														<span className='text-small'>{vendor.vendor_name}</span>
+														<span className='text-small'>
+															{vendor.vendor_name}
+														</span>
 														<span className='text-tiny text-default-400'>
 															{vendor.vendor_services}
 														</span>
@@ -664,7 +700,9 @@ export default function ExpenseProjectTable({
 										className='text-white w-fit bg-black tracking-wider'
 										variant='bordered'
 										size='lg'
-										startContent={<span className='material-symbols-outlined'>add</span>}
+										startContent={
+											<span className='material-symbols-outlined'>add</span>
+										}
 										type='submit'
 										radius='md'>
 										Add
@@ -685,7 +723,9 @@ export default function ExpenseProjectTable({
 								item ? (
 									<TableRow key={item.id}>
 										{(columnKey) => (
-											<TableCell>{renderCell(item, columnKey, index)}</TableCell>
+											<TableCell>
+												{renderCell(item, columnKey, index)}
+											</TableCell>
 										)}
 									</TableRow>
 								) : null,

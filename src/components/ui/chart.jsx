@@ -283,6 +283,75 @@ export const PieChart = ({ dashboard }) => {
 	);
 };
 
+export const PieChartAccounts = ({ cash, bank, gcash }) => {
+	const data = {
+		labels: ['Cash', 'Bank', ' Gcash'],
+		datasets: [
+			{
+				label: 'Financial Breakdown',
+				data: [parseFloat(cash), parseFloat(bank), parseFloat(gcash)],
+				backgroundColor: ['#228B22', '#FF6384', '#36A2EB'],
+				hoverOffset: 4,
+			},
+		],
+	};
+
+	const options = {
+		responsive: true,
+		plugins: {
+			legend: {
+				position: 'top',
+			},
+			tooltip: {
+				callbacks: {
+					label: function (context) {
+						let label = context.label || '';
+						if (context.parsed) {
+							label += `: ${context.parsed}`;
+						}
+						return label;
+					},
+				},
+			},
+			datalabels: {
+				color: '#fff',
+				display: true,
+				formatter: (value, context) => {
+					const parsedValue = parseFloat(value);
+					const total = context.chart.data.datasets[0].data
+						.map((val) => parseFloat(val)) // Ensure all values are numbers
+						.reduce((acc, val) => acc + val, 0);
+
+					if (total === 0) {
+						return '0%';
+					}
+					const percentage = ((parsedValue / total) * 100).toFixed(2);
+					return `${percentage}%`;
+				},
+				font: {
+					weight: 'bold',
+					size: 25,
+				},
+				anchor: 'end',
+				align: 'start',
+				offset: 20,
+			},
+		},
+		layout: {
+			padding: {
+				right: 50,
+			},
+		},
+	};
+
+	return (
+		<Pie
+			data={data}
+			options={options}
+		/>
+	);
+};
+
 export const BarChartHorizontal = () => {
 	const dataValues = [65, 59, 80, 81, 56, 55, 40];
 	const months = [

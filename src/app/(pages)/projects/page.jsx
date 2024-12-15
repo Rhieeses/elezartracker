@@ -1,6 +1,6 @@
 import ProjectsContent from './project';
 export const metadata = {
-	title: 'Projects',
+	title: 'Projects | Elezar Tracker',
 	description: 'Capstone',
 };
 

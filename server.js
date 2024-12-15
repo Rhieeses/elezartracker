@@ -16,6 +16,7 @@ dotenv.config();
 
 app.prepare().then(() => {
 	const server = express();
+	const uploadsDir = path.join(__dirname, './src/backend/public/uploads');
 
 	// Use CORS middleware to enable CORS
 	server.use(cors());
@@ -38,6 +39,8 @@ app.prepare().then(() => {
 	server.use(express.json());
 	// Serve API routes from the routes file
 	server.use('/api', apiRoutes);
+
+	server.use('/uploads', express.static(uploadsDir));
 
 	// For all other routes, use Next.js handling
 	server.all('*', (req, res) => {

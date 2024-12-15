@@ -1,7 +1,7 @@
 import AccountsContent from './accounts';
 
 export const metadata = {
-	title: 'Accounts',
+	title: 'Accounts | Elezar Tracker',
 	description: 'Capstone',
 };
 

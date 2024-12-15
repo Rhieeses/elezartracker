@@ -1,61 +1,67 @@
 'use client';
 import Layout from '@/components/ui/layout';
 import {
+	Input,
 	Card,
 	CardHeader,
 	CardBody,
 	CardFooter,
-	Spinner,
-	Modal,
-	ModalContent,
-	ModalHeader,
-	ModalBody,
-	ModalFooter,
-	Button,
 	useDisclosure,
-	Input,
-	Select,
-	SelectItem,
+	Button,
 	Table,
 	TableHeader,
 	TableColumn,
 	TableBody,
 	TableRow,
 	TableCell,
+	Modal,
+	ModalContent,
+	ModalHeader,
+	ModalBody,
+	ModalFooter,
+	Select,
+	SelectItem,
 } from '@nextui-org/react';
-import axios from 'axios';
-import { AccountsTransaction } from '@/backend/data/dataHooks';
 import React from 'react';
+import { AccountsData, AccountsTransaction } from '@/backend/data/dataHooks';
+import {
+	formatNumber,
+	removeFormatting,
+	formatNumberDecimal,
+	formatDateTime,
+} from '@/utils/inputFormatter';
+import Loading from '@/app/loading';
+import { PieChartAccounts } from '@/components/ui/chart';
+import axios from 'axios';
 import { useState, useEffect, useCallback } from 'react';
-import { AccountsData } from '@/backend/data/dataHooks';
-import { formatNumber, removeFormatting, formatDateTime } from '@/utils/inputFormatter';
+
+const columns = [
+	{
+		key: 'account_name',
+		label: 'ACCOUNT NAME',
+	},
+	{
+		key: 'description',
+		label: 'DESCRIPTION',
+	},
+	{
+		key: 'date',
+		label: 'DATE',
+	},
+	{
+		key: 'amount',
+		label: 'AMOUNT',
+	},
+	{
+		key: 'status',
+		label: 'STATUS',
+	},
+];
 
 export default function AccountsContent() {
-	const columns = [
-		{
-			key: 'account_name',
-			label: 'ACCOUNT NAME',
-		},
-		{
-			key: 'description',
-			label: 'DESCRIPTION',
-		},
-		{
-			key: 'date',
-			label: 'DATE',
-		},
-		{
-			key: 'amount',
-			label: 'AMOUNT',
-		},
-		{
-			key: 'status',
-			label: 'STATUS',
-		},
-	];
-
+	//transfer accounts
+	const { accounts, loading, error } = AccountsData();
 	const { accTransaction, refetchTransaction } = AccountsTransaction();
-	const { accounts, loading, refetch } = AccountsData();
 	const { isOpen, onOpen, onOpenChange } = useDisclosure();
 	const [loadingSubmit, setLoadingSubmit] = useState();
 	const [maxValue, setMaxValue] = useState(0);
@@ -166,36 +172,65 @@ export default function AccountsContent() {
 		}
 	}, []);
 
+	//
+
+	if (loading) {
+		return <Loading />;
+	}
+
+	if (error) {
+		return (
+			<Layout>
+				<div className='flex justify-center items-center h-[50rem]'>
+					<h2>Error loading dashboard data</h2>
+					<p>{error.message}</p>
+				</div>
+			</Layout>
+		);
+	}
+
 	return (
 		<Layout>
-			{!loading && accounts && accounts.length > 0 ? (
-				<div className='h-fit '>
-					<div className='p-10 mb-5 border-b-[1px] flex space-x-4 items-center'>
-						<span
-							className='material-symbols-outlined'
-							style={{ fontSize: '36px' }}>
-							account_balance_wallet
-						</span>
-						<h1 className='font-semibold tracking-wide text-3xl text-left'>Accounts</h1>
+			<div className='grid grid-cols-2 gap-10 '>
+				<div className='col-span-2 p-10 mb-5 border-b-[1px] flex space-x-4 items-center'>
+					<span
+						className='material-symbols-outlined'
+						style={{ fontSize: '36px' }}>
+						account_balance_wallet
+					</span>
+					<h1 className='font-semibold tracking-wide text-3xl text-left'>Accounts</h1>
+				</div>
+				<div className='flex items-center justify-center w-full'>
+					<div className='w-[70%]'>
+						<PieChartAccounts
+							cash={accounts?.total_payment_cash}
+							bank={accounts?.total_payment_bank}
+							gcash={accounts?.total_payment_gcash}
+						/>
 					</div>
-					<div className='grid grid-cols-2 lg:grid-cols-4 gap-5 col-span-1 p-10'>
-						<Card className='border-1 border-black p-2 shadow-none'>
+				</div>
+
+				<div className='h-fit'>
+					<h1 className='text-center font-semibold text-3xl'>Assets</h1>
+					<div className='grid grid-cols-2 lg:grid-cols-2 gap-5 col-span-1 p-10'>
+						<Card className='border-1 border-black p-2'>
 							<CardHeader className='flex items-start justify-between'>
 								<span
-									className='material-symbols-outlined col-span-2'
+									className='material-symbols-outlined  col-span-2'
 									style={{ fontSize: '36px' }}>
 									contactless
 								</span>
-								<em className='text-right font-bold tracking-wide'>VISA</em>
+								<em className='text-right  font-bold tracking-wide'>VISA</em>
 							</CardHeader>
 							<CardBody>
-								<p className='font-bold tracking-wide text-2xl'>
-									CASH AND CASH EQUIVALENTS
-								</p>
+								<p className=' font-bold tracking-wide text-2xl'>CASH</p>
 							</CardBody>
 							<CardFooter className='flex items-end justify-between'>
-								<strong className='tracking-wide col-span-2 text-2xl mt-6'>
-									{formatNumber(accounts[0].total_balance_sum)}
+								<strong className=' tracking-wide col-span-2 text-2xl mt-6'>
+									{formatNumberDecimal(
+										Number(accounts?.total_payment_cash || 0) -
+											Number(accounts?.total_expense_cash || 0),
+									)}
 								</strong>
 								<div className='bank-card-div-2  mt-4'>
 									<p className='text-xs text-right'>Expiry date</p>
@@ -203,72 +238,96 @@ export default function AccountsContent() {
 								</div>
 							</CardFooter>
 						</Card>
-						{accounts.map((accountsItem) => (
-							<Card
-								key={accountsItem.id}
-								className='border-1 border-black p-2'>
-								<CardHeader className='flex items-start justify-between'>
-									<span
-										className='material-symbols-outlined  col-span-2'
-										style={{ fontSize: '36px' }}>
-										contactless
-									</span>
-									<em className='text-right  font-bold tracking-wide'>VISA</em>
-								</CardHeader>
-								<CardBody>
-									<p className=' font-bold tracking-wide text-2xl'>
-										{accountsItem.account_name}
-									</p>
-								</CardBody>
-								<CardFooter className='flex items-end justify-between'>
-									<strong className=' tracking-wide col-span-2 text-2xl mt-6'>
-										{formatNumber(accountsItem.total_balance)}
-									</strong>
-									<div className='bank-card-div-2  mt-4'>
-										<p className='text-xs text-right'>Expiry date</p>
-										<p className='text-sm text-center'>2/24</p>
-									</div>
-								</CardFooter>
-							</Card>
-						))}
-					</div>
 
-					<div className='mt-10 p-10 pt-0'>
-						<div className='flex items-center justify-between'>
-							<h1>Transactions</h1>
-							<Button
-								className='bg-black text-white p-3'
-								startContent={<span className='material-symbols-outlined'>move_up</span>}
-								onPress={onOpen}>
-								Transfer fund
-							</Button>
-						</div>
+						<Card className='border-1 border-black p-2'>
+							<CardHeader className='flex items-start justify-between'>
+								<span
+									className='material-symbols-outlined  col-span-2'
+									style={{ fontSize: '36px' }}>
+									contactless
+								</span>
+								<em className='text-right  font-bold tracking-wide'>VISA</em>
+							</CardHeader>
+							<CardBody>
+								<p className=' font-bold tracking-wide text-2xl'>BANK</p>
+							</CardBody>
+							<CardFooter className='flex items-end justify-between'>
+								<strong className=' tracking-wide col-span-2 text-2xl mt-6'>
+									{formatNumber(
+										Number(accounts?.total_payment_bank || 0) -
+											Number(accounts?.total_expense_bank || 0),
+									)}
+								</strong>
+								<div className='bank-card-div-2  mt-4'>
+									<p className='text-xs text-right'>Expiry date</p>
+									<p className='text-sm text-center'>2/24</p>
+								</div>
+							</CardFooter>
+						</Card>
 
-						<Table
-							aria-label='Transaction table'
-							classNames={{ th: 'bg-black text-white ', td: 'border-b-1' }}
-							className='p-2 w-full rounded-none'
-							removeWrapper>
-							<TableHeader columns={columns}>
-								{(column) => <TableColumn key={column.key}>{column.label}</TableColumn>}
-							</TableHeader>
-							<TableBody
-								items={accTransaction}
-								emptyContent={<p>No transaction</p>}>
-								{(item) => (
-									<TableRow key={item.key}>
-										{(columnKey) => <TableCell>{renderCell(item, columnKey)}</TableCell>}
-									</TableRow>
-								)}
-							</TableBody>
-						</Table>
+						<Card className='border-1 border-black p-2'>
+							<CardHeader className='flex items-start justify-between'>
+								<span
+									className='material-symbols-outlined  col-span-2'
+									style={{ fontSize: '36px' }}>
+									contactless
+								</span>
+								<em className='text-right  font-bold tracking-wide'>VISA</em>
+							</CardHeader>
+							<CardBody>
+								<p className=' font-bold tracking-wide text-2xl'>GCASH</p>
+							</CardBody>
+							<CardFooter className='flex items-end justify-between'>
+								<strong className=' tracking-wide col-span-2 text-2xl mt-6'>
+									{formatNumber(
+										Number(accounts?.total_payment_gcash || 0) -
+											Number(accounts?.total_expense_gcash || 0),
+									)}
+								</strong>
+								<div className='bank-card-div-2  mt-4'>
+									<p className='text-xs text-right'>Expiry date</p>
+									<p className='text-sm text-center'>2/24</p>
+								</div>
+							</CardFooter>
+						</Card>
 					</div>
 				</div>
-			) : (
-				<div className='flex justify-center items-center w-full h-screen'>
-					<Spinner />
+
+				<div className='col-span-2 mt-10 p-10 pt-0'>
+					<div className='flex items-center justify-between'>
+						<h1>Transactions</h1>
+						<Button
+							className='bg-black text-white p-3'
+							startContent={
+								<span className='material-symbols-outlined'>move_up</span>
+							}
+							onPress={onOpen}>
+							Transfer fund
+						</Button>
+					</div>
+
+					<Table
+						aria-label='Transaction table'
+						classNames={{ th: 'bg-black text-white ', td: 'border-b-1' }}
+						className='p-2 w-full rounded-none'
+						removeWrapper>
+						<TableHeader columns={columns}>
+							{(column) => <TableColumn key={column.key}>{column.label}</TableColumn>}
+						</TableHeader>
+						<TableBody
+							items={accTransaction}
+							emptyContent={<p>No transaction</p>}>
+							{(item) => (
+								<TableRow key={item.key}>
+									{(columnKey) => (
+										<TableCell>{renderCell(item, columnKey)}</TableCell>
+									)}
+								</TableRow>
+							)}
+						</TableBody>
+					</Table>
 				</div>
-			)}
+			</div>
 
 			<Modal
 				isOpen={isOpen}
@@ -351,3 +410,124 @@ export default function AccountsContent() {
 		</Layout>
 	);
 }
+
+/**
+ * 
+ * 	<div className='h-fit'>
+				<div className='p-10 mb-5 border-b-[1px] flex space-x-4 items-center'>
+					<span
+						className='material-symbols-outlined'
+						style={{ fontSize: '36px' }}>
+						account_balance_wallet
+					</span>
+					<h1 className='font-semibold tracking-wide text-3xl text-left'>Accounts</h1>
+				</div>
+				<div className='grid grid-cols-2 lg:grid-cols-4 gap-5 col-span-1 p-10'>
+					<Card className='border-1 border-black p-2 shadow-none'>
+						<CardHeader className='flex items-start justify-between'>
+							<span
+								className='material-symbols-outlined col-span-2'
+								style={{ fontSize: '36px' }}>
+								contactless
+							</span>
+							<em className='text-right font-bold tracking-wide'>VISA</em>
+						</CardHeader>
+						<CardBody>
+							<p className='font-bold tracking-wide text-2xl'>
+								CASH AND CASH EQUIVALENTS
+							</p>
+						</CardBody>
+						<CardFooter className='flex items-end justify-between'>
+							<strong className='tracking-wide col-span-2 text-2xl mt-6'>
+								{formatNumberDecimal(
+									(Number(accounts?.total_payment_cash) || 0) +
+										(Number(accounts?.total_payment_bank) || 0) +
+										(Number(accounts?.total_payment_gcash) || 0),
+								)}
+							</strong>
+							<div className='bank-card-div-2  mt-4'>
+								<p className='text-xs text-right'>Expiry date</p>
+								<p className='text-sm text-center'>2/24</p>
+							</div>
+						</CardFooter>
+					</Card>
+					<Card className='border-1 border-black p-2'>
+						<CardHeader className='flex items-start justify-between'>
+							<span
+								className='material-symbols-outlined  col-span-2'
+								style={{ fontSize: '36px' }}>
+								contactless
+							</span>
+							<em className='text-right  font-bold tracking-wide'>VISA</em>
+						</CardHeader>
+						<CardBody>
+							<p className=' font-bold tracking-wide text-2xl'>CASH</p>
+						</CardBody>
+						<CardFooter className='flex items-end justify-between'>
+							<strong className=' tracking-wide col-span-2 text-2xl mt-6'>
+								{formatNumber(
+									Number(accounts?.total_payment_cash || 0) -
+										Number(accounts?.total_expense_cash || 0),
+								)}
+							</strong>
+							<div className='bank-card-div-2  mt-4'>
+								<p className='text-xs text-right'>Expiry date</p>
+								<p className='text-sm text-center'>2/24</p>
+							</div>
+						</CardFooter>
+					</Card>
+
+					<Card className='border-1 border-black p-2'>
+						<CardHeader className='flex items-start justify-between'>
+							<span
+								className='material-symbols-outlined  col-span-2'
+								style={{ fontSize: '36px' }}>
+								contactless
+							</span>
+							<em className='text-right  font-bold tracking-wide'>VISA</em>
+						</CardHeader>
+						<CardBody>
+							<p className=' font-bold tracking-wide text-2xl'>BANK</p>
+						</CardBody>
+						<CardFooter className='flex items-end justify-between'>
+							<strong className=' tracking-wide col-span-2 text-2xl mt-6'>
+								{formatNumber(
+									Number(accounts?.total_payment_bank || 0) -
+										Number(accounts?.total_expense_bank || 0),
+								)}
+							</strong>
+							<div className='bank-card-div-2  mt-4'>
+								<p className='text-xs text-right'>Expiry date</p>
+								<p className='text-sm text-center'>2/24</p>
+							</div>
+						</CardFooter>
+					</Card>
+
+					<Card className='border-1 border-black p-2'>
+						<CardHeader className='flex items-start justify-between'>
+							<span
+								className='material-symbols-outlined  col-span-2'
+								style={{ fontSize: '36px' }}>
+								contactless
+							</span>
+							<em className='text-right  font-bold tracking-wide'>VISA</em>
+						</CardHeader>
+						<CardBody>
+							<p className=' font-bold tracking-wide text-2xl'>GCASH</p>
+						</CardBody>
+						<CardFooter className='flex items-end justify-between'>
+							<strong className=' tracking-wide col-span-2 text-2xl mt-6'>
+								{formatNumber(
+									Number(accounts?.total_payment_gcash || 0) -
+										Number(accounts?.total_expense_gcash || 0),
+								)}
+							</strong>
+							<div className='bank-card-div-2  mt-4'>
+								<p className='text-xs text-right'>Expiry date</p>
+								<p className='text-sm text-center'>2/24</p>
+							</div>
+						</CardFooter>
+					</Card>
+				</div>
+			</div>
+ */

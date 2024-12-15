@@ -1,6 +1,7 @@
 const connection = require('../../config/db');
 const {
 	generateRandomInvoiceNumber,
+	generateAdditionalsNumber,
 	calculateProgressPayment,
 } = require('../../../utils/inputFormatter');
 
@@ -213,8 +214,14 @@ async function projectInsertData(projectFormData) {
 }
 
 async function vendorInsertData(vendorFormData) {
-	const { vendorName, vendorService, vendorEmail, vendorContactNo, vendorAddress, vendorPicture } =
-		vendorFormData;
+	const {
+		vendorName,
+		vendorService,
+		vendorEmail,
+		vendorContactNo,
+		vendorAddress,
+		vendorPicture,
+	} = vendorFormData;
 
 	const queryInsert = `
   INSERT INTO vendor
@@ -375,7 +382,8 @@ async function expenseInsert(expenseFormData) {
 }
 
 async function expenseInsertIndirect(expenseFormData) {
-	const { vendorName, invoiceDate, description, amount, paymentType, invoiceNo } = expenseFormData;
+	const { vendorName, invoiceDate, description, amount, paymentType, invoiceNo } =
+		expenseFormData;
 
 	const queryExpenseInsert = `
 		WITH vendor_insert AS (
@@ -423,8 +431,16 @@ async function expenseInsertIndirect(expenseFormData) {
 }
 
 async function expenseScanInsert(expenseFormData) {
-	const { projectId, vendorName, date, description, amount, paymentType, invoiceNumber, fileUrl } =
-		expenseFormData;
+	const {
+		projectId,
+		vendorName,
+		date,
+		description,
+		amount,
+		paymentType,
+		invoiceNumber,
+		fileUrl,
+	} = expenseFormData;
 
 	const queryExpenseInsert = `
 		WITH vendor_insert AS (
@@ -678,21 +694,15 @@ async function salesInsert(salesFormData) {
 
 	const queryExpenseInsert = `
 		INSERT INTO sales
-		("project_id", "invoice_no", "due_date", "description", "billed_amount", "paid_amount", "status")
-		VALUES ($1, $2, $3, $4, $5, $6, $7)
+		("project_id", "invoice_no", "due_date", "description", "billed_amount", "paid_amount", "balance", "status")
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 		RETURNING *;
-	`;
-
-	const queryUpdateProject = `
-		UPDATE project
-		SET "project_contractPrice" = "project_contractPrice" + $1
-		WHERE id = $2;
 	`;
 
 	try {
 		await connection.query(queryExpenseInsert, [
 			projectId,
-			generateRandomInvoiceNumber(),
+			generateAdditionalsNumber(),
 			dueDate,
 			description,
 			amount,
@@ -701,8 +711,6 @@ async function salesInsert(salesFormData) {
 			'UNPAID',
 		]);
 		console.log('Sales inserted!');
-
-		await connection.query(queryUpdateProject, [amount, projectId]);
 	} catch (error) {
 		console.error(`Error processing sales data: ${error.message}`);
 		throw new Error(`Error processing sales data: ${error.message}`);

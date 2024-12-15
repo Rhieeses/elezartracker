@@ -136,7 +136,9 @@ export default function ClientsContent() {
 								placeholder='Type to search...'
 								value={searchTerm}
 								onChange={(e) => setSearchTerm(e.target.value)}
-								startContent={<span className='material-symbols-outlined'>search</span>}
+								startContent={
+									<span className='material-symbols-outlined'>search</span>
+								}
 							/>
 						</div>
 
@@ -173,7 +175,7 @@ export default function ClientsContent() {
 													radius='sm'
 													width='100%'
 													className='w-full object-cover h-[15rem]'
-													src={clientItem.client_profilePicture || '/house.jpg'}
+													src={clientItem.client_profilePicture}
 												/>
 											</CardBody>
 											<CardFooter className='flex flex-col items-start'>

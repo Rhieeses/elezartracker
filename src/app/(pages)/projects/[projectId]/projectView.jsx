@@ -34,7 +34,12 @@ import {
 	formatDate,
 	formatNumber,
 } from '@/utils/inputFormatter';
-import { ProjectDataId, TopVendorData, ReceivableDataProject } from '@/backend/data/dataHooks';
+import {
+	ProjectDataId,
+	TopVendorData,
+	ReceivableDataProject,
+	Additionals,
+} from '@/backend/data/dataHooks';
 import ReceivablesTableProject from '@/components/tables/receivableTableProject';
 import EditProject from './edit-project/editProject';
 
@@ -50,6 +55,9 @@ export default function ProjectView({ id }) {
 	const { project, loading, error } = ProjectDataId({ projectId });
 	const { receivableProject, refetchReceivableProject } = ReceivableDataProject({ projectId });
 	const { topVendor } = TopVendorData({ projectId });
+	const { additionals } = Additionals({ projectId });
+
+	console.log(additionals);
 
 	const [selected, setSelected] = useState('overview');
 	const [filterValue, setFilterValue] = useState('');
@@ -468,6 +476,40 @@ export default function ProjectView({ id }) {
 														vendorItem?.total_purchase_amount,
 													)}
 												</TableCell>
+											</TableRow>
+										))}
+									</TableBody>
+								</Table>
+							</div>
+
+							<div className='col-span-2'>
+								<h1 className='p-5 pl-0'>Additionals</h1>
+								<Table
+									removeWrapper
+									aria-label='table'
+									classNames={{ th: 'bg-black text-white', td: 'border-b-1' }}
+									className='p-2 w-full rounded-none'>
+									<TableHeader>
+										<TableColumn>Invoice #</TableColumn>
+										<TableColumn>Due Date</TableColumn>
+										<TableColumn>Description</TableColumn>
+										<TableColumn>Amount</TableColumn>
+										<TableColumn>Status</TableColumn>
+									</TableHeader>
+									<TableBody emptyContent={'No additionals found'}>
+										{additionals.map((additionalsItem, index) => (
+											<TableRow key={index}>
+												<TableCell>{additionalsItem?.invoice_no}</TableCell>
+												<TableCell>{additionalsItem?.due_date}</TableCell>
+												<TableCell>
+													{additionalsItem?.description}
+												</TableCell>
+												<TableCell>
+													{formatNumberDecimal(
+														additionalsItem?.billed_amount,
+													)}
+												</TableCell>
+												<TableCell>{additionalsItem?.status}</TableCell>
 											</TableRow>
 										))}
 									</TableBody>

@@ -798,18 +798,43 @@ async function fetchTransactionDetails(id) {
 		throw new Error('Failed to fetch transaction');
 	}
 }
-
 async function fetchAccounts() {
-	const selectResult = `SELECT *,
-       (SELECT SUM(total_balance) FROM accounts) AS total_balance_sum
-FROM accounts ORDER BY ID ASC;
-`;
+	// First query for expenses
+	const selectResultExpense = `
+      SELECT
+        COALESCE(SUM(CASE WHEN payment_type = 'CASH' THEN purchase_amount ELSE 0 END), 0) AS total_expense_cash,
+        COALESCE(SUM(CASE WHEN payment_type = 'BANK' THEN purchase_amount ELSE 0 END), 0) AS total_expense_bank,
+        COALESCE(SUM(CASE WHEN payment_type = 'GCASH' THEN purchase_amount ELSE 0 END), 0) AS total_expense_gcash
+      FROM expense;
+    `;
+
+	// Second query for payments
+	const selectResultPayment = `
+      SELECT
+        COALESCE(SUM(CASE WHEN p.payment_type = 'CASH' THEN p.payment_amount ELSE 0 END), 0) AS total_payment_cash,
+        COALESCE(SUM(CASE WHEN p.payment_type = 'BANK' THEN p.payment_amount ELSE 0 END), 0) AS total_payment_bank,
+        COALESCE(SUM(CASE WHEN p.payment_type = 'GCASH' THEN p.payment_amount ELSE 0 END), 0) AS total_payment_gcash
+      FROM payments p;
+    `;
 
 	try {
-		const result = await connection.query(selectResult);
-		return result.rows;
+		// Execute the first query for expenses
+		const expenseResult = await connection.query(selectResultExpense);
+
+		// Execute the second query for payments
+		const paymentResult = await connection.query(selectResultPayment);
+
+		// Combine both results in a single object or array as needed
+		return {
+			total_expense_cash: expenseResult.rows[0].total_expense_cash,
+			total_expense_bank: expenseResult.rows[0].total_expense_bank,
+			total_expense_gcash: expenseResult.rows[0].total_expense_gcash,
+			total_payment_cash: paymentResult.rows[0].total_payment_cash,
+			total_payment_bank: paymentResult.rows[0].total_payment_bank,
+			total_payment_gcash: paymentResult.rows[0].total_payment_gcash,
+		};
 	} catch (error) {
-		throw new Error('Failed to fetch accounts');
+		throw new Error('Failed to fetch accounts: ' + error.message);
 	}
 }
 
@@ -1018,8 +1043,8 @@ SELECT
     p.payment_date AS transaction_date,
     p.payment_type AS type,
     'PAYMENT' AS transaction_type,
-    NULL AS debit,  -- Payments are usually credits
-    p.payment_amount AS credit
+    NULL AS credit,  -- Payments are usually credits
+    p.payment_amount AS debit
 FROM 
     payments p
 JOIN 
@@ -1039,8 +1064,8 @@ SELECT
     e.purchase_date AS transaction_date,
     e.payment_type AS type,
     'EXPENSE' AS transaction_type,
-    e.purchase_amount AS debit, 
-    NULL AS credit
+    e.purchase_amount AS credit, 
+    NULL AS debit
 FROM 
     expense e
 JOIN 
@@ -1062,8 +1087,8 @@ SELECT
     p.payment_date AS transaction_date,
     p.payment_type AS type,
     'EXPENSE' AS transaction_type,
-    p.payment_amount AS debit, 
-    NULL AS credit
+    p.payment_amount AS credit, 
+    NULL AS debit
 FROM 
     payables_transaction p
 JOIN
@@ -1114,6 +1139,21 @@ GROUP BY
 		return topVendorResult.rows;
 	} catch (error) {
 		throw new Error('Failed to fetch project name: ' + error.message);
+	}
+}
+
+async function fetchAdditionals(id) {
+	const additionalsQuery = ` 
+    SELECT *
+    FROM sales
+    WHERE invoice_no LIKE 'ADS-%' AND project_id = $1;
+`;
+
+	try {
+		const additionalsRes = await connection.query(additionalsQuery, [id]);
+		return additionalsRes.rows;
+	} catch (error) {
+		throw new Error('Failed to fetch additionals: ' + error.message);
 	}
 }
 /**
@@ -1171,7 +1211,9 @@ async function fetchReport(reportBody) {
 		case 'monthly':
 			if (formattedMonth) {
 				const startDate = `${selectedYear}-${formattedMonth}-01`;
-				const endDate = new Date(selectedYear, formattedMonth, 0).toISOString().split('T')[0];
+				const endDate = new Date(selectedYear, formattedMonth, 0)
+					.toISOString()
+					.split('T')[0];
 				date = [startDate, endDate];
 			}
 			break;

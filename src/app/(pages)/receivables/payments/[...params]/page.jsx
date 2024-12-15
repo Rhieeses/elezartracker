@@ -67,19 +67,20 @@ export default function Receipt({ params }) {
 
 				<div className='body'>
 					<p className='font-semibold'>
-						This receipt acknowledges the down payment received from <strong>{name}</strong>{' '}
-						for the construction of a residential house
+						This receipt acknowledges the down payment received from{' '}
+						<strong>{name}</strong> for the construction of a residential house
 						<strong> {project}</strong>.The payment total amounting of
-						<strong> {formatNumberDecimal(amount)} </strong> represents part of the total
-						project cost, and further payments will be due as outlined in the contract
-						agreement. This receipt serves as proof of payment and is not an invoice.
+						<strong> {formatNumberDecimal(amount)} </strong> represents part of the
+						total project cost, and further payments will be due as outlined in the
+						contract agreement. This receipt serves as proof of payment and is not an
+						invoice.
 					</p>
 				</div>
 
 				<div className='receipt-footer w-full mt-[15rem] flex flex-col items-start'>
 					<div>
-						<p className='font-bold'>Juan dela cruz</p>
-						<p className='text-slate text-center'>Secretary</p>
+						<p className='font-bold'>Mary Cris R. Retuerma</p>
+						<p className='text-slate text-center'>Book keeper</p>
 					</div>
 				</div>
 			</div>

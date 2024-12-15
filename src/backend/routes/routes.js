@@ -19,11 +19,20 @@ const dbUpdate = require('../models/UPDATE/dbUpdate');
 
 const { verifyToken } = require('../config/auth');
 
+const { OpenAI } = require('openai');
+
+/** 
+const openai = new OpenAI({
+	apiKey: process.env.OPENAI_API_KEY,
+});*/
+
 router.post('/login', async (req, res) => {
 	const { username, password } = req.body;
 
 	try {
-		const result = await connection.query('SELECT * FROM users WHERE username = $1', [username]);
+		const result = await connection.query('SELECT * FROM users WHERE username = $1', [
+			username,
+		]);
 
 		const user = result.rows[0];
 
@@ -168,7 +177,10 @@ router.post('/add-client', (req, res, next) => {
 
 			const clientInsertedData = await dbInsert.clientInsertData(clientFormData);
 
-			res.status(201).json({ message: 'Data inserted successfully', data: clientInsertedData });
+			res.status(201).json({
+				message: 'Data inserted successfully',
+				data: clientInsertedData,
+			});
 		} catch (error) {
 			console.error('Error handling request:', error);
 			res.status(500).json({ message: 'Failed to insert data', error: error.message });
@@ -196,7 +208,10 @@ router.post('/create-project', (req, res, next) => {
 
 			const projectInsertedData = await dbInsert.projectInsertData(projectFormData);
 
-			res.status(201).json({ message: 'Data inserted successfully', data: projectInsertedData });
+			res.status(201).json({
+				message: 'Data inserted successfully',
+				data: projectInsertedData,
+			});
 		} catch (error) {
 			console.error('Error handling request:', error);
 			res.status(500).json({ message: 'Failed to insert data', error: error.message });
@@ -224,7 +239,10 @@ router.post('/add-vendor', (req, res, next) => {
 
 			const vendorInsertedData = await dbInsert.vendorInsertData(vendorFormData);
 
-			res.status(201).json({ message: 'Data inserted successfully', data: vendorInsertedData });
+			res.status(201).json({
+				message: 'Data inserted successfully',
+				data: vendorInsertedData,
+			});
 		} catch (error) {
 			console.error('Error handling request:', error);
 			res.status(500).json({ message: 'Failed to insert data', error: error.message });
@@ -1108,6 +1126,22 @@ router.get('/top-vendor/:id', async (req, res) => {
 	}
 });
 
+router.get('/additionals/:id', async (req, res) => {
+	const token = req.cookies.token;
+
+	if (!token) {
+		return res.status(401).json({ message: 'Unauthorized, token missing' });
+	}
+	try {
+		verifyToken(token, ['Admin', 'Bookkeeper']);
+		const { id } = req.params;
+		const additionals = await dbSelect.fetchTopVendor(id);
+		res.json(additionals);
+	} catch (error) {
+		res.status(500).json({ error: 'Failed to  fetch addtionals' });
+	}
+});
+
 //
 router.get('/all-transactions', async (req, res) => {
 	const token = req.cookies.token;
@@ -1239,8 +1273,8 @@ router.get('/test-db', async (req, res) => {
 		res.status(500).json({ message: 'Database connection failed', error: error.message });
 	}
 });
-const axios = require('axios');
 
+/** 
 router.post('/openai', async (req, res) => {
 	const { prompt } = req.body;
 
@@ -1250,32 +1284,23 @@ router.post('/openai', async (req, res) => {
 	}
 
 	try {
-		const response = await axios.post(
-			`${process.env.OPENAI_ENDPOINT}openai/deployments/gpt-4-32k/completions?api-version=2024-02-01`,
-			{
-				model: 'gpt-4-32k', // Ensure this model is available in your Azure OpenAI instance
-				messages: [{ role: 'user', content: prompt }],
-			},
-			{
-				headers: {
-					Authorization: `Bearer ${process.env.OPENAI_API_KEY}`, // Ensure this is your correct Azure API key
-					'Content-Type': 'application/json',
-				},
-			},
-		);
+		// Make a request to the OpenAI API
+
+		const response = await openai.chat.completions.create({
+			model: 'gpt-3.5-turbo', // Use the free-tier model
+			messages: [{ role: 'user', content: 'add this ${prompt}' }],
+		});
 
 		// Send the OpenAI response back to the client
-		res.status(200).json(response.data);
+		res.status(200).json({ message: response.choices[0].message.content });
 	} catch (error) {
-		console.error(
-			'Error communicating with OpenAI:',
-			error.response ? error.response.data : error.message,
-		);
+		console.error('Error communicating with OpenAI:', error.response?.data || error.message);
+
 		// Provide a more specific error message if available
 		res.status(500).json({
-			error: error.response ? error.response.data : 'Failed to communicate with OpenAI',
+			error: error.response?.data || 'Failed to communicate with OpenAI',
 		});
 	}
-});
+});*/
 
 module.exports = router;

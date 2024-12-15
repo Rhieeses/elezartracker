@@ -1,6 +1,6 @@
 import ReceivablesContent from '../receivables/receivables';
 export const metadata = {
-	title: 'Receivables',
+	title: 'Receivables | Elezar Tracker',
 	description: 'Capstone',
 };
 
