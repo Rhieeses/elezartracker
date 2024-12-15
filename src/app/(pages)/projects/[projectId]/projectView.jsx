@@ -252,9 +252,12 @@ export default function ProjectView({ id }) {
 								iconText='payments'
 								labelText='Balance'
 								strongText={formatNumberDecimal(
-									project.projectDetails.project_contractPrice -
-										project.projectAccounts.total_paid,
-								)}
+  Math.abs(
+    project.projectDetails.project_contractPrice -
+    project.projectAccounts.total_paid
+  )
+)}
+
 								descriptionText={
 									<Progress
 										size='md'
