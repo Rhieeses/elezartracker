@@ -453,7 +453,8 @@ export default function ProjectView({ id }) {
 										<TableColumn>Total amount</TableColumn>
 									</TableHeader>
 									<TableBody emptyContent={'No vendor found'}>
-										{topVendor.map((vendorItem, index) => (
+										{topVendor?.length > 0
+											? topVendor.map((vendorItem, index) => (	
 											<TableRow key={index}>
 												<TableCell>{index + 1}</TableCell>
 												<TableCell>
@@ -475,7 +476,8 @@ export default function ProjectView({ id }) {
 													)}
 												</TableCell>
 											</TableRow>
-										))}
+										  ))
+											: null}
 									</TableBody>
 								</Table>
 							</div>
