@@ -57,8 +57,6 @@ export default function ProjectView({ id }) {
 	const { topVendor } = TopVendorData({ projectId });
 	const { additionals } = Additionals({ projectId });
 
-	console.log(additionals);
-
 	const [selected, setSelected] = useState('overview');
 	const [filterValue, setFilterValue] = useState('');
 
@@ -497,21 +495,29 @@ export default function ProjectView({ id }) {
 										<TableColumn>Status</TableColumn>
 									</TableHeader>
 									<TableBody emptyContent={'No additionals found'}>
-										{additionals.map((additionalsItem, index) => (
-											<TableRow key={index}>
-												<TableCell>{additionalsItem?.invoice_no}</TableCell>
-												<TableCell>{additionalsItem?.due_date}</TableCell>
-												<TableCell>
-													{additionalsItem?.description}
-												</TableCell>
-												<TableCell>
-													{formatNumberDecimal(
-														additionalsItem?.billed_amount,
-													)}
-												</TableCell>
-												<TableCell>{additionalsItem?.status}</TableCell>
-											</TableRow>
-										))}
+										{additionals?.length > 0
+											? additionals.map((additionalsItem, index) => (
+													<TableRow key={index}>
+														<TableCell>
+															{additionalsItem?.invoice_no}
+														</TableCell>
+														<TableCell>
+															{additionalsItem?.due_date}
+														</TableCell>
+														<TableCell>
+															{additionalsItem?.description}
+														</TableCell>
+														<TableCell>
+															{formatNumberDecimal(
+																additionalsItem?.billed_amount,
+															)}
+														</TableCell>
+														<TableCell>
+															{additionalsItem?.status}
+														</TableCell>
+													</TableRow>
+											  ))
+											: null}
 									</TableBody>
 								</Table>
 							</div>

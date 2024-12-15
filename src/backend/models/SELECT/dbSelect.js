@@ -1490,4 +1490,5 @@ module.exports = {
 	fetchProjectName,
 	fetchTopVendor,
 	fetchReport,
+	fetchAdditionals,
 };

@@ -1135,7 +1135,7 @@ router.get('/additionals/:id', async (req, res) => {
 	try {
 		verifyToken(token, ['Admin', 'Bookkeeper']);
 		const { id } = req.params;
-		const additionals = await dbSelect.fetchTopVendor(id);
+		const additionals = await dbSelect.fetchAdditionals(id);
 		res.json(additionals);
 	} catch (error) {
 		res.status(500).json({ error: 'Failed to  fetch addtionals' });
