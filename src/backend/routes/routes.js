@@ -319,7 +319,7 @@ router.post('/payable-payment', async (req, res) => {
 router.post('/scan-expense', async (req, res) => {
 	try {
 		const expenseFormData = req.body;
-		const expenseInsertData = await dbInsert.expenseScanInsert(expenseFormData);
+		await dbInsert.expenseScanInsert(expenseFormData);
 		res.status(200).json({ message: 'Expense inserted successfully' });
 	} catch (error) {
 		console.error('Error inserting expense:', error);

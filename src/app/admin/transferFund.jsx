@@ -26,7 +26,7 @@ import { AccountsTransaction, AccountsTransactionId } from '@/backend/data/dataH
 import React from 'react';
 import { useState, useCallback } from 'react';
 import { AccountsData } from '@/backend/data/dataHooks';
-import { formatNumber, removeFormatting, formatDateTime } from '@/utils/inputFormatter';
+import { formatNumber, formatNumberDecimal, formatDateTime } from '@/utils/inputFormatter';
 
 export default function Transferfund() {
 	const { isOpen, onOpen, onOpenChange } = useDisclosure();
@@ -64,6 +64,8 @@ export default function Transferfund() {
 		viewId,
 	});
 	const { accounts, loading, error, refetch } = AccountsData();
+
+	console.log(accounts);
 
 	const renderCell = useCallback((accTransaction, columnKey) => {
 		const cellValue = accTransaction[columnKey];
@@ -147,59 +149,84 @@ export default function Transferfund() {
 				</span>
 				<h1 className='font-semibold tracking-wide text-3xl text-left'>Transfer fund</h1>
 			</div>
-			<div className='grid grid-cols-2 lg:grid-cols-4 gap-5 col-span-1 p-3'>
-				<Card className='bg-gradient-to-l from-purple-600 to-purple-800 p-2'>
+			<div className='grid grid-cols-2 lg:grid-cols-3 gap-5 col-span-1 p-3'>
+				<Card className='border-1 border-black p-2'>
 					<CardHeader className='flex items-start justify-between'>
 						<span
-							className='material-symbols-outlined text-white col-span-2'
+							className='material-symbols-outlined  col-span-2'
 							style={{ fontSize: '36px' }}>
 							contactless
 						</span>
-						<em className='text-right text-white font-bold tracking-wide'>VISA</em>
+						<em className='text-right  font-bold tracking-wide'>VISA</em>
 					</CardHeader>
 					<CardBody>
-						<p className='text-white font-bold tracking-wide text-2xl'>REVENUE</p>
-						<p className='text-white tracking-wide'>5363 4700 0123 457</p>
+						<p className=' font-bold tracking-wide text-2xl'>CASH</p>
 					</CardBody>
 					<CardFooter className='flex items-end justify-between'>
-						<p className='text-white tracking-wide col-span-2 text-2xl mt-6'>
-							{formatNumber(accounts[0].total_balance_sum)}
-						</p>
-						<div className='bank-card-div-2 text-white mt-4'>
+						<strong className=' tracking-wide col-span-2 text-2xl mt-6'>
+							{formatNumberDecimal(
+								Number(accounts?.total_payment_cash || 0) -
+									Number(accounts?.total_expense_cash || 0),
+							)}
+						</strong>
+						<div className='bank-card-div-2  mt-4'>
 							<p className='text-xs text-right'>Expiry date</p>
 							<p className='text-sm text-center'>2/24</p>
 						</div>
 					</CardFooter>
 				</Card>
-				{accounts.map((accountsItem) => (
-					<Card
-						key={accountsItem.id}
-						className='bg-gradient-to-l from-gray-600 to-gray-800 p-2'>
-						<CardHeader className='flex items-start justify-between'>
-							<span
-								className='material-symbols-outlined text-white col-span-2'
-								style={{ fontSize: '36px' }}>
-								contactless
-							</span>
-							<em className='text-right text-white font-bold tracking-wide'>VISA</em>
-						</CardHeader>
-						<CardBody>
-							<p className='text-white font-bold tracking-wide text-2xl'>
-								{accountsItem.account_name}
-							</p>
-							<p className='text-white tracking-wide'>5363 4700 0123 457</p>
-						</CardBody>
-						<CardFooter className='flex items-end justify-between'>
-							<p className='text-white tracking-wide col-span-2 text-2xl mt-6'>
-								{formatNumber(accountsItem.total_balance)}
-							</p>
-							<div className='bank-card-div-2 text-white mt-4'>
-								<p className='text-xs text-right'>Expiry date</p>
-								<p className='text-sm text-center'>2/24</p>
-							</div>
-						</CardFooter>
-					</Card>
-				))}
+
+				<Card className='border-1 border-black p-2'>
+					<CardHeader className='flex items-start justify-between'>
+						<span
+							className='material-symbols-outlined  col-span-2'
+							style={{ fontSize: '36px' }}>
+							contactless
+						</span>
+						<em className='text-right  font-bold tracking-wide'>VISA</em>
+					</CardHeader>
+					<CardBody>
+						<p className=' font-bold tracking-wide text-2xl'>BANK</p>
+					</CardBody>
+					<CardFooter className='flex items-end justify-between'>
+						<strong className=' tracking-wide col-span-2 text-2xl mt-6'>
+							{formatNumber(
+								Number(accounts?.total_payment_bank || 0) -
+									Number(accounts?.total_expense_bank || 0),
+							)}
+						</strong>
+						<div className='bank-card-div-2  mt-4'>
+							<p className='text-xs text-right'>Expiry date</p>
+							<p className='text-sm text-center'>2/24</p>
+						</div>
+					</CardFooter>
+				</Card>
+
+				<Card className='border-1 border-black p-2'>
+					<CardHeader className='flex items-start justify-between'>
+						<span
+							className='material-symbols-outlined  col-span-2'
+							style={{ fontSize: '36px' }}>
+							contactless
+						</span>
+						<em className='text-right  font-bold tracking-wide'>VISA</em>
+					</CardHeader>
+					<CardBody>
+						<p className=' font-bold tracking-wide text-2xl'>GCASH</p>
+					</CardBody>
+					<CardFooter className='flex items-end justify-between'>
+						<strong className=' tracking-wide col-span-2 text-2xl mt-6'>
+							{formatNumber(
+								Number(accounts?.total_payment_gcash || 0) -
+									Number(accounts?.total_expense_gcash || 0),
+							)}
+						</strong>
+						<div className='bank-card-div-2  mt-4'>
+							<p className='text-xs text-right'>Expiry date</p>
+							<p className='text-sm text-center'>2/24</p>
+						</div>
+					</CardFooter>
+				</Card>
 			</div>
 
 			<div className='mt-10 p-3'>
@@ -215,7 +242,9 @@ export default function Transferfund() {
 						emptyContent={<p>No transaction</p>}>
 						{(item) => (
 							<TableRow key={item.key}>
-								{(columnKey) => <TableCell>{renderCell(item, columnKey)}</TableCell>}
+								{(columnKey) => (
+									<TableCell>{renderCell(item, columnKey)}</TableCell>
+								)}
 							</TableRow>
 						)}
 					</TableBody>
@@ -234,7 +263,9 @@ export default function Transferfund() {
 					{(onClose) => (
 						<>
 							<ModalHeader className='flex gap-1 mb-5'>
-								<span className='material-symbols-outlined'>account_balance_wallet</span>
+								<span className='material-symbols-outlined'>
+									account_balance_wallet
+								</span>
 								<p>Transfer Details</p>
 							</ModalHeader>
 
@@ -248,7 +279,9 @@ export default function Transferfund() {
 												<p className='self-center font-semibold'>
 													{accountsTransactionId[0].account_name}
 												</p>
-												<p className='text-xs text-gray-400'>Account Name</p>
+												<p className='text-xs text-gray-400'>
+													Account Name
+												</p>
 											</div>
 											<div>
 												<p className='self-center font-semibold'>
@@ -268,7 +301,9 @@ export default function Transferfund() {
 												<p className='self-center font-semibold'>
 													{formatDateTime(accountsTransactionId[0].date)}
 												</p>
-												<p className='text-xs text-gray-400'>Transfer date</p>
+												<p className='text-xs text-gray-400'>
+													Transfer date
+												</p>
 											</div>
 											<div>
 												<p className='self-center font-semibold'>
@@ -281,7 +316,9 @@ export default function Transferfund() {
 									{accountsTransactionId[0].status === 'PENDING' ? (
 										<Button
 											endContent={
-												<span className='material-symbols-outlined'>done_outline</span>
+												<span className='material-symbols-outlined'>
+													done_outline
+												</span>
 											}
 											color='success'
 											variant='solid'

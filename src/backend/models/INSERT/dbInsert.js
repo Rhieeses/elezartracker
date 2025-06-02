@@ -442,6 +442,17 @@ async function expenseScanInsert(expenseFormData) {
 		fileUrl,
 	} = expenseFormData;
 
+	console.log(
+		projectId,
+		vendorName,
+		date,
+		description,
+		amount,
+		paymentType,
+		invoiceNumber,
+		fileUrl,
+	);
+
 	const queryExpenseInsert = `
 		WITH vendor_insert AS (
 			INSERT INTO vendor (vendor_name)
