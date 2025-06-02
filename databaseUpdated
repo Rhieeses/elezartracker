@@ -1,0 +1,497 @@
+
+
+CREATE TABLE public.accounts (
+    id integer NOT NULL,
+    account_name character varying,
+    total_sales numeric(10,2),
+    total_expense numeric(10,2),
+    total_balance numeric(10,2)
+);
+
+
+
+
+ALTER TABLE public.accounts ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME public.accounts_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+CREATE TABLE public.accounts_project (
+    id integer NOT NULL,
+    project_id integer,
+    contract_price double precision,
+    total_paid numeric(10,2),
+    total_expenses numeric(10,2)
+);
+
+
+
+
+ALTER TABLE public.accounts_project ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME public.accounts_projects_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+
+CREATE TABLE public.accounts_transaction (
+    id integer NOT NULL,
+    account_name character varying,
+    description character varying,
+    date timestamp without time zone,
+    amount numeric(10,2),
+    status character varying(50) DEFAULT 'PENDING'::character varying NOT NULL,
+    transferto character varying(50)
+);
+
+
+
+ALTER TABLE public.accounts_transaction ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME public.accounts_transaction_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+CREATE TABLE public.client (
+    id integer NOT NULL,
+    "client_lastName" character varying(20),
+    "client_firstName" character varying(20),
+    "client_middleName" character varying(20),
+    client_email character varying(50),
+    "client_contactNo" character varying(20),
+    client_address character varying(100),
+    "client_dateJoined" date,
+    "client_profilePicture" character varying(100),
+    client_description character varying
+);
+
+
+
+ALTER TABLE public.client ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME public.client_client_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+
+CREATE TABLE public.expense (
+    id integer NOT NULL,
+    project_id integer,
+    vendor_id integer,
+    purchase_date date,
+    expense_description character varying(100),
+    purchase_amount numeric(10,2),
+    payment_type character varying(100),
+    "invoiceNo" character varying(50),
+    vendor_name character varying(50),
+    is_archived boolean DEFAULT false,
+    status character varying(50) DEFAULT 'PAID'::character varying,
+    direct_expense boolean DEFAULT true,
+    is_payable boolean DEFAULT false,
+    balance numeric DEFAULT 0
+);
+
+
+
+ALTER TABLE public.expense ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME public.expense_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+CREATE TABLE public.notification (
+    id integer NOT NULL,
+    description character varying(100),
+    date timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    isseen boolean DEFAULT false,
+    title character varying(50),
+    project_id integer
+);
+
+
+
+ALTER TABLE public.notification ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME public.notification_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+
+CREATE TABLE public.payable (
+    project_id integer,
+    invoice_date date,
+    due_date date,
+    description character varying(200),
+    amount numeric,
+    amount_paid numeric,
+    balance numeric,
+    status character varying(50) DEFAULT 'UNPAID'::character varying,
+    vendor_id integer,
+    is_archived boolean DEFAULT false,
+    invoice_no character varying,
+    id integer NOT NULL,
+    is_direct boolean DEFAULT false NOT NULL
+);
+
+
+
+ALTER TABLE public.payable ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME public.payable_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+
+
+CREATE TABLE public.payables_transaction (
+    id integer NOT NULL,
+    vendor_id integer,
+    invoice_id character varying(100),
+    payment_description character varying(100),
+    payment_amount numeric(10,2),
+    payment_date timestamp without time zone,
+    payment_type character varying,
+    project_id integer,
+    is_archived boolean DEFAULT false
+);
+
+
+
+
+
+CREATE TABLE public.payments (
+    id integer NOT NULL,
+    recipient_id integer,
+    invoice_id character varying(100),
+    payment_description character varying(100),
+    payment_amount numeric(10,2),
+    payment_date timestamp without time zone,
+    payment_type character varying,
+    project_id integer,
+    is_archived boolean DEFAULT false
+);
+
+
+
+ALTER TABLE public.payments ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME public.payments_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+
+
+CREATE TABLE public.project (
+    id integer NOT NULL,
+    client_id integer,
+    project_name character varying(250),
+    project_category character varying(250),
+    project_address character varying(250),
+    "project_paymentTerms" character varying(250),
+    "project_startDate" date,
+    "project_endDate" date,
+    project_description character varying(250),
+    "project_projectPicture" character varying(250),
+    "project_contractPrice" numeric(10,2),
+    downpayment integer,
+    warningvalue integer,
+    status character varying(20)
+);
+
+
+
+
+ALTER TABLE public.project ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME public.project_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+CREATE TABLE public.sales (
+    id integer NOT NULL,
+    project_id integer,
+    invoice_no character varying(50),
+    due_date date,
+    description character varying(50),
+    billed_amount numeric(10,2),
+    paid_amount numeric(10,2),
+    balance numeric(10,2),
+    status character varying(50)
+);
+
+
+CREATE TABLE public.sales_project (
+    id integer NOT NULL,
+    project_id integer,
+    client_id integer,
+    date date,
+    amount numeric,
+    amount_paid numeric,
+    balance numeric,
+    status character varying(50),
+    is_archived boolean DEFAULT false,
+    description character varying(200),
+    end_date date,
+    payment_terms character varying(50),
+    project_status character varying(50)
+);
+
+
+
+ALTER TABLE public.sales_project ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME public."salesProject_id_seq"
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+
+ALTER TABLE public.sales ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME public.sales_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+CREATE TABLE public.users (
+    id integer NOT NULL,
+    username character varying(100) NOT NULL,
+    name character varying(100) NOT NULL,
+    profilepicture character varying(100),
+    email character varying(255) NOT NULL,
+    password text NOT NULL,
+    created_at timestamp without time zone DEFAULT now(),
+    updated_at timestamp without time zone DEFAULT now(),
+    "position" character varying(255) NOT NULL
+);
+
+
+
+CREATE SEQUENCE public.users_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+
+CREATE TABLE public.vendor (
+    id integer NOT NULL,
+    vendor_name character varying(100),
+    vendor_address character varying(100),
+    vendor_email character varying(50),
+    "vendor_contactNo" character varying(50),
+    vendor_services character varying(50),
+    vendor_picture character varying(100),
+    "vendor_dateJoined" date DEFAULT now()
+);
+
+
+
+ALTER TABLE public.vendor ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME public.vendor_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+
+ALTER TABLE ONLY public.users ALTER COLUMN id SET DEFAULT nextval('public.users_id_seq'::regclass);
+
+
+
+
+ALTER TABLE ONLY public.accounts
+    ADD CONSTRAINT accounts_pkey PRIMARY KEY (id);
+
+
+
+ALTER TABLE ONLY public.accounts_project
+    ADD CONSTRAINT accounts_projects_pkey PRIMARY KEY (id);
+
+
+
+ALTER TABLE ONLY public.accounts_transaction
+    ADD CONSTRAINT accounts_transaction_pkey PRIMARY KEY (id);
+
+
+
+ALTER TABLE ONLY public.client
+    ADD CONSTRAINT client_pkey PRIMARY KEY (id);
+
+
+
+ALTER TABLE ONLY public.expense
+    ADD CONSTRAINT expense_pkey PRIMARY KEY (id);
+
+
+
+ALTER TABLE ONLY public.notification
+    ADD CONSTRAINT notification_pkey PRIMARY KEY (id);
+
+
+ALTER TABLE ONLY public.payable
+    ADD CONSTRAINT payable_pkey PRIMARY KEY (id);
+
+
+
+ALTER TABLE ONLY public.payables_transaction
+    ADD CONSTRAINT payables_transaction_pkey PRIMARY KEY (id);
+
+
+
+ALTER TABLE ONLY public.payments
+    ADD CONSTRAINT payments_pkey PRIMARY KEY (id);
+
+
+
+ALTER TABLE ONLY public.project
+    ADD CONSTRAINT project_pkey PRIMARY KEY (id);
+
+
+
+
+ALTER TABLE ONLY public.sales_project
+    ADD CONSTRAINT "salesProject_pkey" PRIMARY KEY (id);
+
+
+
+
+ALTER TABLE ONLY public.sales
+    ADD CONSTRAINT sales_pkey PRIMARY KEY (id);
+
+
+
+ALTER TABLE ONLY public.vendor
+    ADD CONSTRAINT unique_vendor_name UNIQUE (vendor_name);
+
+
+
+ALTER TABLE ONLY public.users
+    ADD CONSTRAINT users_email_key UNIQUE (email);
+
+
+
+ALTER TABLE ONLY public.users
+    ADD CONSTRAINT users_pkey PRIMARY KEY (id);
+
+
+
+
+ALTER TABLE ONLY public.users
+    ADD CONSTRAINT users_username_key UNIQUE (username);
+
+
+
+
+ALTER TABLE ONLY public.vendor
+    ADD CONSTRAINT vendor_pkey PRIMARY KEY (id);
+
+
+
+CREATE TRIGGER accounts_transaction_status_trigger AFTER UPDATE OF status ON public.accounts_transaction FOR EACH ROW EXECUTE FUNCTION public.update_accountasset_balance();
+
+
+
+CREATE TRIGGER balance_trigger BEFORE INSERT OR UPDATE OF amount, amount_paid ON public.payable FOR EACH ROW EXECUTE FUNCTION public.update_balance_payable();
+
+
+
+
+CREATE TRIGGER balance_trigger BEFORE INSERT OR UPDATE OF amount, amount_paid ON public.sales_project FOR EACH ROW EXECUTE FUNCTION public.update_balance_payable();
+
+
+
+CREATE TRIGGER expense_after_insert_update AFTER INSERT OR UPDATE ON public.expense FOR EACH ROW EXECUTE FUNCTION public.update_total_expenses();
+
+
+CREATE TRIGGER payable_status_trigger BEFORE INSERT OR UPDATE OF amount_paid, balance ON public.payable FOR EACH ROW EXECUTE FUNCTION public.update_payable_status();
+
+
+
+
+CREATE TRIGGER payments_after_insert_update AFTER INSERT OR UPDATE ON public.payments FOR EACH ROW EXECUTE FUNCTION public.update_project_total_paid();
+
+ALTER TABLE public.payments DISABLE TRIGGER payments_after_insert_update;
+
+
+
+CREATE TRIGGER sales_project_status_trigger BEFORE INSERT OR UPDATE OF amount_paid, balance ON public.sales_project FOR EACH ROW EXECUTE FUNCTION public.update_payable_status();
+
+
+
+CREATE TRIGGER set_project_status BEFORE INSERT OR UPDATE ON public.project FOR EACH ROW EXECUTE FUNCTION public.project_status();
+
+
+CREATE TRIGGER set_project_status BEFORE INSERT OR UPDATE ON public.sales_project FOR EACH ROW EXECUTE FUNCTION public.update_project_status();
+
+
+CREATE TRIGGER status_trigger BEFORE INSERT OR UPDATE ON public.sales FOR EACH ROW EXECUTE FUNCTION public.update_status();
+
+
+
+CREATE TRIGGER trg_update_total_balance BEFORE INSERT OR DELETE OR UPDATE ON public.accounts FOR EACH ROW EXECUTE FUNCTION public.update_total_balance();
+
+
+
+CREATE TRIGGER trg_update_total_expense AFTER INSERT OR UPDATE ON public.expense FOR EACH STATEMENT EXECUTE FUNCTION public.update_total_expense();
+
+
+
+CREATE TRIGGER trg_update_total_payments AFTER INSERT OR UPDATE ON public.payments FOR EACH STATEMENT EXECUTE FUNCTION public.update_total_payments();
+
+
+
+CREATE TRIGGER trigger_handle_excess_payment BEFORE UPDATE ON public.sales FOR EACH ROW EXECUTE FUNCTION public.handle_excess_payment();
+
+ALTER TABLE public.sales DISABLE TRIGGER trigger_handle_excess_payment;
+
+
